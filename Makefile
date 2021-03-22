@@ -17,3 +17,6 @@ test:
 
 play:
 	$(OCAMLBUILD) -tag 'debug' $(MAIN) && OCAMLRUNPARAM=b ./$(MAIN)
+
+clean:
+	ocamlbuild -clean
