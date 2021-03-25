@@ -7,7 +7,7 @@ MAIN=main.byte
 OCAMLBUILD=ocamlbuild -use-ocamlfind
 
 default: build
-	utop
+	OCAMLRUNPARAM=b utop
 
 build:
 	$(OCAMLBUILD) $(OBJECTS)
