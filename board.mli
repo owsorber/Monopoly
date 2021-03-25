@@ -14,7 +14,7 @@ type space =
   | FreeParking
   | GoToJail
 
-(** Raised when an integer does not refer to a valid location on the
+(** Raised when an integer does not refer to a valid 0-indexed location on the
     Monopoly board. *)
 exception NotOnBoard of int
 
@@ -34,7 +34,8 @@ val space_from_location : t -> int -> space
     location [i] on [board], starting from "Go" at 0 and counting up by 1 around
     the board clockwise.
 
-    Ex: [space_name 1] should return "Mediterranean Avenue".
+    Ex: [space_name board 1] should return "Mediterranean Avenue" if [board] is 
+    created from "board.json".
 
     Requires: [i] refers to a valid 0-indexed space on [board]
     Raises: [NotOnBoard] if [i] does not indicate a valid space on [board] *)
