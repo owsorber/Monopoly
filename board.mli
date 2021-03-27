@@ -3,7 +3,7 @@ type t
 
 type space =
   | Property of {name: string; price: int; house_price: int; color: string; 
-                  rent: int list}
+                  rent: int array}
   | Railroad of {name: string; price: int}
   | Utility of {name: string; price: int}
   | Tax of {name: string; cost: int}

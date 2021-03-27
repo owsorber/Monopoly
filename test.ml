@@ -6,6 +6,7 @@ open Game
 open Input
 
 (* General Helper Functions *)
+let pp_string s = "\"" ^ s ^ "\""
 
 (* Any Player Module Testing Helper Functions/Variables *)
 let player1 = make_player "Kira"
@@ -30,9 +31,40 @@ let player_tests = [
 ]
 
 (* Any Board Module Testing Helper Functions/Variables *)
+let space_from_location_test name board loc expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (space_from_location board loc)
+
+let space_name_test name board loc expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (space_name board loc)
+    ~printer:pp_string
+
+let start_space_test name board expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (start_space board)
+    ~printer:pp_string
+
+let test_board = Yojson.Basic.from_file "board.json" |> init_board
+let mediterranean_avenue_space =
+  Property {name = "Mediterranean Avenue"; price = 60; house_price = 50; 
+            color = "#955438"; rent = [|2; 10; 30; 90; 160; 250|]}
+let income_tax_space = Tax {name = "Income Tax"; cost = 200}
 
 (* Board Module Tests *)
-let board_tests = []
+let board_tests = [
+  space_from_location_test "Mediterranean Avenue Property" test_board 1 
+    mediterranean_avenue_space;
+  space_from_location_test "Income Tax" test_board 4 income_tax_space;
+  space_from_location_test "Chance" test_board 7 Chance;
+  space_name_test "0 is Go" test_board 0 "Go";
+  space_name_test "10 is Jail" test_board 10 "Jail";
+  space_name_test "Last space is Boardwalk" test_board 39 "Boardwalk";
+  start_space_test "Start on Go" test_board "Go"
+]
 
 (* Any Game Module Testing Helper Functions/Variables *)
 
