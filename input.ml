@@ -40,7 +40,7 @@ let get_action turn =
   turn.action
 
 let turn p g =
-  cyan_print ("\nPlayer " ^ (Player.get_player_id p) ^ "'s turn.\n");
+  cyan_print ("\n" ^ (Player.get_player_id p) ^ "'s turn.\n");
   cyan_print "\n possible moves: ";
   Stdlib.print_endline (options_printer (options p g));
   cyan_print "\n input the number of the move you would like to make:";
