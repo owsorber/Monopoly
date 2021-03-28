@@ -14,7 +14,7 @@ type property_info = {
 type t = {
   board: Board.t;
   players: Player.t array;
-  cur_player: int;
+  mutable cur_player: int;
   properties: (property_name, property_info) Stdlib__hashtbl.t
 }
 
@@ -28,12 +28,22 @@ let update_player p t =
 
 let get_all_players t = t.players
 
-(*TODO: Add an argument [names], which is a list of player names, and 
-  initialize [player] array accordingly *)
 (*TODO: Initialize properties hashtable*)
-let init_game b n = 
-  let all_players = Array.make n (Player.make_player "") in
+let init_game b names = 
+  let num_players = List.length names in
+  let blank_players = Array.make num_players (Player.make_player "") in
+  let rec init_players names index =
+    match names with 
+    | [] -> blank_players
+    | h :: t -> 
+      blank_players.(index) <- Player.make_player h;
+      init_players t (index + 1)
+  in
+  let all_players = init_players names 0 in
   {board = b; players = all_players; cur_player = 0; 
-  properties = Hashtbl.create n}
+  properties = Hashtbl.create num_players}
 
-let next_player t = {t with cur_player = t.cur_player + 1}
+let next_player t = 
+  let player_amt = Array.length t.players in
+  t.cur_player <- (t.cur_player + 1) mod player_amt
+  
