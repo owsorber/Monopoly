@@ -36,19 +36,21 @@ let input s o =
   List.nth o (i - 1)
 let cyan_print = ANSITerminal.print_string [ ANSITerminal.cyan ]
 
-let turn p = 
-  cyan_print ("\nPlayer " ^ (Player.get_id p) ^ "'s turn.\n");
+let get_action turn =
+  turn.action
+
+let turn p g =
+  cyan_print ("\nPlayer " ^ (Player.get_player_id p) ^ "'s turn.\n");
   cyan_print "\n possible moves: ";
   Stdlib.print_endline (options_printer (options p g));
   cyan_print "\n input the number of the move you would like to make:";
   cyan_print "\n >";
   try
     match input (read_line ()) (options p g) with
-      | Roll -> Legal of 
+      | Roll -> Legal
         {
           player_id = Player.get_player_id p;
-          action = Player.move_player (p Player.roll)
+          action = Player.move_player (Player.roll ())
         }
-      | _ -> Illegal
   with 
   | _ -> Illegal

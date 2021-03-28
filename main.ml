@@ -1,23 +1,23 @@
 let rec turn b g = 
   (*do current player turn*)
-  let current_player = Game.current_player p in
-  let move = Input.turn current_player in
-  match move with
-    | Legal of t -> t.action current_player
+  let current_player = Game.current_player g in
+  let move = Input.turn current_player g in
+  let useless = match move with
+    | Legal r -> Input.get_action r current_player
     | Illegal -> ANSITerminal.print_string [ ANSITerminal.red ] 
-      "Illegal move. Please enter a valid move.\n";
+      "Illegal move. Please enter a valid move.\n" in
   
   (*advance to next player in game*)
-  Game.next_player g;
-  turn b g
+  let new_g = Game.next_player g in
+  turn b new_g
 
 (** [play_game b] starts the game given board file f. *)
 let play_game f = 
   try
-    let board = Board.init_board Yojson.Basic.from_file f in
+    let board = Board.init_board (Yojson.Basic.from_file f) in
     (*query number of players*)
     ANSITerminal.print_string [ ANSITerminal.red ]
-    "Enter the number of players: \n>";
+    "Enter the number of players: \n> ";
     let n = int_of_string (read_line ()) in 
     (*create board with number of players*)
     let game = Game.init_game board n in

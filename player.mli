@@ -13,10 +13,10 @@ type location = int
 (** the type of property_name_list*)
 type property_name_list = string list
 
-type rolled_dice = int*int 
+type rolled_dice = int*int
 
-(** [get_player_id t] returns the player_id of [t]*)
-val get_player_id : t -> player_id 
+(** [get_player_id t] returns the name of player [t]*)
+val get_player_id : t -> player_id
 
 (** [get_balance t] returns the balance of [t]*)
 val get_balance : t -> balance
@@ -32,11 +32,11 @@ val get_property_name_list : t -> property_name_list
 val make_player : player_id -> t
 
 (**[roll] returns a tuple containing 2 random ints between 1 and 6 inclusive*)
-val roll : rolled_dice
+val roll : unit -> rolled_dice
 
 (** [move_player loc roll] updates a players location bases on their 
     current location [loc ]and the value of their dice roll [roll]*)
-val move_player : t -> (int*int) -> unit
+val move_player : rolled_dice -> t -> unit
 
 (** [update_balance player i] modifies [player]'s balance by adding [i] to 
     [player]'s balance.

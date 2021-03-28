@@ -12,11 +12,11 @@ let pp_string s = "\"" ^ s ^ "\""
 let player1 = make_player "Kira"
 let player2 = make_player "player2";;
 update_balance player2 100;;
-let roll1 = roll;;
+let roll1 = roll ();;
 let roll1sum = (fst roll1) + (snd roll1);;
-move_player player2 roll1;;
+move_player roll1 player2;;
 let player3 = make_player "player3";;
-move_player player3 (41,1);;
+move_player (41,1) player3;;
 
 (* Player Module Tests *)
 let player_tests = [

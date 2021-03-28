@@ -23,6 +23,8 @@ exception NotOnBoard of int
     Board. *)
 val init_board : Yojson.Basic.t -> t
 
+(** Length of board *)
+
 (** [space_from_location board i] returns value of type space representing the 
     space at location [i] on [board], starting from "Go" at 0 and counting up 
     by 1 around the board clockwise.

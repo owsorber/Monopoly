@@ -6,9 +6,12 @@ type result =
   | Legal of t
   | Illegal
 
-(** [turn game] is the result of a queried input from a player during one turn. 
-It returns [Legal] of the desired move if the input is valid given game state
-[game] or [Illegal] if the input is invalid. *)
-val turn : Player.t -> result
+(** *)
+val get_action : t -> (Player.t -> unit)
+
+(** [turn player game] is the result of a queried input from a player during one 
+turn.  It returns [Legal] of the desired move if the input is valid given game 
+state [game] or [Illegal] if the input is invalid. *)
+val turn : Player.t -> Game.t -> result
 
     
