@@ -31,15 +31,15 @@ let get_all_players t = t.players
 (*TODO: Initialize properties hashtable*)
 let init_game b names = 
   let num_players = List.length names in
-  let blank_players = Array.make num_players (Player.make_player "") in
+  let all_players = Array.make num_players (Player.make_player "") in
   let rec init_players names index =
     match names with 
-    | [] -> blank_players
+    | [] -> ()
     | h :: t -> 
-      blank_players.(index) <- Player.make_player h;
+      all_players.(index) <- Player.make_player h;
       init_players t (index + 1)
   in
-  let all_players = init_players names 0 in
+  init_players names 0;
   {board = b; players = all_players; cur_player = 0; 
   properties = Hashtbl.create num_players}
 
