@@ -68,6 +68,8 @@ let board_tests = [
 
 (* Any Game Module Testing Helper Functions/Variables *)
 
+let test_game = init_game test_board 1
+
 (* Game Module Tests *)
 let game_tests = []
 
