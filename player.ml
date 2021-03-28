@@ -36,6 +36,6 @@ let update_balance player i =  player.balance <- player.balance + i
 (** [move_helper player sum] is [sum] if [sum] is less than 40 and id sum is greater
   than 40, 200 is added to the [player]'s account and [sum] mod 40 is returned*)
 let move_helper player sum = 
-  if sum >= 40 then (update_balance player 200; sum mod 40) else sum
+  if sum >= 40 then (print_string "You passed Go and received $200!"; update_balance player 200; sum mod 40) else sum
 
-let move_player roll player = player.location <- move_helper player (sums roll)
+let move_player roll player = player.location <- move_helper player (player.location + sums roll)
