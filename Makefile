@@ -18,5 +18,8 @@ test:
 play:
 	$(OCAMLBUILD) -tag 'debug' $(MAIN) && OCAMLRUNPARAM=b ./$(MAIN)
 
+zip:
+	zip monopoly.zip *.ml* *.json *.sh *.txt _tags .merlin .ocamlformat .ocamlinit
+
 clean:
 	ocamlbuild -clean
