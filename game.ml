@@ -21,6 +21,7 @@ let get_board t = t.board
 
 let current_player t = t.players.(t.cur_player)
 
+(*Note: Could delete this function, as players already have mutable fields *)
 let update_player p t = 
   let current_index = t.cur_player in
   t.players.(current_index) <- p

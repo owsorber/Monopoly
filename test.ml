@@ -105,10 +105,37 @@ let board_tests = [
 
 (* Any Game Module Testing Helper Functions/Variables *)
 
-let test_game = init_game test_board [""]
+let test_game = init_game test_board [|player1; player2; player3; player4|]
+let test_game_two = init_game test_board [|player1; player2; player3; player4|]
+let board = get_board test_game
+let cur_player = current_player test_game
+
+let current_player_test name game expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (current_player game)
+    ~printer:get_player_id
+
+let next_player_help game =
+  next_player game;
+  game
+
+let update_player_help player game =
+  update_player player game; 
+  game
 
 (* Game Module Tests *)
-let game_tests = []
+let game_tests = [
+  space_from_location_test "Income Tax" board 4 income_tax_space;
+  space_name_test "10 is Jail" board 10 "Jail";
+  start_space_test "Start on Go" board "Go";
+  ("get_all_players in game" >:: 
+    fun _ -> assert_equal (get_all_players test_game) 
+    [|player1; player2; player3; player4|]);
+  current_player_test "Player 1 starts the game" test_game player1;
+  current_player_test "Player 2 moves after Player 1" 
+    (next_player_help test_game_two) player2;
+]
 
 (* Any Input Module Testing Helper Functions/Variables *)
 
