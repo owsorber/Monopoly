@@ -15,6 +15,8 @@ type property_name_list = string list
 
 type rolled_dice = int*int
 
+exception BalanceBelowZero
+
 (** [get_player_id t] returns the name of player [t]*)
 val get_player_id : t -> player_id
 
@@ -34,14 +36,18 @@ val make_player : player_id -> t
 (**[roll] returns a tuple containing 2 random ints between 1 and 6 inclusive*)
 val roll : unit -> rolled_dice
 
-(** [move_player loc roll] updates a players location bases on their 
-    current location [loc ]and the value of their dice roll [roll]*)
+(** [move_player roll p] updates player [p]'s location based on the dice 
+    values in [roll] and updates their balance if they pass "Go". *)
 val move_player : rolled_dice -> t -> unit
+
+(** [passed_go roll p] returns true if the number of spaces player [p] will move
+    due to [roll] will cause them to pass "Go" *)
+val passes_go : rolled_dice -> t -> bool
 
 (** [update_balance player i] modifies [player]'s balance by adding [i] to 
     [player]'s balance.
-    requries: [i] is a positive number if money needs to be added
-        and is negative if money needs to be decuted *)
+    Requires: [i] is a positive number if money needs to be added and is 
+    negative if money needs to be decuted.
+    Raises: [BalanceBelowZero] if [i] will cause [player]'s balance to fall
+    below zero. *)
 val update_balance : t -> int -> unit
-
-

@@ -57,7 +57,7 @@ let space_from_json j =
   | "jail" -> Jail
   | "free-parking" -> FreeParking
   | "go-to-jail" -> GoToJail
-  | _ -> failwith "Board JSON File gave invalid space type"
+  | _ -> failwith ("Board JSON File gave invalid space type " ^ space_type)
 
 (* Generates a space list from json *)
 let rec init_board_helper builder spaces =
@@ -68,6 +68,9 @@ let rec init_board_helper builder spaces =
 let init_board json =
   let board_list = to_list json |> init_board_helper [] in
   List.rev board_list |> Array.of_list
+
+let length board =
+  Array.length board
 
 let space_from_location board i =
   try board.(i) with

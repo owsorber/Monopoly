@@ -8,8 +8,10 @@ type property_name_list = string list
 
 type rolled_dice = int * int
 
+exception BalanceBelowZero
+
 type t = { player_id: player_id; mutable balance: balance; 
-        mutable location : location; mutable property_name_list : property_name_list}
+  mutable location : location; mutable property_name_list : property_name_list}
 
 let get_player_id player = player.player_id
 
@@ -29,13 +31,17 @@ let make_player id = {
 (**[sums roll] is the sum of the two die in [roll]*)
 let sums roll = fst roll + snd roll
 
-let roll () = ((Random.self_init (); Random.int 5 + 1), (Random.self_init (); Random.int 5 + 1))
+let roll () = ((Random.self_init (); Random.int 5 + 1), 
+                (Random.self_init (); Random.int 5 + 1))
 
-let update_balance player i =  player.balance <- player.balance + i
+let update_balance player i = 
+  if player.balance + i < 0 then raise BalanceBelowZero
+  else player.balance <- player.balance + i
 
-(** [move_helper player sum] is [sum] if [sum] is less than 40 and id sum is greater
-  than 40, 200 is added to the [player]'s account and [sum] mod 40 is returned*)
-let move_helper player sum = 
-  if sum >= 40 then (print_string "You passed Go and received $200!"; update_balance player 200; sum mod 40) else sum
+let passes_go roll player =
+  player.location + sums roll >= 40
 
-let move_player roll player = player.location <- move_helper player (player.location + sums roll)
+let move_player roll player =
+  if passes_go roll player then player.balance <- player.balance + 200;
+  let new_pos = (player.location + sums roll) mod 40 in
+  player.location <- new_pos;

@@ -9,25 +9,62 @@ open Input
 let pp_string s = "\"" ^ s ^ "\""
 
 (* Any Player Module Testing Helper Functions/Variables *)
+let get_balance_test name player expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (get_balance player) ~printer:string_of_int
+
+let get_location_test name player expected_output =
+  name >:: fun _ ->
+    assert_equal expected_output
+      (get_location player) ~printer:string_of_int
+
+let passes_go_test name roll player expected_output =
+  name >:: fun _ ->
+    assert_equal expected_output
+      (passes_go roll player) ~printer:string_of_bool
+
 let player1 = make_player "Kira"
-let player2 = make_player "player2";;
-update_balance player2 100;;
-let roll1 = roll ();;
-let roll1sum = (fst roll1) + (snd roll1);;
-move_player roll1 player2;;
-let player3 = make_player "player3";;
-move_player (41,1) player3;;
+let player2 = make_player "player2"
+let () = update_balance player2 100
+let random_roll = roll ()
+let random_roll_sum = (fst random_roll) + (snd random_roll)
+let () = move_player random_roll player2
+
+let player3 = make_player "player3"
+let () = move_player (38, 0) player3
+let roll3 = (1, 1)
+let () = move_player roll3 player3
+
+let player4 = make_player "player4"
+let () = move_player (34, 0) player4
+let () = update_balance player4 (-500)
+let roll4 = (6, 3)
+
+let player5 = make_player "player5"
 
 (* Player Module Tests *)
 let player_tests = [
-   ("get_player_id for player 1" >:: fun _ -> assert_equal (get_player_id player1) "Kira");
-   ("get_blance for player 1 start of game" >:: fun _ -> assert_equal (get_balance player1) 1500);
-   ("get_location for player 1 start of game" >:: fun _ -> assert_equal (get_location player1) 0);
-   ("get_property_name_list for player 1 start of game" >:: fun _ -> assert_equal (get_property_name_list player1) []);
-   ("get_blance for player 2 after adding" >:: fun _ -> assert_equal (get_balance player2) 1600);
-   ("get_location for player 2 after 1 move of roll1 spaces" >:: fun _ -> assert_equal (get_location player2) (roll1sum));
-   ("get_balance for player 3 after passing go" >:: fun _ -> assert_equal (get_balance player3) 1700);
-   ("get_location for player 3 after passing go" >:: fun _ -> assert_equal (get_location player3) 2);
+  ("get_player_id for player 1" >:: 
+    fun _ -> assert_equal (get_player_id player1) "Kira");
+  ("get_property_name_list for player 1 start of game" >:: 
+    fun _ -> assert_equal (get_property_name_list player1) []);
+
+  get_balance_test "Player 1 starting balance" player1 1500;
+  get_location_test "Player 1 starting location" player1 0;
+
+  get_balance_test "Player 2 balance after positive transaction" player2 1600;
+  get_location_test "Player 2 location after one roll" player2 random_roll_sum;
+  passes_go_test "Player 2 will not pass go with 1 & 1" (1, 1) player2 false;
+
+  get_balance_test "Player 3 balance after go passed" player3 1700;
+  get_location_test "Player 3 location after hitting go" player3 0;
+
+  get_balance_test "Player 4 balance after negative transaction" player4 1000;
+  passes_go_test "Player 4 will pass go with roll4" roll4 player4 true;
+
+  "Prevent negative balance" >:: fun _ -> 
+    assert_raises BalanceBelowZero (fun () -> update_balance player5 (-1501))
 ]
 
 (* Any Board Module Testing Helper Functions/Variables *)
@@ -68,7 +105,7 @@ let board_tests = [
 
 (* Any Game Module Testing Helper Functions/Variables *)
 
-let test_game = init_game test_board 1
+let test_game = init_game test_board [""]
 
 (* Game Module Tests *)
 let game_tests = []
