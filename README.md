@@ -22,6 +22,8 @@ Working on MS1 (Alpha)
 - Runs the game interface
 ### `make clean`
 - Runs `ocaml build -clean` to get rid of our `_build` directory
+### `make zip`
+- Compresses our project into a zip file for submission on CMS
 ### `./cloc.sh`
 - Counts and outputs the number of lines of code in our system
 - Make sure you [have cloc installed](https://github.com/AlDanial/cloc#install-via-package-manager)

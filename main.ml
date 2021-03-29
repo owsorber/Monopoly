@@ -1,4 +1,4 @@
-let rec turn b g = 
+let rec turn b g =
   (*do current player turn*)
   let current_player = Game.current_player g in
   let move = Input.turn current_player b g in

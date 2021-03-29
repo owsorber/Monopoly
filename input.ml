@@ -3,7 +3,7 @@ type t = {
   action : Player.t -> unit;
 }
 
-type result = 
+type result =
   | Legal of t
   | Illegal
 
@@ -24,8 +24,9 @@ let string_of_move m =
   | Roll -> "Roll"
   | Quit -> "Quit"
 
-(** [options_printer] is the string representation of [o], a [moves] list. *)
-let options_printer o = 
+(** [options_printer] is the string representation of [o], a [moves]
+    list. *)
+let options_printer o =
   let pp_elts lst =
     let rec loop acc i= function
       | [] -> acc
@@ -48,6 +49,7 @@ let string_of_list lst=
 let input s o =
   let i = int_of_string s in
   List.nth o (i - 1)
+
 let cyan_print = ANSITerminal.print_string [ ANSITerminal.cyan ]
 let magenta_print = ANSITerminal.print_string [ ANSITerminal.magenta ]
 let red_print = ANSITerminal.print_string [ ANSITerminal.red ]
