@@ -27,10 +27,8 @@ let play_game f =
       (yellow_print ("Enter Player " ^ (string_of_int i) ^ "'s name: "); 
       read_line ())
     done;
-    let player_names = Array.to_list 
-      (Array.map (fun p -> Player.get_player_id p) players) in
-    (*create board with number of players*)
-    let game = Game.init_game board player_names in
+    (* create board with number of players *)
+    let game = Game.init_game board players in
     turn board game
   with Sys_error _ -> Stdlib.print_endline "board file not found"
 
