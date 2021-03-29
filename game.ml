@@ -6,10 +6,9 @@ type status =
   | Owned of (num_houses * Player.t)
   | Mortgaged of Player.t
 
-type property_info = {
-  own_status: status;
-  available: bool
-}
+type property_info = 
+  | Unavailable of status
+  | Available
 
 type t = {
   board: Board.t;
@@ -28,20 +27,26 @@ let update_player p t =
 
 let get_all_players t = t.players
 
-(*TODO: Initialize properties hashtable*)
-let init_game b names = 
-  let num_players = List.length names in
-  let all_players = Array.make num_players (Player.make_player "") in
-  let rec init_players names index =
-    match names with 
-    | [] -> ()
-    | h :: t -> 
-      all_players.(index) <- Player.make_player h;
-      init_players t (index + 1)
-  in
-  init_players names 0;
+let is_property = function
+  | Board.Property t -> true
+  | _ -> false
+
+(*TODO: Add update hashtable method*)
+let init_hashtbl hashtbl b = 
+  let num_spaces = Board.length b in
+  for i = 0 to num_spaces - 1 do
+    let space = Board.space_from_location b i in
+    let space_name = Board.space_name b i in
+    if is_property space then Hashtbl.add hashtbl space_name Available 
+    else ()
+  done
+
+let init_game b all_players = 
+  let num_players = Array.length all_players in
+  let all_props = Hashtbl.create num_players in
+  init_hashtbl all_props b;
   {board = b; players = all_players; cur_player = 0; 
-  properties = Hashtbl.create num_players}
+  properties = all_props}
 
 let next_player t = 
   let player_amt = Array.length t.players in
