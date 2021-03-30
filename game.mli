@@ -8,8 +8,8 @@ val get_board : t -> Board.t
     player in [game] g *)
 val current_player : t -> Player.t
 
-(** [update_player p g] mutates the [player] array in [game] g to
-    updates values following the current player's move *)
+(** [update_player p g] mutates the [player] array in [game] g to update
+    values following the current player's move *)
 val update_player : Player.t -> t -> unit
 
 (** [get_all_players g] returns a list of all players in [game] g *)
