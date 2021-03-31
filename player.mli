@@ -38,8 +38,13 @@ val make_player : player_id -> t
 val roll : unit -> rolled_dice
 
 (** [move_player roll p] updates player [p]'s location based on the dice
-    values in [roll] and updates their balance if they pass "Go". *)
+    values in [roll] and updates their balance if they pass "Go". 
+    Requires: [rolled_dice] is a valid roll. *)
 val move_player : rolled_dice -> t -> unit
+
+(** [projected_space roll p b] is the name of the space that player [p] is 
+    projected to land on, given roll [p] and board [b]. *)
+val projected_space : rolled_dice -> t -> Board.t -> string
 
 (** [passed_go roll p] returns true if the number of spaces player [p]
     will move due to [roll] will cause them to pass "Go". *)

@@ -52,3 +52,7 @@ let move_player roll player =
   if passes_go roll player then player.balance <- player.balance + 200;
   let new_pos = (player.location + sums roll) mod 40 in
   player.location <- new_pos
+
+let projected_space roll player board = 
+  let new_pos = (player.location + sums roll) mod 40 in
+  Board.space_name board new_pos
