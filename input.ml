@@ -106,17 +106,17 @@ let print_endgame b g =
   let max_money = max players Player.get_balance in
   let max_properties = 
     max players (fun p -> List.length(Player.get_property_name_list p)) in
-  cyan_print "Player with the most money (ties excluded): " ;
+  yellow_print "Player with the most money (ties excluded): " ;
   green_print (Player.get_player_id max_money);
-  cyan_print " with "; 
+  yellow_print " with "; 
   green_print ("$" ^ (max_money |> Player.get_balance |> string_of_int)); 
   print_endline "";
-  cyan_print "Player with the most properties (ties excluded): ";
+  yellow_print "Player with the most properties (ties excluded): ";
   green_print (Player.get_player_id max_properties);
-  cyan_print " with ";
+  yellow_print " with ";
   green_print (max_properties |> Player.get_property_name_list 
     |> List.length |> string_of_int);
-  cyan_print " properties.\n"
+  yellow_print " properties.\n"
 
 (**[graceful_shutdown b g] ends the game [g] given board [b]. *)
 let graceful_shutdown b g = 
