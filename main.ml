@@ -1,5 +1,5 @@
-
 let cyan_print = ANSITerminal.print_string [ ANSITerminal.cyan ]
+
 let yellow_print = ANSITerminal.print_string [ ANSITerminal.yellow ]
 
 let red_print = ANSITerminal.print_string [ ANSITerminal.red ]
@@ -29,11 +29,18 @@ let rec get_player_count () =
     let n = int_of_string (read_line ()) in
     if n < 1 then (
       print_string "Invalid input. Please enter a positive integer. \n";
-      get_player_count () )
-    else (match n with
-    | 1 -> cyan_print "It's lonely in here... have fun!\n"; 1
-    | i -> if i > 10 then cyan_print "Wow you have a lot of friends!\ 
-        I wish I had that many friends...\n"; i)
+      get_player_count ())
+    else
+      match n with
+      | 1 ->
+          cyan_print "It's lonely in here... have fun!\n";
+          1
+      | i ->
+          if i >= 10 then
+            cyan_print
+              "Wow you have a lot of friends! I wish I had that many \
+               friends...\n";
+          i
   with _ ->
     print_string "Invalid input. Please enter a positive integer. \n";
     get_player_count ()
