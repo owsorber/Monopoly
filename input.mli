@@ -6,7 +6,8 @@ type result =
   | Legal of t
   | Illegal
 
-(** *)
+(**[get_action result player] is the action given by [result] that should be
+    acting on player [player]*)
 val get_action : t -> Player.t -> unit
 
 (** [turn player board game] is the result of a queried input from a player 
