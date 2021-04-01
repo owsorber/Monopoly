@@ -13,7 +13,7 @@ type location = int
 (** the type of property_name_list *)
 type property_name_list = string list
 
-(** the type of rolled_dice*)
+(** the type of rolled_dice where each int is between 1 and 6 inclusive*)
 type rolled_dice = int * int
 
 (** Raised when a player's Balance is below 0*)
@@ -32,7 +32,7 @@ val get_location : t -> location
 val get_property_name_list : t -> property_name_list
 
 (** [make_player id] is a player at the begining of the game with
-    player_id [id]*)
+    player_id [id] *)
 val make_player : player_id -> t
 
 (** [roll] returns a tuple containing 2 random ints between 1 and 6
@@ -45,7 +45,7 @@ val roll : unit -> rolled_dice
 val move_player : rolled_dice -> t -> unit
 
 (** [projected_space roll p b] is the name of the space that player [p] is 
-    projected to land on, given roll [p] and board [b]. *)
+    projected to land on, given roll [roll] and board [b]. *)
 val projected_space : rolled_dice -> t -> Board.t -> string
 
 (** [passed_go roll p] returns true if the number of spaces player [p]
