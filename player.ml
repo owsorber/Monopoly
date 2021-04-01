@@ -33,7 +33,7 @@ let make_player id =
     property_name_list = [];
   }
 
-(* [sums roll] is the sum of the two die in [roll] *)
+(* [sums roll] is the sum of the two value die in [roll] *)
 let sums roll = fst roll + snd roll
 
 let roll () =

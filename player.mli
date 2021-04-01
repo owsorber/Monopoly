@@ -1,4 +1,4 @@
-(** The type representing a player *)
+(** The abstract type representing a player *)
 type t
 
 (** the type of player_id *)
@@ -13,8 +13,10 @@ type location = int
 (** the type of property_name_list *)
 type property_name_list = string list
 
+(** the type of rolled_dice*)
 type rolled_dice = int * int
 
+(** Raised when a player's Balance is below 0*)
 exception BalanceBelowZero
 
 (** [get_player_id t] returns the name of player [t]*)
