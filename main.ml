@@ -1,3 +1,8 @@
+
+let yellow_print = ANSITerminal.print_string [ ANSITerminal.yellow ]
+
+let red_print = ANSITerminal.print_string [ ANSITerminal.red ]
+
 let rec turn b g =
   (*do current player turn*)
   let current_player = Game.current_player g in
@@ -8,16 +13,12 @@ let rec turn b g =
         Input.get_action r current_player;
         Game.next_player g
     | Illegal ->
-        ANSITerminal.print_string [ ANSITerminal.red ]
-          "Illegal move. Please enter a valid move.\n"
+        red_print "Illegal move. Please enter a valid move.\n"
   in
-
+  red_print "Press enter to begin next player's turn: ";
+  let _ = read_line () in
   (*advance to next player in game*)
   turn b g
-
-let yellow_print = ANSITerminal.print_string [ ANSITerminal.yellow ]
-
-let red_print = ANSITerminal.print_string [ ANSITerminal.red ]
 
 (** [get_player_count ()] prompts the user to enter in the number of
     players until a valid (positive integer) input is read. *)

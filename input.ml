@@ -88,7 +88,7 @@ let print_player_info b p =
   let player_loc = Board.space_name b (Player.get_location p) in
   cyan_print "Current balance: "; green_print (player_bal ^ "\n");
   cyan_print "Current properties: "; green_print (player_props ^ "\n"); 
-  cyan_print "Current loaction: "; green_print player_loc
+  cyan_print "Current location: "; green_print player_loc
 
 (**[max players f] is the maximum element in [players] according to the 
     comparison function f applied to each player. *)
