@@ -11,20 +11,19 @@ let rec turn b g =
     match move with
     | Legal r ->
         Input.get_action r current_player;
-        Game.next_player g
+        Game.next_player g;
+        red_print "Press enter to begin next player's turn. ";
+        let _ = read_line () in ()
     | Illegal ->
         red_print "Illegal move. Please enter a valid move.\n"
   in
-  red_print "Press enter to begin next player's turn: ";
-  let _ = read_line () in
   (*advance to next player in game*)
   turn b g
 
 (** [get_player_count ()] prompts the user to enter in the number of
     players until a valid (positive integer) input is read. *)
 let rec get_player_count () =
-  ANSITerminal.print_string [ ANSITerminal.red ]
-    "Enter the number of players: \n> ";
+  red_print "Enter the number of players: \n> ";
   try
     let n = int_of_string (read_line ()) in
     if n < 1 then (
