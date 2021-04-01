@@ -1,4 +1,3 @@
-
 let yellow_print = ANSITerminal.print_string [ ANSITerminal.yellow ]
 
 let red_print = ANSITerminal.print_string [ ANSITerminal.red ]
@@ -13,9 +12,9 @@ let rec turn b g =
         Input.get_action r current_player;
         Game.next_player g;
         red_print "Press enter to begin next player's turn. ";
-        let _ = read_line () in ()
-    | Illegal ->
-        red_print "Illegal move. Please enter a valid move.\n"
+        let _ = read_line () in
+        ()
+    | Illegal -> red_print "Illegal move. Please enter a valid move.\n"
   in
   (*advance to next player in game*)
   turn b g
@@ -28,7 +27,7 @@ let rec get_player_count () =
     let n = int_of_string (read_line ()) in
     if n < 1 then (
       print_string "Invalid input. Please enter a positive integer. \n";
-      get_player_count () )
+      get_player_count ())
     else n
   with _ ->
     print_string "Invalid input. Please enter a positive integer. \n";
@@ -50,16 +49,16 @@ let rec play_game () =
         for i = 1 to n do
           players.(i - 1) <-
             Player.make_player
-              ( yellow_print
-                  ("Enter Player " ^ string_of_int i ^ "'s name: ");
-                read_line () )
+              (yellow_print
+                 ("Enter Player " ^ string_of_int i ^ "'s name: ");
+               read_line ())
         done;
         (* create board with number of players *)
         let game = Game.init_game board players in
         turn board game
       with Sys_error _ ->
         Stdlib.print_endline "board file not found";
-        play_game () )
+        play_game ())
 
 (** [main ()] prompts for the board to use, then starts it. *)
 let main () =
