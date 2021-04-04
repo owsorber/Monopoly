@@ -10,7 +10,7 @@ let take_action result p g phase =
           let _ = (read_line ()) in true)
         else true;
     | Input.Illegal -> red_print "Illegal move. Please enter a valid move.\n";
-      phase
+      false
 
 let rec turn b g phase =
   (*do current player turn*)
