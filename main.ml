@@ -1,25 +1,26 @@
-let cyan_print = ANSITerminal.print_string [ ANSITerminal.cyan ]
+open Printers
 
-let yellow_print = ANSITerminal.print_string [ ANSITerminal.yellow ]
+let take_action result p g phase =
+  match result with
+    | Input.Legal r ->
+        Input.get_action r p;
+        if phase = false then (
+          Game.next_player g;
+          red_print "Press enter to begin next player's turn. ";
+          let _ = (read_line ()) in true)
+        else true;
+    | Input.Illegal -> red_print "Illegal move. Please enter a valid move.\n";
+      phase
 
-let red_print = ANSITerminal.print_string [ ANSITerminal.red ]
-
-let rec turn b g =
+let rec turn b g phase =
   (*do current player turn*)
   let current_player = Game.current_player g in
-  let move = Input.turn current_player b g in
-  let _ =
-    match move with
-    | Legal r ->
-        Input.get_action r current_player;
-        Game.next_player g;
-        red_print "Press enter to begin next player's turn. ";
-        let _ = read_line () in
-        ()
-    | Illegal -> red_print "Illegal move. Please enter a valid move.\n"
-  in
+  let move = Input.turn current_player b g phase in
+  let progress = take_action move current_player g phase in
   (*advance to next player in game*)
-  turn b g
+  match progress with
+  | true -> turn b g (not phase)
+  | false -> turn b g phase
 
 (** [get_player_count ()] prompts the user to enter in the number of
     players until a valid (positive integer) input is read. *)
@@ -67,7 +68,7 @@ let rec play_game () =
         done;
         (* create board with number of players *)
         let game = Game.init_game board players in
-        turn board game
+        turn board game true
       with Sys_error _ ->
         Stdlib.print_endline "board file not found";
         play_game ())

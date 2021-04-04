@@ -1,3 +1,5 @@
+open Printers
+
 type t = {
   player_id : Player.player_id;
   action : Player.t -> unit;
@@ -11,30 +13,40 @@ type result =
     current game conditions. *)
 type moves = 
   | Roll 
+  | Buy of string
+  | Mortgage of string
+  | Trade of string*string
+  | End
   | Quit
-
-(** [options p g] is the list containing all possible moves player [p] can 
-    make given game state [g]. *)
-let options p g = 
-  let o = [Roll; Quit] in 
-  o
+  | Faulty
 
 (**[string_of_move m] is the string representation of move [m]. *)
 let string_of_move m = 
   match m with
   | Roll -> "Roll"
+  | Buy _ -> "Buy"
+  | Mortgage _ -> "Mortgage"
+  | Trade (_,_) -> "Trade"
+  | End -> "End Turn"
   | Quit -> "Quit"
+  | Faulty -> "Faulty"
 
-(** [options_printer] is the string representation of [o], a [moves]
-    list. *)
-let options_printer o =
-  let pp_elts lst =
-    let rec loop acc i= function
-      | [] -> acc
-      | h::t -> loop 
-        (acc ^ (string_of_int i) ^ ": " ^ (string_of_move h) ^ " ") (i + 1) t 
-  in loop "" 1 lst
-  in "[" ^ pp_elts o ^ "]"
+(** [options_printer phase] is the string representation of the options a 
+    player can take during phase 1 if [phase] is true or phase 2 if [phase]
+    is false. *)
+let options_printer phase =
+  match phase with
+  | true ->
+    "\nPlease choose one of the options below (case sensitive): \
+    \n Roll \
+    \n Quit"
+  | false -> 
+    "\n\nPlease choose one of the options below (case sensitive): \
+    \n Buy \
+    \n Mortage \
+    \n Trade \
+    \n End Turn \
+    \n Quit"
 
 (**[string_of_list lst] is the string representation of list [lst]*)
 let string_of_list lst= 
@@ -48,15 +60,12 @@ let string_of_list lst=
   "[" ^ pp_elts lst ^ "]"
 
 (** [input s o] is the desired move [s] given options [o]. *)
-let input s o =
-  let i = int_of_string s in
-  List.nth o (i - 1)
-
-let cyan_print = ANSITerminal.print_string [ ANSITerminal.cyan ]
-let magenta_print = ANSITerminal.print_string [ ANSITerminal.magenta ]
-let red_print = ANSITerminal.print_string [ ANSITerminal.red ]
-let green_print = ANSITerminal.print_string [ ANSITerminal.green ]
-let yellow_print = ANSITerminal.print_string [ ANSITerminal.yellow ]
+let input s =
+  match s with
+  | "Roll" -> Roll
+  | "End Turn" -> End
+  | "Quit" -> Quit
+  | _ -> Faulty
 
 (**[string_of_roll roll] returns the string represntation of roll [roll]. *)
 let string_of_roll roll = 
@@ -78,6 +87,13 @@ magenta_print "You landed on: "; yellow_print new_space; print_endline "";
   {
     player_id = Player.get_player_id p;
     action = Player.move_player (r)
+  }
+
+let end_turn p b = 
+  Legal 
+  {
+    player_id = Player.get_player_id p;
+    action = fun x -> ()
   }
 
 (**[print_player_info b p] prints appropriate info about player [p] given
@@ -124,18 +140,35 @@ let graceful_shutdown b g =
   print_endgame b g;
   exit 0
 
-(**[turn p b g] is the representation of a single response by the user for 
-    player [p], given board [b] and game [g]. *)
-let turn p b g =
-  cyan_print ("\n" ^ (Player.get_player_id p) ^ "'s turn.\n");
+let turn_info b p phase =
   print_player_info b p;
-  cyan_print "\n possible moves: ";
-  Stdlib.print_endline (options_printer (options p g));
-  cyan_print "\n input the number of the move you would like to make:";
-  cyan_print "\n >";
-  try
-    match input (read_line ()) (options p g) with
-      | Roll -> roll p b
-      | Quit -> graceful_shutdown b g
-  with 
-  | _ -> Illegal
+  cyan_print "\npossible moves: ";
+  yellow_print (options_printer phase);
+  cyan_print "\n>"
+
+(**[turn p b g phase] is the representation of a single response by the user for 
+    player [p], given board [b] and game [g]. *)
+let turn p b g phase =
+  match phase with
+  | true -> 
+    (cyan_print ("\n" ^ (Player.get_player_id p) ^ "'s turn.\n");
+    turn_info b p phase;
+    try
+      match input (read_line ()) with
+        | Roll -> roll p b
+        | Quit -> graceful_shutdown b g
+        | _ -> Illegal
+    with 
+    | _ -> Illegal)
+  | false -> 
+    turn_info b p phase;
+    try
+      match input (read_line ()) with
+        | Buy _ -> Illegal
+        | Mortgage _ -> Illegal
+        | Trade (_,_) -> Illegal
+        | End -> end_turn p b
+        | Quit -> graceful_shutdown b g
+        | _ -> Illegal
+    with
+    | _ -> Illegal
