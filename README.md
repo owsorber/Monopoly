@@ -9,7 +9,7 @@ Our own version of Monopoly, written in OCaml for the CS 3110 Final Project.
 
 
 ## Current Phase
-Finished MS1 (Alpha)
+Working on MS2 (Beta)
 
 ## Commands
 ### `make`
