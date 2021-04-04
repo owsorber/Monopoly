@@ -2,14 +2,16 @@ open Printers
 
 let take_action result p g phase =
   match result with
-    | Input.Legal r ->
-        Input.get_action r p;
-        if phase = false then (
-          Game.next_player g;
-          red_print "Press enter to begin next player's turn. ";
-          let _ = (read_line ()) in true)
-        else true;
-    | Input.Illegal -> red_print "Illegal move. Please enter a valid move.\n";
+  | Input.Legal r ->
+      Input.get_action r p;
+      if phase = false then (
+        Game.next_player g;
+        red_print "Press enter to begin next player's turn. ";
+        let _ = read_line () in
+        true)
+      else true
+  | Input.Illegal ->
+      red_print "Illegal move. Please enter a valid move.\n";
       false
 
 let rec turn b g phase =
