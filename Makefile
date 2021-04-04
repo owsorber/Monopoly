@@ -1,4 +1,4 @@
-MODULES=authors main
+MODULES=authors game player board input main
 OBJECTS=$(MODULES:=.cmo)
 MLS=$(MODULES:=.ml)
 MLIS=$(MODULES:=.mli)
@@ -7,7 +7,7 @@ MAIN=main.byte
 OCAMLBUILD=ocamlbuild -use-ocamlfind
 
 default: build
-	utop
+	OCAMLRUNPARAM=b utop
 
 build:
 	$(OCAMLBUILD) $(OBJECTS)
@@ -17,6 +17,9 @@ test:
 
 play:
 	$(OCAMLBUILD) -tag 'debug' $(MAIN) && OCAMLRUNPARAM=b ./$(MAIN)
+
+zip:
+	zip monopoly.zip *.ml* *.json *.sh *.txt _tags .merlin .ocamlformat .ocamlinit Makefile
 
 clean:
 	ocamlbuild -clean

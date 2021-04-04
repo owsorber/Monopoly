@@ -1,0 +1,8 @@
+#require "ounit2";;
+#require "yojson";;
+#require "ANSITerminal";;
+#directory "_build";;
+#load "board.cmo";;
+#load "player.cmo";;
+#load "game.cmo";;
+#load "input.cmo";;
