@@ -3,6 +3,7 @@ open Printers
 type t = {
   player_id : Player.player_id;
   action : Player.t -> unit;
+  is_double : bool;
 }
 
 type result =
@@ -79,6 +80,12 @@ let string_of_roll roll =
 
 let get_action turn = turn.action
 
+let get_double t = t.is_double
+
+(**[double_of_roll (a,b)] returns true if a and b are equal and false if
+   not. *)
+let double_of_roll (a, b) = if a = b then true else false
+
 (**[roll p b] returns a Legal result of the action representing a roll
    by player [p], given board [b]. *)
 let roll p b =
@@ -94,10 +101,21 @@ let roll p b =
     {
       player_id = Player.get_player_id p;
       action = Player.move_player r;
+      is_double = double_of_roll r;
     }
 
+(**[end_turn p b] is the representative result of type t for player [p]
+   on board [b] to end their turn. *)
 let end_turn p b =
-  Legal { player_id = Player.get_player_id p; action = (fun x -> ()) }
+  Legal
+    {
+      player_id = Player.get_player_id p;
+      action = (fun x -> ());
+      is_double = false;
+    }
+
+(* let buy p b = Legal { player_id = Player.get_player_id p; action = ;
+   is_double = false; } *)
 
 (**[print_player_info b p] prints appropriate info about player [p]
    given board state [b]. *)
@@ -148,6 +166,8 @@ let graceful_shutdown b g =
   print_endgame b g;
   exit 0
 
+(**[turn_info b p phase] prints the information for player [p] on board
+   [b] during phase [phase] of their turn. *)
 let turn_info b p phase =
   print_player_info b p;
   cyan_print "\npossible moves: ";
@@ -160,7 +180,8 @@ let turn p b g phase =
   match phase with
   | true -> (
       cyan_print ("\n" ^ Player.get_player_id p ^ "'s turn.\n");
-      turn_info b p phase;
+      let _ = turn_info b p phase in
+      ();
       try
         match input (read_line ()) with
         | Roll -> roll p b
@@ -168,7 +189,8 @@ let turn p b g phase =
         | _ -> Illegal
       with _ -> Illegal)
   | false -> (
-      turn_info b p phase;
+      let _ = turn_info b p phase in
+      ();
       try
         match input (read_line ()) with
         | Buy _ -> Illegal
