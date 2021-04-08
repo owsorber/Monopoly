@@ -4,6 +4,7 @@ type t = {
   player_id : Player.player_id;
   action : Player.t -> unit;
   is_double : bool;
+  is_end : bool;
 }
 
 type result =
@@ -14,9 +15,9 @@ type result =
     of current game conditions. *)
 type moves =
   | Roll
-  | Buy of string
-  | Mortgage of string
-  | Trade of string * string
+  | Buy
+  | Mortgage
+  | Trade
   | End
   | Quit
   | Faulty
@@ -25,9 +26,9 @@ type moves =
 let string_of_move m =
   match m with
   | Roll -> "Roll"
-  | Buy _ -> "Buy"
-  | Mortgage _ -> "Mortgage"
-  | Trade (_, _) -> "Trade"
+  | Buy -> "Buy"
+  | Mortgage -> "Mortgage"
+  | Trade -> "Trade"
   | End -> "End Turn"
   | Quit -> "Quit"
   | Faulty -> "Faulty"
@@ -46,7 +47,7 @@ let options_printer phase =
       "\n\n\
        Please choose one of the options below (case sensitive): \n\
       \ Buy \n\
-      \ Mortage \n\
+      \ Mortgage \n\
       \ Trade \n\
       \ End Turn \n\
       \ Quit"
@@ -65,9 +66,12 @@ let string_of_list lst =
 (** [input s o] is the desired move [s] given options [o]. *)
 let input s =
   match s with
-  | "Roll" -> Roll
-  | "End Turn" -> End
-  | "Quit" -> Quit
+  | "Roll" | "r" -> Roll
+  | "Buy" | "b" -> Buy
+  | "Mortgage" | "m" -> Mortgage
+  | "Trade" | "t" -> Trade
+  | "End Turn" | "e" -> End
+  | "Quit" | "q" -> Quit
   | _ -> Faulty
 
 (**[string_of_roll roll] returns the string represntation of roll
@@ -81,6 +85,8 @@ let string_of_roll roll =
 let get_action turn = turn.action
 
 let get_double t = t.is_double
+
+let get_end t = t.is_end
 
 (**[double_of_roll (a,b)] returns true if a and b are equal and false if
    not. *)
@@ -96,12 +102,13 @@ let roll p b =
   let new_space = Player.projected_space r p b in
   magenta_print "You landed on: ";
   yellow_print new_space;
-  print_endline "";
+  print_endline "\n";
   Legal
     {
       player_id = Player.get_player_id p;
       action = Player.move_player r;
       is_double = double_of_roll r;
+      is_end = false;
     }
 
 (**[end_turn p b] is the representative result of type t for player [p]
@@ -112,10 +119,70 @@ let end_turn p b =
       player_id = Player.get_player_id p;
       action = (fun x -> ());
       is_double = false;
+      is_end = true;
     }
 
-(* let buy p b = Legal { player_id = Player.get_player_id p; action = ;
-   is_double = false; } *)
+let buy p b =
+  let current_location = Player.get_location p in
+  white_print "You are attempting to buy: ";
+  yellow_print (Board.space_name b current_location);
+  print_endline "\n";
+
+  (* check ownable property *)
+  (* let space = Board.space_from_location b current_location in *)
+  (* if Board.is_ownable space then (* continue *) else Illegal *)
+
+  (* check is_owned *)
+  (* if space.is_owned then (* continue *) else Illegal*)
+
+  (* check valid balance *)
+  (* if Player.get_balance p > space.price then (* continue *) else
+     Illegal *)
+  Legal
+    {
+      player_id = Player.get_player_id p;
+      action = (fun x -> ());
+      (*Player.buy_property p property_name*)
+      is_double = false;
+      is_end = false;
+    }
+
+let mortgage p b =
+  white_print "Please enter what property you would like to mortgage: ";
+  yellow_print "Available properties: ";
+  cyan_print (p |> Player.get_property_name_list |> string_of_list);
+  print_string "\n> ";
+  let property_name = read_line () in
+
+  (*check ownable property*)
+  (* if Board.is_ownable space then (* continue *) else Illegal *)
+
+  (*check is owned by player*)
+  (* if Player.owns space then (* continue *) else Illegal *)
+  Legal
+    {
+      player_id = Player.get_player_id p;
+      action = (fun x -> ());
+      (*Player.mortgage_property p property_name*)
+      is_double = false;
+      is_end = false;
+    }
+
+let trade p b =
+  white_print "Please enter which player you would like to trade with: ";
+  print_string "> ";
+  let trade_partner = read_line () in
+
+  (*check is a player*)
+  (* if Player.exists trade_partner then (* continue *) else Illegal *)
+  Legal
+    {
+      player_id = Player.get_player_id p;
+      action = (fun x -> ());
+      (*Player.mortgage_property p property_name*)
+      is_double = false;
+      is_end = false;
+    }
 
 (**[print_player_info b p] prints appropriate info about player [p]
    given board state [b]. *)
@@ -193,9 +260,9 @@ let turn p b g phase =
       ();
       try
         match input (read_line ()) with
-        | Buy _ -> Illegal
-        | Mortgage _ -> Illegal
-        | Trade (_, _) -> Illegal
+        | Buy -> buy p b
+        | Mortgage -> mortgage p b
+        | Trade -> Illegal
         | End -> end_turn p b
         | Quit -> graceful_shutdown b g
         | _ -> Illegal
