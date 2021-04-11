@@ -44,21 +44,21 @@ val make_player : player_id -> t
 (** [roll] returns a tuple containing 2 random ints between 1 and 6
     inclusive *)
 val roll : unit -> rolled_dice
-
-(** [move_player roll p] if the player's quarantine_status is out 
-    updates player [p]'s location based on the dice values in [roll] and updates
-    their balance if they pass "Go". 
-    If the player's quarantine_status is In of Int
-    player rolls
-    if roll is doubles (two die of the same value) the player 
-    quarentine status is updated to out and move player is called again.
-    if player does not roll doubles and the int is > 1, the int is decreased by 
-    1 and the turn ends
-    if the player does not roll doubles and the int is = 1, they must pay to get 
-    out of jail their quarentine staus is changed, and move player is called 
-    again.
-    Requires: [rolled_dice] is a valid roll. *)
+ 
+(** [move_player roll p] updates player [p]'s location based on the dice values 
+    in [roll] and updates their balance if they pass "Go". 
+    Requires: [rolled_dice] is a valid roll. 
+            the player's quarantine_status is out*)
 val move_player : rolled_dice -> t -> unit
+
+(**[go_to_quarantine_status p] sends player [p] to quarantine by making their 
+    location quarentine and changes their quarantine_status to In of 3*)
+val go_to_quarantine_status: t -> unit
+
+(** [decrement_day_quarantine p] changes the player [p]'s quarantine status to
+    In of (i - 1) where i is the current int in [p]'s quarantine_status 
+    requires: [p].quarantine status is In of int where int is > 1 *)
+val decrement_day_quarantine: t -> unit
 
 (** [projected_space roll p b] is the name of the space that player [p] is 
     projected to land on, given roll [roll] and board [b]. *)
@@ -79,13 +79,6 @@ val update_balance : t -> int -> unit
     player's quarentine_status*)
 val quarantine : t -> quarantine_status
 
-(**[add_house t prop] updates houses in game for property [prop] owned by 
-    player [t] and deducts cost of house from player [t]'s balance
-    requires: player [t] owns prop,
-        player [t]'s balance is greater than or equal to the cost of a house
-        player [t] owns all other properties in the property group*)
-val add_house : t -> Game.property -> unit
-
 (**[add_house t prop] adds property [prop] to player [t]'s property list, 
     deducts cost of house and from player [t]'s balance and updates game 
     property hashmap
@@ -101,3 +94,7 @@ val buy_property : t -> Game.ownable -> unit
     requires: property [ownable] can be morgaged
         player [t] owns [ownable]*)
 val mortgage_property : t -> Game.ownable -> unit
+
+(**[play p1 p2 amount] deducts [amount] from [p1].balance and adds [amount] 
+    to [p2].balance. P1 pays P2 amount*)
+val pay: t -> t -> int -> unit
