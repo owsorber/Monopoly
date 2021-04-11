@@ -10,8 +10,11 @@ type balance = int
 (** the type of location *)
 type location = int
 
+(** the type of property name*)
+type property_name = string
+
 (** the type of property_name_list *)
-type property_name_list = string list
+type property_name_list = property_name list
 
 (** the type of rolled_dice where each int is between 1 and 6 inclusive*)
 type rolled_dice = int * int
@@ -79,21 +82,23 @@ val update_balance : t -> int -> unit
     player's quarentine_status*)
 val quarantine : t -> quarantine_status
 
-(**[add_house t prop] adds property [prop] to player [t]'s property list, 
+(**[buy_property t prop] adds property [prop] to player [t]'s property list, 
     deducts cost of house and from player [t]'s balance and updates game 
     property hashmap
     requires: [prop] is unowned
         player [t]'s balance is greater than or equal to the cost of the 
         property*)
-val buy_property : t -> Game.ownable -> unit
+val buy_property : t -> property_name -> unit
 
-(** [mortgage_property t ownable] checks if space is owned by player [t], if so
+(** [mortgage_property t name] checks if space is owned by player [t], if so
     then changes property [ownable]'s mortaged value to mortaged, increases 
     player [t]'s balance by the property's [ownable] mortage value and updates 
     the game hashmap to show that property is morgaged.
-    requires: property [ownable] can be morgaged
-        player [t] owns [ownable]*)
-val mortgage_property : t -> Game.ownable -> unit
+    requires: property [name] can be morgaged
+        property [name] is a valid property name
+        player [t] owns [ownable]
+        *)
+val mortgage_property : t -> property_name -> unit
 
 (**[play p1 p2 amount] deducts [amount] from [p1].balance and adds [amount] 
     to [p2].balance. P1 pays P2 amount*)
