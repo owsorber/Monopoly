@@ -1,6 +1,11 @@
 (** The abstract type representing a Game State *)
 type t
 
+type ownable
+
+(** Raised when a space represented by type [ownable] is not ownable*)
+exception NotOwnable
+
 (** [get_board g] returns the board field in [game] g *)
 val get_board : t -> Board.t
 
@@ -21,3 +26,22 @@ val init_game : Board.t -> Player.t array -> t
 
 (** [next_player g] mutates a [game] g with an updated current player *)
 val next_player : t -> unit
+
+(** [get_rent o r] returns the rent associated with landing on a space
+    with type ownable [o] with the roll [r]. *)
+val get_rent : ownable -> Player.rolled_dice -> int
+
+(** [is_available o] returns whether or not the space with type
+    [ownable] o is available. Requires: ownable [o] is an ownable
+    property Raises: [NotOwnable] if ownable [o] is not ownable*)
+val is_available : ownable -> bool
+
+(** [owner o] returns Some Player.t if the space with type [ownable] o
+    is owned by a player and None if it available. Requires: ownable [o]
+    is an ownable property Raises: [NotOwnable] if ownable [o] is not
+    ownable *)
+val owner : ownable -> Player.t option
+
+(** [get_free_parking t] returns the accumulated free parking amount in
+    [game] t *)
+val get_free_parking : t -> int

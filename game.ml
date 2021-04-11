@@ -1,20 +1,27 @@
 type num_houses = int
 
-type property_name = string
+type ownable_name = string
 
-type status =
+type house_rr_status =
   | Owned of (num_houses * Player.t)
   | Mortgaged of Player.t
-
-type property_info =
-  | Unavailable of status
   | Available
+
+type util_status =
+  | Owned of Player.t
+  | Available
+
+type ownable =
+  | Property of house_rr_status
+  | Railroad of house_rr_status
+  | Utility of util_status
 
 type t = {
   board : Board.t;
   players : Player.t array;
   mutable cur_player : int;
-  properties : (property_name, property_info) Stdlib__hashtbl.t;
+  mutable free_parking : int;
+  ownable_spaces : (ownable_name, ownable) Stdlib__hashtbl.t;
 }
 
 let get_board t = t.board
@@ -29,7 +36,14 @@ let update_player p t =
 
 let get_all_players t = t.players
 
-let is_property = function Board.Property t -> true | _ -> false
+(* let is_property = function Board.Property t -> true | _ -> false *)
+
+let init_ownable (space : Board.space) =
+  match space with
+  | Property p -> Property Available
+  | Railroad r -> Railroad Available
+  | Utility u -> Utility Available
+  | _ -> Property Available
 
 (*TODO: Add update hashtable method*)
 let init_hashtbl hashtbl b =
@@ -37,7 +51,8 @@ let init_hashtbl hashtbl b =
   for i = 0 to num_spaces - 1 do
     let space = Board.space_from_location b i in
     let space_name = Board.space_name b i in
-    if is_property space then Hashtbl.add hashtbl space_name Available
+    if Board.is_ownable space then
+      Hashtbl.add hashtbl space_name (init_ownable space)
     else ()
   done
 
@@ -49,9 +64,12 @@ let init_game b all_players =
     board = b;
     players = all_players;
     cur_player = 0;
-    properties = all_props;
+    free_parking = 0;
+    ownable_spaces = all_props;
   }
 
 let next_player t =
   let player_amt = Array.length t.players in
   t.cur_player <- (t.cur_player + 1) mod player_amt
+
+let get_free_parking t = t.free_parking
