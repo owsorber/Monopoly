@@ -3,6 +3,8 @@ type t
 
 type ownable
 
+type ownable_name
+
 (** Raised when a space represented by type [ownable] is not ownable*)
 exception NotOwnable
 
@@ -27,9 +29,16 @@ val init_game : Board.t -> Player.t array -> t
 (** [next_player g] mutates a [game] g with an updated current player *)
 val next_player : t -> unit
 
+(** [update_player_on_space p s] updates player [p] when [p] lands on
+    space [s]. *)
+val update_player_on_space : Player.t -> Board.space -> unit
+
 (** [get_rent o r] returns the rent associated with landing on a space
     with type ownable [o] with the roll [r]. *)
 val get_rent : ownable -> Player.rolled_dice -> int
+
+(** [add_house p] adds a house to the property with name [p]. *)
+val add_house : ownable_name -> unit
 
 (** [is_available o] returns whether or not the space with type
     [ownable] o is available. Requires: ownable [o] is an ownable

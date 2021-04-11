@@ -2,19 +2,19 @@ type num_houses = int
 
 type ownable_name = string
 
-type house_rr_status =
-  | Owned of (num_houses * Player.t)
+type property_status =
+  | Owned of (Player.t * num_houses)
   | Mortgaged of Player.t
   | Available
 
-type util_status =
+type util_rr_status =
   | Owned of Player.t
   | Available
 
 type ownable =
-  | Property of house_rr_status
-  | Railroad of house_rr_status
-  | Utility of util_status
+  | Property of property_status
+  | Railroad of util_rr_status
+  | Utility of util_rr_status
 
 type t = {
   board : Board.t;
