@@ -79,9 +79,9 @@ let space_from_json j =
   | "go" -> Go
   | "chance" -> Chance
   | "community-chest" -> CommunityChest
-  | "jail" -> Jail
+  | "jail" -> Quarantine
   | "free-parking" -> FreeParking
-  | "go-to-jail" -> GoToJail
+  | "go-to-jail" -> GoToQuarantine
   | _ ->
       failwith ("Board JSON File gave invalid space type " ^ space_type)
 
@@ -115,8 +115,8 @@ let space_name board i =
   | Go -> "Go"
   | Chance -> "Chance"
   | CommunityChest -> "Community Chest"
-  | Jail -> "Jail"
+  | Quarantine -> "Jail"
   | FreeParking -> "Free Parking"
-  | GoToJail -> "Go To Jail"
+  | GoToQuarantine -> "Go To Jail"
 
 let start_space board = space_name board 0
