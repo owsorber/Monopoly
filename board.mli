@@ -1,7 +1,32 @@
 (** The abstract type representing a Board *)
 type t
 
-type space
+type space =
+  | Property of {
+      name : string;
+      price : int;
+      house_price : int;
+      color : string;
+      rent : int array;
+    }
+  | Railroad of {
+      name : string;
+      price : int;
+    }
+  | Utility of {
+      name : string;
+      price : int;
+    }
+  | Tax of {
+      name : string;
+      cost : int;
+    }
+  | Go
+  | Chance
+  | CommunityChest
+  | Quarantine
+  | FreeParking
+  | GoToQuarantine
 
 (** Raised when an integer does not refer to a valid 0-indexed location
     on the Monopoly board. *)

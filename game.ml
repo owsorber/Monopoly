@@ -16,6 +16,8 @@ type ownable =
   | Railroad of util_rr_status
   | Utility of util_rr_status
 
+exception NotOwnable
+
 type t = {
   board : Board.t;
   players : Player.t array;
@@ -40,10 +42,10 @@ let get_all_players t = t.players
 
 let init_ownable (space : Board.space) =
   match space with
-  | Property p -> Property Available
-  | Railroad r -> Railroad Available
-  | Utility u -> Utility Available
-  | _ -> Property Available
+  | Board.Property p -> Property Available
+  | Board.Railroad r -> Railroad Available
+  | Board.Utility u -> Utility Available
+  | _ -> raise NotOwnable
 
 (*TODO: Add update hashtable method*)
 let init_hashtbl hashtbl b =
