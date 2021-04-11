@@ -23,9 +23,9 @@ type space =
   | Go
   | Chance
   | CommunityChest
-  | Jail
+  | Quarantine
   | FreeParking
-  | GoToJail
+  | GoToQuarantine
 
 exception NotOnBoard of int
 
