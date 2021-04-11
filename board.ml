@@ -100,6 +100,11 @@ let length board = Array.length board
 let space_from_location board i =
   try board.(i) with Invalid_argument _ -> raise (NotOnBoard i)
 
+let is_ownable board space =
+  match space with
+  | Property _, Railroad _, Utility _ -> true
+  | _ -> false
+
 let space_name board i =
   let s = space_from_location board i in
   match s with

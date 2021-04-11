@@ -46,6 +46,11 @@ val length : t -> int
     [NotOnBoard] if [i] does not indicate a valid space on [board] *)
 val space_from_location : t -> int -> space
 
+(** [is_ownable s] returns true iff [s] is an ownable space. More
+    specifically, an "ownable space" is either a property, railroad, or
+    utility. *)
+val is_ownable : space -> bool
+
 (** [space_name board i] returns a string holding the name of the space
     at location [i] on [board], starting from "Go" at 0 and counting up
     by 1 around the board clockwise.
