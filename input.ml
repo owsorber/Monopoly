@@ -179,7 +179,7 @@ let trade p b =
     {
       player_id = Player.get_player_id p;
       action = (fun x -> ());
-      (*Player.mortgage_property p property_name*)
+      (* trade somehow *)
       is_double = false;
       is_end = false;
     }
