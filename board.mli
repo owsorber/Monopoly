@@ -65,3 +65,10 @@ val space_name : t -> int -> string
 (** [start_space board] returns the name of the space all players start
     on in [board]. *)
 val start_space : t -> string
+
+(* [color board s] returns the color of space [s]. *)
+val color : t -> space -> string
+
+(* [num_of_color board col] returns the number of properties in [board]
+   with the color [col]. *)
+val num_of_color : t -> string -> int
