@@ -90,16 +90,6 @@ val quarantine : t -> quarantine_status
         property*)
 val buy_property : t -> property_name -> unit
 
-(** [mortgage_property t name] checks if space is owned by player [t], if so
-    then changes property [ownable]'s mortaged value to mortaged, increases 
-    player [t]'s balance by the property's [ownable] mortage value and updates 
-    the game hashmap to show that property is morgaged.
-    requires: property [name] can be morgaged
-        property [name] is a valid property name
-        player [t] owns [ownable]
-        *)
-val mortgage_property : t -> property_name -> unit
-
 (**[play p1 p2 amount] deducts [amount] from [p1].balance and adds [amount] 
     to [p2].balance. P1 pays P2 amount*)
 val pay: t -> t -> int -> unit

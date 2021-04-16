@@ -66,7 +66,7 @@ let go_to_quarantine_status = failwith "unimplemented"
 let decrement_day_quarantine = failwith "unimplemented"
 let quarantine = failwith "unimplemented"
 let buy_property =failwith "unimplemented"
-let mortgage_property = failwith "unimplemented"
+
 let pay p1 p2 i =
   update_balance p1 (-i);
   update_balance p2 (i);
