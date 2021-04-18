@@ -54,22 +54,24 @@ val get_ownable_name : ownable -> ownable_name
 (** [get_ownable_price o] returns the price to buy ownable property [o]. *)
 val get_ownable_price : ownable -> int
 
-(* [make_ownable_owned p o] makes player [p] own the ownable [o]. *)
+(** [make_ownable_owned p o] makes player [p] own the ownable [o]. *)
 val make_ownable_owned : Player.t -> ownable_name -> unit
 
-(* [make_ownable_mortgaged p o] makes player [p] mortgage the ownable
-   [o]. Raises: [MortgageFailure] if the ownable cannot be mortgaged
-   either because it is a utility or because the player does not own it. *)
+(** [make_ownable_mortgaged p o] makes player [p] mortgage the ownable
+    [o]. Raises: [MortgageFailure] if the ownable cannot be mortgaged
+    either because it is a utility or because the player does not own
+    it. *)
 val make_ownable_mortgaged : Player.t -> ownable_name -> unit
 
-(* [all_mortgagable p] returns an array of the ownables that [p] can
-   mortgage i.e. all ownables that are owned (and if a property, has
-   zero houses on the color group). *)
+(** [all_mortgagable p] returns an array of the ownables that [p] can
+    mortgage i.e. all ownables that are owned (and if a property, has
+    zero houses on the color group). *)
 val all_mortgagable : Player.t -> ownable_name array
 
-(* [can_add_house g p property_name] returns true iff player [p] can add
-   a house on the property with name [property_name] in game [g].
-   Raises: [NotPropertyName] if [property_name] is not a property name. *)
+(** [can_add_house g p property_name] returns true iff player [p] can
+    add a house on the property with name [property_name] in game [g].
+    Requires: Player [p] owns property with name [property_name].
+    Raises: [NotPropertyName] if [property_name] is not a property name. *)
 val can_add_house : t -> Player.t -> ownable_name -> bool
 
 (** [add_house g p] adds a house to the property with name [p] in game
@@ -77,6 +79,18 @@ val can_add_house : t -> Player.t -> ownable_name -> bool
     it. Raises: [NotPropertyName] if [p] does not correspond to a
     property. *)
 val add_house : t -> ownable_name -> unit
+
+(** [can_add_hotel g p property_name] returns true iff player [p] can
+    add a hotel on the property with name [property_name] in game [g].
+    Requires: Player [p] owns property with name [property_name].
+    Raises: [NotPropertyName] if [property_name] is not a property name. *)
+val can_add_hotel : t -> Player.t -> ownable_name -> bool
+
+(** [add_hotel g p] adds a hotel to the property with name [p] in game
+    [g]. Requires: [p] is a property name and a house can be added to
+    it. Raises: [NotPropertyName] if [p] does not correspond to a
+    property. *)
+val add_hotel : t -> ownable_name -> unit
 
 (** [is_available g o] returns true iff the ownable with name [o] is
     available in game [g]. Raises: [NotOwnableName] if [o] does not

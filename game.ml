@@ -34,6 +34,8 @@ type t = {
   players : Player.t array;
   mutable cur_player : int;
   mutable free_parking : int;
+  mutable houses_available : int;
+  mutable hotels_available : int;
   ownables : (ownable_name, ownable_status) Stdlib__hashtbl.t;
 }
 
@@ -69,6 +71,8 @@ let init_game b all_players =
     players = all_players;
     cur_player = 0;
     free_parking = 0;
+    houses_available = 32;
+    hotels_available = 12;
     ownables = all_props;
   }
 
@@ -86,14 +90,17 @@ let make_ownable_mortgaged p o = failwith "Unimplemented"
 
 let all_mortgagable p = failwith "Unimplemented"
 
+let get_ownable space = failwith "Unimplemented"
+
+let get_ownable_name own = failwith "Unimplemented"
+
+let get_ownable_price own = failwith "Unimplemented"
+
 let get_own_status t o =
   match Hashtbl.find_opt t.ownables o with
   | None -> raise NotOwnableName
   | Some status -> status
 
-(** [is_available o] returns true iff the ownable with name [o] is
-    available. Raises: [NotOwnableName] if [o] does not correspond to an
-    ownable. *)
 let is_available t o =
   let own_status = get_own_status t o in
   match own_status with
@@ -101,9 +108,6 @@ let is_available t o =
   | Railroad r -> ( match r with Available -> true | _ -> false )
   | Utility u -> ( match u with Available -> true | _ -> false )
 
-(** [owner o] returns Some Player.t if the ownable with name [o] is
-    owned by a player and None if it available. Raises: [NotOwnableName]
-    if [o] does not correspond to an ownable. *)
 let owner t o =
   let available = is_available t o in
   let own_status = get_own_status t o in
@@ -124,28 +128,121 @@ let owner t o =
           match u with Owned player -> Some player | _ -> None ) )
   | true -> None
 
-let color_owned t p col =
-  (* each player has a property list, so we can iterate through the list
-    and check how many of the colors they have.
-    Question: how do we check if a property_name has x color?*)
+(** Gets the property (space) from a ownable name*)
+let get_property_from_space_name board name =
+  match Board.space_from_space_name board name with
+  | Some s -> s
+  | None -> raise NotPropertyName
 
+(** Returns how many properties of [color] col owned by the player*)
+let color_owned g p col =
+  let prop_list = Player.get_property_name_list p in
+  let rec amt_color lst acc =
+    match lst with
+    | [] -> acc
+    | h :: t ->
+        if
+          Board.color g.board (get_property_from_space_name g.board h)
+          = col
+        then amt_color t (acc + 1)
+        else amt_color t acc
+  in
+  amt_color prop_list 0
 
-(* [has_monopoly p col] returns true iff player [p] has a monopoly on
-   the color group [col] i.e. [p] owns every property with color [col]. *)
-let has_monopoly t p col = 
-  let num_col = Board.num_of_color t.board col in
+let has_monopoly t p col =
+  Board.num_of_color t.board col = color_owned t p col
 
+(** [get_houses g name] returns the number of houses on the space with
+    [ownable_name] name*)
+let get_houses g name =
+  let status = get_own_status g name in
+  match status with
+  | Property p -> (
+      match p with Owned (player, houses) -> houses | _ -> 0 )
+  | Railroad r -> 0
+  | Utility u -> 0
 
-(* [has_houses_on_color] returns true iff player [p] has any houses on
-   any properties with color [col]. *)
-let has_houses_on_color t p col = failwith "Unimplemented"
+let has_houses_on_color g p col =
+  let prop_list = Player.get_property_name_list p in
+  let rec find_house_with_col lst =
+    match lst with
+    | [] -> false
+    | h :: t ->
+        let is_color =
+          if
+            Board.color g.board (get_property_from_space_name g.board h)
+            = col
+          then true
+          else false
+        in
+        if is_color && get_houses g h > 0 then true
+        else find_house_with_col t
+  in
+  find_house_with_col prop_list
 
-(* [can_add_house p property_name] returns true iff player [p] can add a
-   house on the property with name [property_name]. Raises:
-   [NotPropertyName] if [property_name] is not a property name. *)
-let can_add_house t player property_name = failwith "Unimplemented"
+(** Checks for even build rule. Requires: player p has monopoly on col *)
+let check_even_build g p prop_name col =
+  let prop_list = Player.get_property_name_list p in
+  let rec get_house_list lst acc =
+    match lst with
+    | [] -> acc
+    | h :: t ->
+        let added_house = if h = prop_name then 1 else 0 in
+        if
+          Board.color g.board (get_property_from_space_name g.board h)
+          = col
+        then get_house_list t ((get_houses g h + added_house) :: acc)
+        else get_house_list t acc
+  in
+  let house_list = get_house_list prop_list [] in
+  let max_list = List.fold_left (fun x y -> max x y) 0 house_list in
+  let min_list = List.fold_left (fun x y -> min x y) 5 house_list in
+  max_list - min_list <= 1
 
-(** [add_house p] adds a house to the property with name [p]. Requires:
-    [p] is a property name and a house can be added to it. Raises:
-    [NotPropertyName] if [p] does not correspond to a property. *)
-let add_house t property_name = failwith "Unimplemented"
+(** Checks that a player can't add another house to a property with four
+    houses *)
+let check_four_houses g prop_name = get_houses g prop_name < 4
+
+(** [can_add_house p property_name] returns true iff player [p] can add
+    a house on the property with name [property_name]. Raises:
+    [NotPropertyName] if [property_name] is not a property name. *)
+let can_add_house t player property_name =
+  let space = get_property_from_space_name t.board property_name in
+  let cur_space_color = Board.color t.board space in
+  has_monopoly t player cur_space_color
+  && t.houses_available > 0
+  && check_four_houses t property_name
+  && check_even_build t player property_name cur_space_color
+
+(** Returns an updated property_status with an additional house*)
+let new_property_house t property_name : property_status =
+  let cur_own_status = get_own_status t property_name in
+  let cur_prop_status =
+    match cur_own_status with
+    | Property p -> p
+    | _ -> raise NotPropertyName
+  in
+  let upd_prop_status =
+    match cur_prop_status with
+    | Owned (a, b) -> (a, b + 1)
+    | _ -> failwith "Impossible: Precondition Violation"
+  in
+  Owned upd_prop_status
+
+let add_house t property_name =
+  let property_space =
+    Board.space_from_space_name t.board property_name
+  in
+  let property_check (space : Board.space option) =
+    match space with
+    | Some s -> (
+        match s with Property p -> true | _ -> raise NotPropertyName )
+    | _ -> raise NotPropertyName
+  in
+  if property_check property_space then
+    Hashtbl.add t.ownables property_name
+      (Property (new_property_house t property_name))
+
+let can_add_hotel t p name = failwith "Unimplemented"
+
+let add_hotel t name = failwith "Unimplemented"
