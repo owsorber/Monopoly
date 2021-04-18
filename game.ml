@@ -57,7 +57,7 @@ let init_hashtbl hashtbl b =
   for i = 0 to num_spaces - 1 do
     let space = Board.space_from_location b i in
     let space_name = Board.space_name b i in
-    if Board.is_ownable space then
+    if Board.is_ownable b space then
       Hashtbl.add hashtbl space_name (init_ownable space)
     else ()
   done

@@ -100,9 +100,13 @@ let length board = Array.length board
 let space_from_location board i =
   try board.(i) with Invalid_argument _ -> raise (NotOnBoard i)
 
+let space_from_space_name board space_name = failwith "Unimplemented"
+
 let is_ownable board space =
   match space with
-  | Property _, Railroad _, Utility _ -> true
+  | Property _ -> true
+  | Railroad _ -> true
+  | Utility _ -> true
   | _ -> false
 
 let space_name board i =
@@ -120,3 +124,7 @@ let space_name board i =
   | GoToQuarantine -> "Go To Jail"
 
 let start_space board = space_name board 0
+
+let color board space = failwith "Unimplemented"
+
+let num_of_color board color = failwith "Unimplemented"

@@ -53,7 +53,7 @@ val space_from_space_name : t -> string -> space option
 (** [is_ownable s] returns true iff [s] is an ownable space. More
     specifically, an "ownable space" is either a property, railroad, or
     utility. *)
-val is_ownable : space -> bool
+val is_ownable : t -> space -> bool
 
 (** [space_name board i] returns a string holding the name of the space
     at location [i] on [board], starting from "Go" at 0 and counting up
