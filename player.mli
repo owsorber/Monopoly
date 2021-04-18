@@ -84,11 +84,11 @@ val update_balance : t -> int -> unit
     returns player's quarentine_status*)
 val quarantine : t -> quarantine_status
 
-(**[buy_property t prop] adds property [prop] to player [t]'s property
-   list, deducts cost of house and from player [t]'s balance and updates
+(**[buy_property t prop i] adds property [prop] to player [t]'s property
+   list, deducts cost [i] of property and from player [t]'s balance and updates
    game property hashmap requires: [prop] is unowned player [t]'s
    balance is greater than or equal to the cost of the property*)
-val buy_property : t -> ownable_name -> unit
+val buy_property : t -> ownable_name -> int -> unit
 
 (**[play p1 p2 amount] deducts [amount] from [p1].balance and adds
    [amount] to [p2].balance. P1 pays P2 amount*)
