@@ -228,7 +228,8 @@ let trade p b =
   let trade_partner = read_line () in
 
   (*check is a player*)
-  (* if Player.exists trade_partner then (* continue *) else Illegal *)
+  (* if Game.player_exists trade_partner then (* continue *) else
+     Illegal *)
   Legal
     {
       player_id = Player.get_player_id p;
