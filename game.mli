@@ -1,9 +1,9 @@
 (** The abstract type representing a Game State *)
 type t
 
-type ownable
-
 type ownable_name = string
+
+type ownable_status
 
 (** Raised when a space cannot be owned. *)
 exception NotOwnableSpace
@@ -39,29 +39,30 @@ val next_player : t -> unit
     the game [g]. *)
 val get_free_parking : t -> int
 
-(** [get_rent o r] returns the rent associated with landing on the
-    ownable with name [o] after rolling [r]. Raises: [NotOwnableName] if
-    [o] does not correspond to an ownable. *)
-val get_rent : ownable_name -> Player.rolled_dice -> int
+(** [get_rent g o r] returns the rent associated with landing on the
+    ownable with name [o] after rolling [r] in game [g]. Raises:
+    [NotOwnableName] if [o] does not correspond to an ownable. *)
+val get_rent : t -> ownable_name -> Player.rolled_dice -> int
 
 (** [get_ownable s] returns Some ownable if [s] is a valid ownable
     property and None otherwise. *)
-val get_ownable : Board.space -> ownable option
+val get_ownable : t -> Board.space -> ownable_status option
 
 (** [get_ownable_name o] returns the name of the ownable space [o]. *)
-val get_ownable_name : ownable -> ownable_name
+val get_ownable_status : ownable_status -> ownable_name
 
 (** [get_ownable_price o] returns the price to buy ownable property [o]. *)
-val get_ownable_price : ownable -> int
+val get_ownable_price : ownable_name -> int
 
-(** [make_ownable_owned p o] makes player [p] own the ownable [o]. *)
-val make_ownable_owned : Player.t -> ownable_name -> unit
+(** [make_ownable_owned g p o] makes player [p] own the ownable [o] in
+    game [g]. *)
+val make_ownable_owned : t -> Player.t -> ownable_name -> unit
 
-(** [make_ownable_mortgaged p o] makes player [p] mortgage the ownable
-    [o]. Raises: [MortgageFailure] if the ownable cannot be mortgaged
-    either because it is a utility or because the player does not own
-    it. *)
-val make_ownable_mortgaged : Player.t -> ownable_name -> unit
+(** [make_ownable_mortgaged g p o] makes player [p] mortgage the ownable
+    [o] in the game [g]. Raises: [MortgageFailure] if the ownable cannot
+    be mortgaged either because it is a utility or because the player
+    does not own it. *)
+val make_ownable_mortgaged : t -> Player.t -> ownable_name -> unit
 
 (** [all_mortgagable p] returns an array of the ownables that [p] can
     mortgage i.e. all ownables that are owned (and if a property, has
