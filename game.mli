@@ -3,7 +3,7 @@ type t
 
 type ownable
 
-type ownable_name
+type ownable_name = string
 
 (** Raised when a space cannot be owned. *)
 exception NotOwnableSpace
@@ -43,6 +43,16 @@ val get_free_parking : t -> int
     ownable with name [o] after rolling [r]. Raises: [NotOwnableName] if
     [o] does not correspond to an ownable. *)
 val get_rent : ownable_name -> Player.rolled_dice -> int
+
+(** [get_ownable s] returns Some ownable if [s] is a valid ownable
+    property and None otherwise. *)
+val get_ownable : Board.space -> ownable option
+
+(** [get_ownable_name o] returns the name of the ownable space [o]. *)
+val get_ownable_name : ownable -> ownable_name
+
+(** [get_ownable_price o] returns the price to buy ownable property [o]. *)
+val get_ownable_price : ownable -> int
 
 (* [make_ownable_owned p o] makes player [p] own the ownable [o]. *)
 val make_ownable_owned : Player.t -> ownable_name -> unit
