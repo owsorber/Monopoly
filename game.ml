@@ -155,12 +155,12 @@ let can_mortgage g p o =
   match get_own_status g o with
   | Property status -> (
       match status with
-      | Owned (player, houses) -> player = p && houses = 0
+      | P_Owned (player, houses) -> player = p && houses = 0
       | _ -> false)
   | Utility status -> (
-      match status with Owned player -> player = p | _ -> false)
+      match status with U_Owned player -> player = p | _ -> false)
   | Railroad status -> (
-      match status with Owned player -> player = p | _ -> false)
+      match status with RR_Owned player -> player = p | _ -> false)
 
 let rec all_mortgagable_helper g acc p ownables =
   match ownables with
@@ -210,16 +210,16 @@ let owner t o =
       match own_status with
       | Property p -> (
           match p with
-          | Owned (player, houses) -> Some player
-          | Mortgaged player -> Some player
-          | Available -> None)
+          | P_Owned (player, houses) -> Some player
+          | P_Mortgaged player -> Some player
+          | P_Available -> None)
       | Railroad r -> (
           match r with
-          | Owned player -> Some player
-          | Mortgaged player -> Some player
-          | Available -> None)
+          | RR_Owned player -> Some player
+          | RR_Mortgaged player -> Some player
+          | RR_Available -> None)
       | Utility u -> (
-          match u with Owned player -> Some player | _ -> None))
+          match u with U_Owned player -> Some player | _ -> None))
   | true -> None
 
 (** Gets the property (space) from a ownable name*)
@@ -252,7 +252,7 @@ let get_houses g name =
   let status = get_own_status g name in
   match status with
   | Property p -> (
-      match p with Owned (player, houses) -> houses | _ -> 0)
+      match p with P_Owned (player, houses) -> houses | _ -> 0)
   | Railroad r -> 0
   | Utility u -> 0
 
