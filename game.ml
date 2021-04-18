@@ -63,8 +63,7 @@ let init_hashtbl hashtbl b =
   done
 
 let init_game b all_players =
-  let num_players = Array.length all_players in
-  let all_props = Hashtbl.create num_players in
+  let all_props = Hashtbl.create (Board.length b) in
   init_hashtbl all_props b;
   {
     board = b;
@@ -107,7 +106,8 @@ let rec has_both_utilities_helper game acc ownables =
   | h :: t ->
       let new_acc =
         match get_own_status game h with
-        | Utility u -> acc + 1
+        | Utility u -> (
+            match u with U_Owned _ -> acc + 1 | _ -> acc + 1)
         | _ -> acc
       in
       has_both_utilities_helper game new_acc t
@@ -124,7 +124,8 @@ let rec num_rrs_owned_helper game acc ownables =
   | h :: t ->
       let new_acc =
         match get_own_status game h with
-        | Railroad r -> acc + 1
+        | Railroad r -> (
+            match r with RR_Owned _ -> acc + 1 | _ -> acc)
         | _ -> acc
       in
       num_rrs_owned_helper game new_acc t
@@ -170,39 +171,6 @@ let make_ownable_owned g p o =
   | Utility _ -> Hashtbl.replace g.ownables o (Utility (U_Owned p))
   | Railroad _ -> Hashtbl.replace g.ownables o (Railroad (RR_Owned p))
 
-let can_mortgage g p o =
-  match get_own_status g o with
-  | Property status -> (
-      match status with
-      | P_Owned (player, houses) -> player = p && houses = 0
-      | _ -> false)
-  | Utility status -> (
-      match status with U_Owned player -> player = p | _ -> false)
-  | Railroad status -> (
-      match status with RR_Owned player -> player = p | _ -> false)
-
-let rec all_mortgagable_helper g acc p ownables =
-  match ownables with
-  | [] -> acc
-  | h :: t ->
-      if can_mortgage g p h then all_mortgagable_helper g (h :: acc) p t
-      else all_mortgagable_helper g acc p t
-
-let all_mortgagable g p =
-  let ownables = Player.get_ownable_name_list p in
-  all_mortgagable_helper g [] p ownables |> List.rev |> Array.of_list
-
-let make_ownable_mortgaged g p o =
-  let mortgagable = can_mortgage g p o in
-  if mortgagable then
-    match get_own_status g o with
-    | Property _ ->
-        Hashtbl.replace g.ownables o (Property (P_Mortgaged p))
-    | Railroad _ ->
-        Hashtbl.replace g.ownables o (Railroad (RR_Mortgaged p))
-    | _ -> raise MortgageFailure
-  else raise MortgageFailure
-
 let get_ownable_status g space =
   match space with
   | Board.Property p -> Some (get_own_status g p.name)
@@ -210,9 +178,16 @@ let get_ownable_status g space =
   | Railroad r -> Some (get_own_status g r.name)
   | _ -> None
 
-let get_ownable_name own = failwith "Unimplemented"
-
-let get_ownable_price own = failwith "Unimplemented"
+let get_ownable_price board own =
+  let space = Board.space_from_space_name board own in
+  match space with
+  | None -> raise NotOwnableName
+  | Some s -> (
+      match s with
+      | Board.Property p -> p.price
+      | Utility u -> u.price
+      | Railroad r -> r.price
+      | _ -> raise NotOwnableSpace)
 
 let is_available t o =
   let own_status = get_own_status t o in
@@ -320,6 +295,7 @@ let check_four_houses g prop_name = get_houses g prop_name < 4
     a house on the property with name [property_name]. Raises:
     [NotPropertyName] if [property_name] is not a property name. *)
 let can_add_house t player property_name =
+  (* also make sure none of the properties of this color are mortgaged *)
   let space = get_property_from_space_name t.board property_name in
   let cur_space_color = Board.color t.board space in
   has_monopoly t player cur_space_color
@@ -359,3 +335,43 @@ let add_house t property_name =
 let can_add_hotel t p name = failwith "Unimplemented"
 
 let add_hotel t name = failwith "Unimplemented"
+
+let can_mortgage g p o =
+  let board = get_board g in
+  let space =
+    match Board.space_from_space_name board o with
+    | None -> raise NotOwnableName
+    | Some s -> s
+  in
+  match get_own_status g o with
+  | Property status -> (
+      match status with
+      | P_Owned (player, houses) ->
+          let col = Board.color board space in
+          player = p && houses = 0 && not (has_houses_on_color g p col)
+      | _ -> false)
+  | Utility status -> false
+  | Railroad status -> (
+      match status with RR_Owned player -> player = p | _ -> false)
+
+let rec all_mortgagable_helper g acc p ownables =
+  match ownables with
+  | [] -> acc
+  | h :: t ->
+      if can_mortgage g p h then all_mortgagable_helper g (h :: acc) p t
+      else all_mortgagable_helper g acc p t
+
+let all_mortgagable g p =
+  let ownables = Player.get_ownable_name_list p in
+  all_mortgagable_helper g [] p ownables |> List.rev |> Array.of_list
+
+let make_ownable_mortgaged g p o =
+  let mortgagable = can_mortgage g p o in
+  if mortgagable then
+    match get_own_status g o with
+    | Property _ ->
+        Hashtbl.replace g.ownables o (Property (P_Mortgaged p))
+    | Railroad _ ->
+        Hashtbl.replace g.ownables o (Railroad (RR_Mortgaged p))
+    | _ -> raise MortgageFailure
+  else raise MortgageFailure

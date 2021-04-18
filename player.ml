@@ -71,8 +71,9 @@ let decrement_day_quarantine = failwith "unimplemented"
 
 let quarantine = failwith "unimplemented"
 
-let buy_property p prop i = update_balance p (-i);
-p.ownable_name_list <- prop :: p.ownable_name_list
+let buy_ownable p prop i =
+  update_balance p (-i);
+  p.ownable_name_list <- prop :: p.ownable_name_list
 
 let pay p1 p2 i =
   update_balance p1 (-i);

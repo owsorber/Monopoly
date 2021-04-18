@@ -48,14 +48,13 @@ val get_rent : t -> int -> Player.rolled_dice -> int
     property and None otherwise. *)
 val get_ownable_status : t -> Board.space -> ownable_status option
 
-(** [get_ownable_name o] returns the name of the ownable space [o]. *)
-val get_ownable_name : ownable_status -> ownable_name
-
-(** [get_ownable_price o] returns the price to buy ownable property [o]. *)
-val get_ownable_price : ownable_name -> int
+(** [get_ownable_price b o] returns the price to buy ownable property
+    [o] if it is available in board [b]. *)
+val get_ownable_price : Board.t -> ownable_name -> int
 
 (** [make_ownable_owned g p o] makes player [p] own the ownable [o] in
-    game [g]. *)
+    game [g] i.e. changes the ownable's status to Owned and performs no
+    checks. *)
 val make_ownable_owned : t -> Player.t -> ownable_name -> unit
 
 (** [make_ownable_mortgaged g p o] makes player [p] mortgage the ownable
