@@ -35,6 +35,10 @@ val init_game : Board.t -> Player.t array -> t
     turn it is. *)
 val next_player : t -> unit
 
+(** [get_free_parking g] returns the accumulated free parking amount in
+    the game [g]. *)
+val get_free_parking : t -> int
+
 (** [get_rent o r] returns the rent associated with landing on the
     ownable with name [o] after rolling [r]. Raises: [NotOwnableName] if
     [o] does not correspond to an ownable. *)
@@ -53,34 +57,32 @@ val make_ownable_mortgaged : Player.t -> ownable_name -> unit
    zero houses on the color group). *)
 val all_mortgagable : Player.t -> ownable_name array
 
-(* [can_add_house p property_name] returns true iff player [p] can add a
-   house on the property with name [property_name]. Raises:
-   [NotPropertyName] if [property_name] is not a property name. *)
-val can_add_house : Player.t -> ownable_name -> bool
+(* [can_add_house g p property_name] returns true iff player [p] can add
+   a house on the property with name [property_name] in game [g].
+   Raises: [NotPropertyName] if [property_name] is not a property name. *)
+val can_add_house : t -> Player.t -> ownable_name -> bool
 
-(** [add_house p] adds a house to the property with name [p]. Requires:
-    [p] is a property name and a house can be added to it. Raises:
-    [NotPropertyName] if [p] does not correspond to a property. *)
-val add_house : ownable_name -> unit
+(** [add_house g p] adds a house to the property with name [p] in game
+    [g]. Requires: [p] is a property name and a house can be added to
+    it. Raises: [NotPropertyName] if [p] does not correspond to a
+    property. *)
+val add_house : t -> ownable_name -> unit
 
-(** [is_available o] returns true iff the ownable with name [o] is
-    available. Raises: [NotOwnableName] if [o] does not correspond to an
-    ownable. *)
-val is_available : ownable_name -> bool
+(** [is_available g o] returns true iff the ownable with name [o] is
+    available in game [g]. Raises: [NotOwnableName] if [o] does not
+    correspond to an ownable. *)
+val is_available : t -> ownable_name -> bool
 
-(** [owner o] returns Some Player.t if the ownable with name [o] is
-    owned by a player and None if it available. Raises: [NotOwnableName]
-    if [o] does not correspond to an ownable. *)
-val owner : ownable_name -> Player.t option
+(** [owner g o] returns Some Player.t if the ownable with name [o] is
+    owned by a player and None if it available in game [g]. Raises:
+    [NotOwnableName] if [o] does not correspond to an ownable. *)
+val owner : t -> ownable_name -> Player.t option
 
-(** [get_free_parking g] returns the accumulated free parking amount in
-    the game [g]. *)
-val get_free_parking : t -> int
+(* [has_monopoly g p col] returns true iff player [p] has a monopoly on
+   the color group [col] in game [g] i.e. [p] owns every property with
+   color [col]. *)
+val has_monopoly : t -> Player.t -> string -> bool
 
-(* [has_monopoly p col] returns true iff player [p] has a monopoly on
-   the color group [col] i.e. [p] owns every property with color [col]. *)
-val has_monopoly : Player.t -> string -> bool
-
-(* [has_houses_on_color] returns true iff player [p] has any houses on
-   any properties with color [col]. *)
-val has_houses_on_color : Player.t -> string -> bool
+(* [has_houses_on_color g p col] returns true iff player [p] has any
+   houses on any properties with color [col] in game [g]. *)
+val has_houses_on_color : t -> Player.t -> string -> bool
