@@ -87,6 +87,19 @@ let get_own_status t o =
   | None -> raise NotOwnableName
   | Some status -> status
 
+let rec get_properties_helper g acc ownables =
+  match ownables with
+  | [] -> acc
+  | h :: t -> (
+      match get_own_status g h with
+      | Property status -> get_properties_helper g (h :: acc) t
+      | _ -> get_properties_helper g acc t)
+
+(* Gets all the properties of player [p] in game [g]. *)
+let get_properties g p =
+  let ownables = Player.get_ownable_name_list p in
+  get_properties_helper g [] ownables |> List.rev
+
 (* Returns the number of utilities a player owns. *)
 let rec has_both_utilities_helper game acc ownables =
   match ownables with
@@ -124,7 +137,13 @@ let get_rent g board_location roll =
   let board = get_board g in
   let space = Board.space_from_location board board_location in
   let o = Board.space_name board board_location in
-  match get_own_status g o with
+  let o_status =
+    try get_own_status g o
+    with NotOwnableName ->
+      failwith
+        "Get rent supplied a board location that isn't an ownable."
+  in
+  match o_status with
   | Property status -> (
       match status with
       | P_Owned (player, houses) -> (
@@ -230,7 +249,7 @@ let get_property_from_space_name board name =
 
 (** Returns how many properties of [color] col owned by the player*)
 let color_owned g p col =
-  let prop_list = Player.get_property_name_list p in
+  let prop_list = get_properties g p in
   let rec amt_color lst acc =
     match lst with
     | [] -> acc
@@ -257,7 +276,7 @@ let get_houses g name =
   | Utility u -> 0
 
 let has_houses_on_color g p col =
-  let prop_list = Player.get_property_name_list p in
+  let prop_list = get_properties g p in
   let rec find_house_with_col lst =
     match lst with
     | [] -> false
@@ -276,7 +295,7 @@ let has_houses_on_color g p col =
 
 (** Checks for even build rule. Requires: player p has monopoly on col *)
 let check_even_build g p prop_name col =
-  let prop_list = Player.get_property_name_list p in
+  let prop_list = get_properties g p in
   let rec get_house_list lst acc =
     match lst with
     | [] -> acc
@@ -318,10 +337,10 @@ let new_property_house t property_name : property_status =
   in
   let upd_prop_status =
     match cur_prop_status with
-    | Owned (a, b) -> (a, b + 1)
+    | P_Owned (a, b) -> (a, b + 1)
     | _ -> failwith "Impossible: Precondition Violation"
   in
-  Owned upd_prop_status
+  P_Owned upd_prop_status
 
 let add_house t property_name =
   let property_space =

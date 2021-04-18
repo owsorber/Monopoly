@@ -4,6 +4,8 @@ type balance = int
 
 type location = int
 
+type ownable_name = string
+
 type ownable_name_list = string list
 
 type rolled_dice = int * int
@@ -28,7 +30,7 @@ let get_balance player = player.balance
 
 let get_location player = player.location
 
-let get_property_name_list player = player.ownable_name_list
+let get_ownable_name_list player = player.ownable_name_list
 
 let make_player id =
   {

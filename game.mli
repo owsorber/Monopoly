@@ -39,17 +39,17 @@ val next_player : t -> unit
     the game [g]. *)
 val get_free_parking : t -> int
 
-(** [get_rent g o r] returns the rent associated with landing on the
-    ownable with name [o] after rolling [r] in game [g]. Raises:
-    [NotOwnableName] if [o] does not correspond to an ownable. *)
-val get_rent : t -> ownable_name -> Player.rolled_dice -> int
+(** [get_rent g i r] returns the rent associated with landing on the
+    space with location after rolling [r] in game [g]. TODO: Raise
+    Exception. *)
+val get_rent : t -> int -> Player.rolled_dice -> int
 
 (** [get_ownable s] returns Some ownable if [s] is a valid ownable
     property and None otherwise. *)
-val get_ownable : t -> Board.space -> ownable_status option
+val get_ownable_status : t -> Board.space -> ownable_status option
 
 (** [get_ownable_name o] returns the name of the ownable space [o]. *)
-val get_ownable_status : ownable_status -> ownable_name
+val get_ownable_name : ownable_status -> ownable_name
 
 (** [get_ownable_price o] returns the price to buy ownable property [o]. *)
 val get_ownable_price : ownable_name -> int
@@ -67,7 +67,7 @@ val make_ownable_mortgaged : t -> Player.t -> ownable_name -> unit
 (** [all_mortgagable p] returns an array of the ownables that [p] can
     mortgage i.e. all ownables that are owned (and if a property, has
     zero houses on the color group). *)
-val all_mortgagable : Player.t -> ownable_name array
+val all_mortgagable : t -> Player.t -> ownable_name array
 
 (** [can_add_house g p property_name] returns true iff player [p] can
     add a house on the property with name [property_name] in game [g].
