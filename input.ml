@@ -63,6 +63,14 @@ let string_of_list lst =
   in
   "[" ^ pp_elts lst ^ "]"
 
+(**[print_array a] prints the string representation of array [a]. *)
+let print_array elem_printer a =
+  Array.iteri
+    (fun i elem ->
+      yellow_print (string_of_int i);
+      white_print (": " ^ elem_printer elem))
+    a
+
 (** [input s o] is the desired move [s] given options [o]. *)
 let input s =
   match s with
@@ -129,44 +137,90 @@ let buy p b =
   print_endline "\n";
 
   (* check ownable property *)
-  (* let space = Board.space_from_location b current_location in *)
-  (* if Board.is_ownable space then (* continue *) else Illegal *)
+  let space = Board.space_from_location b current_location in
+  if Board.is_ownable space then
+    match Game.get_ownable space with
+    | Some ownable_space -> (
+        let ownable_space_name = Game.get_ownable_name ownable_space in
 
-  (* check is_owned *)
-  (* if space.is_owned then (* continue *) else Illegal*)
-
-  (* check valid balance *)
-  (* if Player.get_balance p > space.price then (* continue *) else
-     Illegal *)
-  Legal
-    {
-      player_id = Player.get_player_id p;
-      action = (fun x -> ());
-      (*Player.buy_property p property_name*)
-      is_double = false;
-      is_end = false;
-    }
+        (* check is_owned *)
+        try
+          match Game.owner ownable_space_name with
+          | Some player ->
+              red_print
+                "The space you are currently on is already owned by: "
+              ^ Player.get_player_id player
+              ^ "\n";
+              Illegal
+          | None ->
+              (*check valid balance*)
+              if
+                Player.get_balance p
+                > Game.get_ownable_price ownable_space
+              then
+                Legal
+                  {
+                    player_id = Player.get_player_id p;
+                    action =
+                      (fun p ->
+                        Player.buy_property p ownable_space_name;
+                        Game.make_ownable_owned p ownable_space_name);
+                    is_double = false;
+                    is_end = false;
+                  }
+              else
+                red_print
+                  "You do not have enough money to purchase this space\n";
+              Illegal
+        with Game.NotOwnableName ->
+          red_print "The space you are currently on cannot be bought\n";
+          Illegal)
+    | None ->
+        red_print "The space you are currently on cannot be bought\n";
+        Illegal
 
 let mortgage p b =
-  white_print "Please enter what property you would like to mortgage: ";
-  yellow_print "Available properties: ";
-  cyan_print (p |> Player.get_property_name_list |> string_of_list);
+  white_print
+    "Please the number of the property you would like to mortgage: ";
+  yellow_print "Possible properties to mortgage: ";
+  let mortgagables = Game.all_mortgagable p in
+  print_array (fun x -> x) mortgagables;
   print_string "\n> ";
-  let property_name = read_line () in
+  let property_index = read_line () in
+  let property_name = mortgagables.(int_of_string property_index) in
 
-  (*check ownable property*)
-  (* if Board.is_ownable space then (* continue *) else Illegal *)
+  if Board.is_ownable (Board.space_from_space_name b property_name) then (
+    (*check is owned by player*)
+    match Game.owner property_name with
+    | Some player ->
+        if player = p then
+          Legal
+            {
+              player_id = Player.get_player_id p;
+              action =
+                (fun x -> Game.make_ownable_mortgaged p property_name);
+              (*Player.mortgage_property p property_name*)
+              is_double = false;
+              is_end = false;
+            }
+        else
+          red_print
+            "The property you are trying to mortgage is owned by: "
+          ^ Player.get_player_id player
+          ^ "\n";
+        Illegal
+    | None ->
+        red_print
+          "The property you are tyring to mortgage is not owned by any \
+           player\n";
+        Illegal)
+  else Illegal
 
-  (*check is owned by player*)
-  (* if Player.owns space then (* continue *) else Illegal *)
-  Legal
-    {
-      player_id = Player.get_player_id p;
-      action = (fun x -> ());
-      (*Player.mortgage_property p property_name*)
-      is_double = false;
-      is_end = false;
-    }
+(*check ownable property*)
+(* if Board.is_ownable space then (* continue *) else Illegal *)
+
+(*check is owned by player*)
+(* if Player.owns space then (* continue *) else Illegal *)
 
 let trade p b =
   white_print "Please enter which player you would like to trade with: ";
