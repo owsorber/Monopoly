@@ -32,6 +32,10 @@ type space =
     on the Monopoly board. *)
 exception NotOnBoard of int
 
+(** Raised when the color is asked for from a space that does not have a color
+    on the Monopoly board. *)
+exception SpaceDoesNotHaveColor
+
 (** [init_board json] returns the board represented by [json]. Requires:
     [json] is a valid JSON representation of a standard Monopoly Board. *)
 val init_board : Yojson.Basic.t -> t

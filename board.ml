@@ -31,6 +31,7 @@ exception NotOnBoard of int
 
 exception NameNotOnBoard of string
 
+exception SpaceDoesNotHaveColor
 
 
 type t = space array
@@ -123,7 +124,6 @@ let space_from_space_name board space_name =
   let i = space_from_space_name_helper board space_name in 
   if i = (-1) then raise (NameNotOnBoard space_name) else Some board.(i)
   
-
 let is_ownable board space =
   match space with
   | Property _ -> true
@@ -147,6 +147,19 @@ let space_name board i =
 
 let start_space board = space_name board 0
 
-let color board space = failwith "Unimplemented"
+let make_color_hashmap hashtbl board = 
+  for i = 0 to length board - 1  do 
+  match board.(i) with
+  | Property p -> let color = p.color in if (Hashtbl.mem hashtbl color) then 
+    Hashtbl.replace hashtbl color ((Hashtbl.find hashtbl color)+1) else 
+      Hashtbl.add hashtbl 
+    color 1;
+  |_ ->  () 
+    done
+
+let color board space = 
+  match space with
+  |Property p -> p.color
+  |_ -> raise (SpaceDoesNotHaveColor)
 
 let num_of_color board color = failwith "Unimplemented"
