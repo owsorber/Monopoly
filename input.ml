@@ -136,7 +136,8 @@ let landing p b g space r =
           red_print (string_of_int rent);
           magenta_print " to ";
           yellow_print (Player.get_player_id player);
-          Player.update_balance p rent
+          print_endline "";
+          Player.update_balance p (-rent)
       | None -> ()
     else ()
   with _ -> ()
