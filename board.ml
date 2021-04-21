@@ -29,6 +29,10 @@ type space =
 
 exception NotOnBoard of int
 
+exception NameNotOnBoard of string
+
+
+
 type t = space array
 
 (* Creates a rent array from a JSON list of rent values *)
@@ -100,7 +104,25 @@ let length board = Array.length board
 let space_from_location board i =
   try board.(i) with Invalid_argument _ -> raise (NotOnBoard i)
 
-let space_from_space_name board space_name = failwith "Unimplemented"
+  let space_from_space_name_helper board space_name = 
+    Array.fold_left (fun i acc ->
+    match board.(i) with
+  | Property p -> if (space_name = p.name) then acc + i +1  else acc
+  | Railroad r -> if (space_name = r.name) then acc + i +1  else acc
+  | Utility u -> if (space_name = u.name) then acc + i +1  else acc
+  | Tax t -> if (space_name = t.name) then acc + i +1  else acc
+  | Go -> if (space_name = "Go") then acc + i +1  else acc
+  | Chance -> if (space_name = "Chance") then acc + i +1  else acc
+  | CommunityChest -> if (space_name = "Community Chest") then acc +i+1 else acc
+  | Quarantine -> if (space_name = "Jail") then acc + i +1  else acc
+  | FreeParking -> if (space_name = "Free Parking") then acc + i +1  else acc
+  | GoToQuarantine -> if (space_name = "Go To Jail") then acc + i +1  else acc) 
+  (-1) (Array.init (length board) (fun x -> x))
+
+let space_from_space_name board space_name = 
+  let i = space_from_space_name_helper board space_name in 
+  if i = (-1) then raise (NameNotOnBoard space_name) else Some board.(i)
+  
 
 let is_ownable board space =
   match space with
