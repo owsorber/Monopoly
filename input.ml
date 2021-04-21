@@ -132,8 +132,6 @@ let landing p b g space r =
     if rent > 0 then
       match Game.owner g space with
       | Some player ->
-          magenta_print "You landed on: ";
-          yellow_print space;
           magenta_print "You must pay ";
           red_print (string_of_int rent);
           magenta_print " to ";
