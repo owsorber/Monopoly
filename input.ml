@@ -125,13 +125,31 @@ let get_double t = t.is_double
 
 let get_end t = t.is_end
 
+let landing p b g space r =
+  try
+    let current_location = Player.get_location p in
+    let rent = Game.get_rent g current_location r in
+    if rent > 0 then
+      match Game.owner g space with
+      | Some player ->
+          magenta_print "You landed on: ";
+          yellow_print space;
+          magenta_print "You must pay ";
+          red_print (string_of_int rent);
+          magenta_print " to ";
+          yellow_print (Player.get_player_id player);
+          Player.update_balance p rent
+      | None -> ()
+    else ()
+  with _ -> ()
+
 (**[double_of_roll (a,b)] returns true if a and b are equal and false if
    not. *)
 let double_of_roll (a, b) = if a = b then true else false
 
 (**[roll p b] returns a Legal result of the action representing a roll
    by player [p], given board [b]. *)
-let roll p b =
+let roll p b g =
   let r = Player.roll () in
   magenta_print (string_of_roll r);
   if Player.passes_go r p then
@@ -143,7 +161,10 @@ let roll p b =
   Legal
     {
       player_id = Player.get_player_id p;
-      action = Player.move_player r;
+      action =
+        (fun player ->
+          Player.move_player r player;
+          landing player b g new_space r);
       is_double = double_of_roll r;
       is_end = false;
     }
@@ -266,7 +287,7 @@ let mortgage p b g =
           player_id = Player.get_player_id p;
           action =
             (* handle exceptions in the function *)
-            (fun x -> Game.make_ownable_mortgaged g p property_name);
+            (fun x -> Game.make_ownable_mortgaged g x property_name);
           is_double = false;
           is_end = false;
         }
@@ -421,7 +442,7 @@ let turn p b g phase =
       ();
       try
         match input (read_line ()) with
-        | Roll -> roll p b
+        | Roll -> roll p b g
         | Quit -> graceful_shutdown b g
         | _ -> Illegal
       with _ -> Illegal)
