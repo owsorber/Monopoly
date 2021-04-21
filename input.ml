@@ -16,6 +16,8 @@ type result =
 type moves =
   | Roll
   | Buy
+  | BuyHouse
+  | BuyHotel
   | Mortgage
   | Trade
   | End
@@ -26,7 +28,9 @@ type moves =
 let string_of_move m =
   match m with
   | Roll -> "Roll"
-  | Buy -> "Buy"
+  | Buy -> "Buy Current Space"
+  | BuyHouse -> "Buy House"
+  | BuyHotel -> "Buy Hotel"
   | Mortgage -> "Mortgage"
   | Trade -> "Trade"
   | End -> "End Turn"
@@ -46,7 +50,9 @@ let options_printer phase =
   | false ->
       "\n\n\
        Please choose one of the options below (case sensitive): \n\
-      \ Buy \n\
+      \ Buy Current Space\n\
+      \ Buy House\n\
+      \ Buy Hotel\n\
       \ Mortgage \n\
       \ Trade \n\
       \ End Turn \n\
@@ -64,18 +70,21 @@ let string_of_list lst =
   in
   "[" ^ pp_elts lst ^ "]"
 
+let property_info property g =
+  let is_mortgaged = string_of_bool (Game.is_mortgaged g property) in
+  let houses = Game.get_houses g property in
+  let num_houses = string_of_int (if houses > 4 then 4 else houses) in
+  let has_hotel = string_of_bool (houses > 4) in
+  property ^ ". Houses: " ^ num_houses ^ ". Hotel: " ^ has_hotel
+  ^ ". Mortgaged: " ^ is_mortgaged
+
 let pp_propert_list g lst =
   let pp_elts lst =
     let rec loop acc = function
       | [] -> acc
-      | h1 :: h2 :: t -> (
-          match Game.is_mortgaged g h1 with
-          | true -> loop (h1 ^ " (mortgaged);  " ^ acc) (h2 :: t)
-          | false -> loop (h1 ^ "; " ^ acc) (h2 :: t))
-      | h :: t -> (
-          match Game.is_mortgaged g h with
-          | true -> loop (h ^ " (mortgaged)" ^ acc) t
-          | false -> loop (h ^ acc) t)
+      | h1 :: h2 :: t ->
+          loop (acc ^ property_info h1 g ^ "\n") (h2 :: t)
+      | h :: t -> loop (acc ^ property_info h g) t
     in
     loop "" lst
   in
@@ -93,7 +102,9 @@ let print_array elem_printer a =
 let input s =
   match s with
   | "Roll" | "r" -> Roll
-  | "Buy" | "b" -> Buy
+  | "Buy Current Space" | "b" -> Buy
+  | "Buy House" -> BuyHouse
+  | "Buy Hotel" -> BuyHotel
   | "Mortgage" | "m" -> Mortgage
   | "Trade" | "t" -> Trade
   | "End Turn" | "e" -> End
@@ -221,47 +232,108 @@ let mortgage p b g =
   print_string "\n> ";
   let property_index = read_line () in
   (* check out of bounds *)
-  let property_name = mortgagables.(int_of_string property_index - 1) in
-  let legality = ref false in
+  try
+    let property_name =
+      mortgagables.(int_of_string property_index - 1)
+    in
+    let legality = ref false in
 
-  (match Board.space_from_space_name b property_name with
-  | Some space ->
-      if Board.is_ownable b space then
-        (*check is owned by player*)
-        match Game.owner g property_name with
-        | Some player ->
-            if player = p then legality := true
-            else
+    (match Board.space_from_space_name b property_name with
+    | Some space ->
+        if Board.is_ownable b space then
+          (*check is owned by player*)
+          match Game.owner g property_name with
+          | Some player ->
+              if player = p then legality := true
+              else
+                red_print
+                  "INFO: The property you are trying to mortgage is \
+                   owned by: ";
+              cyan_print (Player.get_player_id player);
+              print_endline ""
+          | None ->
               red_print
-                "INFO: The property you are trying to mortgage is \
-                 owned by: ";
-            cyan_print (Player.get_player_id player);
-            print_endline ""
-        | None ->
-            red_print
-              "INFO: The property you are tyring to mortgage is not \
-               owned by any player\n"
-      else
-        red_print "INFO: The property you entered cannot be mortgaged\n"
-  | None ->
-      red_print "INFO: The property you entered cannot be mortgaged\n");
-  if !legality then
-    Legal
-      {
-        player_id = Player.get_player_id p;
-        action =
-          (* handle exceptions in the function *)
-          (fun x -> Game.make_ownable_mortgaged g p property_name);
-        is_double = false;
-        is_end = false;
-      }
-  else Illegal
+                "INFO: The property you are tyring to mortgage is not \
+                 owned by any player\n"
+        else
+          red_print
+            "INFO: The property you entered cannot be mortgaged\n"
+    | None ->
+        red_print "INFO: The property you entered cannot be mortgaged\n");
+    if !legality then
+      Legal
+        {
+          player_id = Player.get_player_id p;
+          action =
+            (* handle exceptions in the function *)
+            (fun x -> Game.make_ownable_mortgaged g p property_name);
+          is_double = false;
+          is_end = false;
+        }
+    else Illegal
+  with _ ->
+    red_print "invalid input\n";
+    Illegal
 
-(*check ownable property*)
-(* if Board.is_ownable space then (* continue *) else Illegal *)
+let buy_house p g =
+  white_print
+    "Please enter the number of the property you would like to buy a \
+     house on: ";
+  (*need Game.property_list_of_ownable_list*)
+  let prop_array = Array.of_list (Player.get_ownable_name_list p) in
+  print_array (fun x -> x) prop_array;
+  print_string "\n> ";
+  let property_index = read_line () in
+  try
+    let property_name = prop_array.(int_of_string property_index - 1) in
+    try
+      if Game.can_add_house g p property_name then
+        Legal
+          {
+            player_id = Player.get_player_id p;
+            action = (fun _ -> Game.add_house g property_name);
+            is_double = false;
+            is_end = false;
+          }
+      else (
+        red_print "you cannot add a house on this property";
+        Illegal)
+    with Game.NotPropertyName ->
+      red_print "The given name is not a valid property";
+      Illegal
+  with _ ->
+    red_print "invalid input\n";
+    Illegal
 
-(*check is owned by player*)
-(* if Player.owns space then (* continue *) else Illegal *)
+let buy_hotel p g =
+  white_print
+    "Please enter the number of the property you would like to buy a \
+     hotel on: ";
+  (*need Game.property_list_of_ownable_list*)
+  let prop_array = Array.of_list (Player.get_ownable_name_list p) in
+  print_array (fun x -> x) prop_array;
+  print_string "\n> ";
+  let property_index = read_line () in
+  try
+    let property_name = prop_array.(int_of_string property_index - 1) in
+    try
+      if Game.can_add_hotel g p property_name then
+        Legal
+          {
+            player_id = Player.get_player_id p;
+            action = (fun _ -> Game.add_hotel g property_name);
+            is_double = false;
+            is_end = false;
+          }
+      else (
+        red_print "you cannot add a house on this property";
+        Illegal)
+    with Game.NotPropertyName ->
+      red_print "The given name is not a valid property";
+      Illegal
+  with _ ->
+    red_print "invalid input\n";
+    Illegal
 
 let trade p b =
   white_print "Please enter which player you would like to trade with: ";
@@ -312,18 +384,18 @@ let print_endgame b g =
   let max_properties =
     max players (fun p -> List.length (Player.get_ownable_name_list p))
   in
-  yellow_print "Player with the most money (ties excluded): ";
+  magenta_print "Player with the most money (ties excluded): ";
   green_print (Player.get_player_id max_money);
-  yellow_print " with ";
+  magenta_print " with ";
   green_print ("$" ^ (max_money |> Player.get_balance |> string_of_int));
   print_endline "";
-  yellow_print "Player with the most properties (ties excluded): ";
+  magenta_print "Player with the most properties (ties excluded): ";
   green_print (Player.get_player_id max_properties);
-  yellow_print " with ";
+  magenta_print " with ";
   green_print
     (max_properties |> Player.get_ownable_name_list |> List.length
    |> string_of_int);
-  yellow_print " properties.\n"
+  magenta_print " properties.\n"
 
 (**[graceful_shutdown b g] ends the game [g] given board [b]. *)
 let graceful_shutdown b g =
@@ -359,6 +431,8 @@ let turn p b g phase =
       try
         match input (read_line ()) with
         | Buy -> buy p b g
+        | BuyHouse -> buy_house p g
+        | BuyHotel -> buy_hotel p g
         | Mortgage -> mortgage p b g
         | Trade -> Illegal
         | End -> end_turn p b

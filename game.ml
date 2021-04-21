@@ -247,8 +247,6 @@ let color_owned g p col =
 let has_monopoly t p col =
   Board.num_of_color t.board col = color_owned t p col
 
-(** [get_houses g name] returns the number of houses on the space with
-    [ownable_name] name*)
 let get_houses g name =
   let status = get_own_status g name in
   match status with

@@ -52,6 +52,10 @@ val get_ownable_status : t -> Board.space -> ownable_status option
     [o] if it is available in board [b]. *)
 val get_ownable_price : Board.t -> ownable_name -> int
 
+(** [get_houses g name] returns the number of houses on the space with
+    [ownable_name] name*)
+val get_houses : t -> ownable_name -> int
+
 (** [make_ownable_owned g p o] makes player [p] own the ownable [o] in
     game [g] i.e. changes the ownable's status to Owned and performs no
     checks. *)
