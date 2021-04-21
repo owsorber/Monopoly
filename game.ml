@@ -196,6 +196,13 @@ let is_available t o =
   | Railroad r -> ( match r with RR_Available -> true | _ -> false)
   | Utility u -> ( match u with U_Available -> true | _ -> false)
 
+let is_mortgaged t o =
+  let own_status = get_own_status t o in
+  match own_status with
+  | Property p -> ( match p with P_Mortgaged _ -> true | _ -> false)
+  | Railroad r -> ( match r with RR_Mortgaged _ -> true | _ -> false)
+  | _ -> false
+
 let owner t o =
   let available = is_available t o in
   let own_status = get_own_status t o in

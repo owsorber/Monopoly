@@ -97,6 +97,11 @@ val add_hotel : t -> ownable_name -> unit
     correspond to an ownable. *)
 val is_available : t -> ownable_name -> bool
 
+(** [is_available g o] returns true iff the ownable with name [o] is
+    mortgaged in game [g]. Raises: [NotOwnableName] if [o] does not
+    correspond to an ownable. *)
+val is_mortgaged : t -> ownable_name -> bool
+
 (** [owner g o] returns Some Player.t if the ownable with name [o] is
     owned by a player and None if it available in game [g]. Raises:
     [NotOwnableName] if [o] does not correspond to an ownable. *)

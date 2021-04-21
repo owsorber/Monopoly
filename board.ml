@@ -105,28 +105,29 @@ let space_from_location board i =
   try board.(i) with Invalid_argument _ -> raise (NotOnBoard i)
 
 let space_from_space_name_helper board space_name =
-  try
-    Array.fold_left
-      (fun i acc ->
-        match board.(i) with
-        | Property p -> if space_name = p.name then acc + i + 1 else acc
-        | Railroad r -> if space_name = r.name then acc + i + 1 else acc
-        | Utility u -> if space_name = u.name then acc + i + 1 else acc
-        | Tax t -> if space_name = t.name then acc + i + 1 else acc
-        | Go -> if space_name = "Go" then acc + i + 1 else acc
-        | Chance -> if space_name = "Chance" then acc + i + 1 else acc
-        | CommunityChest ->
-            if space_name = "Community Chest" then acc + i + 1 else acc
-        | Quarantine -> if space_name = "Jail" then acc + i + 1 else acc
-        | FreeParking ->
-            if space_name = "Free Parking" then acc + i + 1 else acc
-        | GoToQuarantine ->
-            if space_name = "Go To Jail" then acc + i + 1 else acc)
-      (-1)
-      (Array.init (length board) (fun x -> x))
-  with _ ->
-    Printers.red_print "fold broke\n";
-    -1
+  Array.fold_left
+    (fun i acc ->
+      match
+        try board.(i + 1)
+        with Invalid_argument s ->
+          Printers.red_print (s ^ " at index: " ^ string_of_int i);
+          failwith "invalid argument exception"
+      with
+      | Property p -> if space_name = p.name then acc + i + 1 else acc
+      | Railroad r -> if space_name = r.name then acc + i + 1 else acc
+      | Utility u -> if space_name = u.name then acc + i + 1 else acc
+      | Tax t -> if space_name = t.name then acc + i + 1 else acc
+      | Go -> if space_name = "Go" then acc + i + 1 else acc
+      | Chance -> if space_name = "Chance" then acc + i + 1 else acc
+      | CommunityChest ->
+          if space_name = "Community Chest" then acc + i + 1 else acc
+      | Quarantine -> if space_name = "Jail" then acc + i + 1 else acc
+      | FreeParking ->
+          if space_name = "Free Parking" then acc + i + 1 else acc
+      | GoToQuarantine ->
+          if space_name = "Go To Jail" then acc + i + 1 else acc)
+    (-1)
+    (Array.init (length board) (fun x -> x))
 
 let space_from_space_name board space_name =
   let i = space_from_space_name_helper board space_name in

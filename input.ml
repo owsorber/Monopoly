@@ -57,7 +57,25 @@ let string_of_list lst =
   let pp_elts lst =
     let rec loop acc = function
       | [] -> acc
-      | h :: t -> loop (h ^ "\n " ^ acc) t
+      | h1 :: h2 :: t -> loop (h1 ^ ";  " ^ acc) (h2 :: t)
+      | h :: t -> loop (h ^ acc) t
+    in
+    loop "" lst
+  in
+  "[" ^ pp_elts lst ^ "]"
+
+let pp_propert_list g lst =
+  let pp_elts lst =
+    let rec loop acc = function
+      | [] -> acc
+      | h1 :: h2 :: t -> (
+          match Game.is_mortgaged g h1 with
+          | true -> loop (h1 ^ " (mortgaged);  " ^ acc) (h2 :: t)
+          | false -> loop (h1 ^ "; " ^ acc) (h2 :: t))
+      | h :: t -> (
+          match Game.is_mortgaged g h with
+          | true -> loop (h ^ " (mortgaged)" ^ acc) t
+          | false -> loop (h ^ acc) t)
     in
     loop "" lst
   in
@@ -158,9 +176,7 @@ let buy p b g =
                 let price =
                   Game.get_ownable_price b ownable_space_name
                 in
-                if Player.get_balance p > price then (
-                  cyan_print "you can buy this property";
-                  legality := true)
+                if Player.get_balance p > price then legality := true
                 else
                   red_print
                     "INFO: You do not have enough money to purchase \
@@ -170,8 +186,7 @@ let buy p b g =
               | Game.NotOwnableName -> red_print "not ownable name\n"
               | Board.NameNotOnBoard s ->
                   red_print (s ^ " not on board\n")
-              | _ ->
-                  red_print "how tf could it come from anywhere else\n")
+              | _ -> red_print "somewhere else\n")
         with Game.NotOwnableName ->
           red_print
             "INFO: The space you are currently on cannot be bought\n")
@@ -267,9 +282,11 @@ let trade p b =
 
 (**[print_player_info b p] prints appropriate info about player [p]
    given board state [b]. *)
-let print_player_info b p =
+let print_player_info b p g =
   let player_bal = string_of_int (Player.get_balance p) in
-  let player_props = string_of_list (Player.get_ownable_name_list p) in
+  let player_props =
+    pp_propert_list g (Player.get_ownable_name_list p)
+  in
   let player_loc = Board.space_name b (Player.get_location p) in
   cyan_print "Current balance: ";
   green_print (player_bal ^ "\n");
@@ -316,8 +333,8 @@ let graceful_shutdown b g =
 
 (**[turn_info b p phase] prints the information for player [p] on board
    [b] during phase [phase] of their turn. *)
-let turn_info b p phase =
-  print_player_info b p;
+let turn_info b p g phase =
+  print_player_info b p g;
   cyan_print "\npossible moves: ";
   yellow_print (options_printer phase);
   cyan_print "\n>"
@@ -328,7 +345,7 @@ let turn p b g phase =
   match phase with
   | true -> (
       cyan_print ("\n" ^ Player.get_player_id p ^ "'s turn.\n");
-      let _ = turn_info b p phase in
+      let _ = turn_info b p g phase in
       ();
       try
         match input (read_line ()) with
@@ -337,7 +354,7 @@ let turn p b g phase =
         | _ -> Illegal
       with _ -> Illegal)
   | false -> (
-      let _ = turn_info b p phase in
+      let _ = turn_info b p g phase in
       ();
       try
         match input (read_line ()) with
