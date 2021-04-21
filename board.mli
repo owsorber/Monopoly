@@ -32,8 +32,12 @@ type space =
     on the Monopoly board. *)
 exception NotOnBoard of int
 
-(** Raised when the color is asked for from a space that does not have a color
-    on the Monopoly board. *)
+(** Raised when a space name is provided but is not present on the
+    board. *)
+exception NameNotOnBoard of string
+
+(** Raised when the color is asked for from a space that does not have a
+    color on the Monopoly board. *)
 exception SpaceDoesNotHaveColor
 
 (** [init_board json] returns the board represented by [json]. Requires:

@@ -67,7 +67,7 @@ let string_of_list lst =
 let print_array elem_printer a =
   Array.iteri
     (fun i elem ->
-      yellow_print (string_of_int i);
+      yellow_print (string_of_int (i + 1));
       white_print (": " ^ elem_printer elem))
     a
 
@@ -130,90 +130,116 @@ let end_turn p b =
       is_end = true;
     }
 
-let buy p b =
+let buy p b g =
   let current_location = Player.get_location p in
   white_print "You are attempting to buy: ";
   yellow_print (Board.space_name b current_location);
   print_endline "\n";
 
+  let legality = ref false in
   (* check ownable property *)
   let space = Board.space_from_location b current_location in
-  if Board.is_ownable space then
-    match Game.get_ownable space with
+  if Board.is_ownable b space then
+    match Game.get_ownable_status g space with
     | Some ownable_space -> (
-        let ownable_space_name = Game.get_ownable_name ownable_space in
-
+        let ownable_space_name = Board.space_name b current_location in
         (* check is_owned *)
         try
-          match Game.owner ownable_space_name with
+          match Game.owner g ownable_space_name with
           | Some player ->
               red_print
-                "The space you are currently on is already owned by: "
-              ^ Player.get_player_id player
-              ^ "\n";
-              Illegal
-          | None ->
+                "INFO: The space you are currently on is already owned \
+                 by: ";
+              cyan_print (Player.get_player_id player);
+              print_endline ""
+          | None -> (
               (*check valid balance*)
-              if
-                Player.get_balance p
-                > Game.get_ownable_price ownable_space
-              then
-                Legal
-                  {
-                    player_id = Player.get_player_id p;
-                    action =
-                      (fun p ->
-                        Player.buy_property p ownable_space_name;
-                        Game.make_ownable_owned p ownable_space_name);
-                    is_double = false;
-                    is_end = false;
-                  }
-              else
-                red_print
-                  "You do not have enough money to purchase this space\n";
-              Illegal
+              try
+                let price =
+                  Game.get_ownable_price b ownable_space_name
+                in
+                if Player.get_balance p > price then (
+                  cyan_print "you can buy this property";
+                  legality := true)
+                else
+                  red_print
+                    "INFO: You do not have enough money to purchase \
+                     this space\n"
+              with
+              | Game.NotOwnableSpace -> red_print "not ownable space\n"
+              | Game.NotOwnableName -> red_print "not ownable name\n"
+              | Board.NameNotOnBoard s ->
+                  red_print (s ^ " not on board\n")
+              | _ ->
+                  red_print "how tf could it come from anywhere else\n")
         with Game.NotOwnableName ->
-          red_print "The space you are currently on cannot be bought\n";
-          Illegal)
+          red_print
+            "INFO: The space you are currently on cannot be bought\n")
     | None ->
-        red_print "The space you are currently on cannot be bought\n";
-        Illegal
+        red_print
+          "INFO: The space you are currently on cannot be bought\n"
+  else
+    red_print "INFO: The space you are currently on cannot be bought\n";
 
-let mortgage p b =
+  if !legality then
+    let ownable_space_name = Board.space_name b current_location in
+    let price = Game.get_ownable_price b ownable_space_name in
+    Legal
+      {
+        player_id = Player.get_player_id p;
+        action =
+          (fun p ->
+            Player.buy_ownable p ownable_space_name price;
+            Game.make_ownable_owned g p ownable_space_name);
+        is_double = false;
+        is_end = false;
+      }
+  else Illegal
+
+let mortgage p b g =
   white_print
     "Please the number of the property you would like to mortgage: ";
   yellow_print "Possible properties to mortgage: ";
-  let mortgagables = Game.all_mortgagable p in
+  let mortgagables = Game.all_mortgagable g p in
   print_array (fun x -> x) mortgagables;
+  if Array.length mortgagables = 0 then green_print "None.\n";
   print_string "\n> ";
   let property_index = read_line () in
-  let property_name = mortgagables.(int_of_string property_index) in
+  (* check out of bounds *)
+  let property_name = mortgagables.(int_of_string property_index - 1) in
+  let legality = ref false in
 
-  if Board.is_ownable (Board.space_from_space_name b property_name) then (
-    (*check is owned by player*)
-    match Game.owner property_name with
-    | Some player ->
-        if player = p then
-          Legal
-            {
-              player_id = Player.get_player_id p;
-              action =
-                (fun x -> Game.make_ownable_mortgaged p property_name);
-              (*Player.mortgage_property p property_name*)
-              is_double = false;
-              is_end = false;
-            }
-        else
-          red_print
-            "The property you are trying to mortgage is owned by: "
-          ^ Player.get_player_id player
-          ^ "\n";
-        Illegal
-    | None ->
-        red_print
-          "The property you are tyring to mortgage is not owned by any \
-           player\n";
-        Illegal)
+  (match Board.space_from_space_name b property_name with
+  | Some space ->
+      if Board.is_ownable b space then
+        (*check is owned by player*)
+        match Game.owner g property_name with
+        | Some player ->
+            if player = p then legality := true
+            else
+              red_print
+                "INFO: The property you are trying to mortgage is \
+                 owned by: ";
+            cyan_print (Player.get_player_id player);
+            print_endline ""
+        | None ->
+            red_print
+              "INFO: The property you are tyring to mortgage is not \
+               owned by any player\n"
+      else
+        red_print "INFO: The property you entered cannot be mortgaged\n"
+  | None ->
+      red_print "INFO: The property you entered cannot be mortgaged\n");
+  if !legality then
+    Legal
+      {
+        player_id = Player.get_player_id p;
+        action =
+          (* handle exceptions in the function *)
+          (fun x -> Game.make_ownable_mortgaged g p property_name);
+        is_double = false;
+        is_end = false;
+      }
   else Illegal
 
 (*check ownable property*)
@@ -243,7 +269,7 @@ let trade p b =
    given board state [b]. *)
 let print_player_info b p =
   let player_bal = string_of_int (Player.get_balance p) in
-  let player_props = string_of_list (Player.get_property_name_list p) in
+  let player_props = string_of_list (Player.get_ownable_name_list p) in
   let player_loc = Board.space_name b (Player.get_location p) in
   cyan_print "Current balance: ";
   green_print (player_bal ^ "\n");
@@ -267,7 +293,7 @@ let print_endgame b g =
   let players = Array.to_list (Game.get_all_players g) in
   let max_money = max players Player.get_balance in
   let max_properties =
-    max players (fun p -> List.length (Player.get_property_name_list p))
+    max players (fun p -> List.length (Player.get_ownable_name_list p))
   in
   yellow_print "Player with the most money (ties excluded): ";
   green_print (Player.get_player_id max_money);
@@ -278,7 +304,7 @@ let print_endgame b g =
   green_print (Player.get_player_id max_properties);
   yellow_print " with ";
   green_print
-    (max_properties |> Player.get_property_name_list |> List.length
+    (max_properties |> Player.get_ownable_name_list |> List.length
    |> string_of_int);
   yellow_print " properties.\n"
 
@@ -315,8 +341,8 @@ let turn p b g phase =
       ();
       try
         match input (read_line ()) with
-        | Buy -> buy p b
-        | Mortgage -> mortgage p b
+        | Buy -> buy p b g
+        | Mortgage -> mortgage p b g
         | Trade -> Illegal
         | End -> end_turn p b
         | Quit -> graceful_shutdown b g

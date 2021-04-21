@@ -65,11 +65,11 @@ let projected_space roll player board =
   let new_pos = (player.location + sums roll) mod 40 in
   Board.space_name board new_pos
 
-let go_to_quarantine_status = failwith "unimplemented"
+let go_to_quarantine_status player = ()
 
-let decrement_day_quarantine = failwith "unimplemented"
+let decrement_day_quarantine player = failwith "unimplemented"
 
-let quarantine = failwith "unimplemented"
+let quarantine player = failwith "unimplemented"
 
 let buy_ownable p prop i =
   update_balance p (-i);

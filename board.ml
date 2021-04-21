@@ -33,7 +33,6 @@ exception NameNotOnBoard of string
 
 exception SpaceDoesNotHaveColor
 
-
 type t = space array
 
 (* Creates a rent array from a JSON list of rent values *)
@@ -105,25 +104,34 @@ let length board = Array.length board
 let space_from_location board i =
   try board.(i) with Invalid_argument _ -> raise (NotOnBoard i)
 
-  let space_from_space_name_helper board space_name = 
-    Array.fold_left (fun i acc ->
-    match board.(i) with
-  | Property p -> if (space_name = p.name) then acc + i +1  else acc
-  | Railroad r -> if (space_name = r.name) then acc + i +1  else acc
-  | Utility u -> if (space_name = u.name) then acc + i +1  else acc
-  | Tax t -> if (space_name = t.name) then acc + i +1  else acc
-  | Go -> if (space_name = "Go") then acc + i +1  else acc
-  | Chance -> if (space_name = "Chance") then acc + i +1  else acc
-  | CommunityChest -> if (space_name = "Community Chest") then acc +i+1 else acc
-  | Quarantine -> if (space_name = "Jail") then acc + i +1  else acc
-  | FreeParking -> if (space_name = "Free Parking") then acc + i +1  else acc
-  | GoToQuarantine -> if (space_name = "Go To Jail") then acc + i +1  else acc) 
-  (-1) (Array.init (length board) (fun x -> x))
+let space_from_space_name_helper board space_name =
+  try
+    Array.fold_left
+      (fun i acc ->
+        match board.(i) with
+        | Property p -> if space_name = p.name then acc + i + 1 else acc
+        | Railroad r -> if space_name = r.name then acc + i + 1 else acc
+        | Utility u -> if space_name = u.name then acc + i + 1 else acc
+        | Tax t -> if space_name = t.name then acc + i + 1 else acc
+        | Go -> if space_name = "Go" then acc + i + 1 else acc
+        | Chance -> if space_name = "Chance" then acc + i + 1 else acc
+        | CommunityChest ->
+            if space_name = "Community Chest" then acc + i + 1 else acc
+        | Quarantine -> if space_name = "Jail" then acc + i + 1 else acc
+        | FreeParking ->
+            if space_name = "Free Parking" then acc + i + 1 else acc
+        | GoToQuarantine ->
+            if space_name = "Go To Jail" then acc + i + 1 else acc)
+      (-1)
+      (Array.init (length board) (fun x -> x))
+  with _ ->
+    Printers.red_print "fold broke\n";
+    -1
 
-let space_from_space_name board space_name = 
-  let i = space_from_space_name_helper board space_name in 
-  if i = (-1) then raise (NameNotOnBoard space_name) else Some board.(i)
-  
+let space_from_space_name board space_name =
+  let i = space_from_space_name_helper board space_name in
+  if i = -1 then raise (NameNotOnBoard space_name) else Some board.(i)
+
 let is_ownable board space =
   match space with
   | Property _ -> true
@@ -147,19 +155,20 @@ let space_name board i =
 
 let start_space board = space_name board 0
 
-let make_color_hashmap hashtbl board = 
-  for i = 0 to length board - 1  do 
-  match board.(i) with
-  | Property p -> let color = p.color in if (Hashtbl.mem hashtbl color) then 
-    Hashtbl.replace hashtbl color ((Hashtbl.find hashtbl color)+1) else 
-      Hashtbl.add hashtbl 
-    color 1;
-  |_ ->  () 
-    done
+let make_color_hashmap hashtbl board =
+  for i = 0 to length board - 1 do
+    match board.(i) with
+    | Property p ->
+        let color = p.color in
+        if Hashtbl.mem hashtbl color then
+          Hashtbl.replace hashtbl color (Hashtbl.find hashtbl color + 1)
+        else Hashtbl.add hashtbl color 1
+    | _ -> ()
+  done
 
-let color board space = 
+let color board space =
   match space with
-  |Property p -> p.color
-  |_ -> raise (SpaceDoesNotHaveColor)
+  | Property p -> p.color
+  | _ -> raise SpaceDoesNotHaveColor
 
 let num_of_color board color = failwith "Unimplemented"

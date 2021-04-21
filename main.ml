@@ -17,9 +17,25 @@ let take_action result p g phase =
       red_print "Illegal move. Please enter a valid move.\n";
       false
 
+let rec phase_2 b g p =
+  let result = Input.turn p b g false in
+  (* let _ = take_action result p g false in *)
+  match result with
+  | Input.Legal r ->
+      Input.get_action r p;
+      Input.get_end r
+  | Input.Illegal ->
+      red_print "Illegal move. Please enter a valid move. \n";
+      phase_2 b g p
+
 (**[double_turn b g p] handles taking another roll phase for player [p]
    given board [b] and game [g]. *)
 let rec double_turn b g p =
+  (*phase 2*)
+  while phase_2 b g p = false do
+    ()
+  done;
+
   let result = Input.turn p b g true in
   let _ = take_action result p g true in
   match result with
@@ -48,20 +64,11 @@ let rec phase_1 b g p =
       red_print "Illegal move. Please enter a valid move. \n";
       phase_1 b g p
 
-let rec phase_2 b g p =
-  let result = Input.turn p b g false in
-  (* let _ = take_action result p g false in *)
-  match result with
-  | Input.Legal r ->
-      Input.get_action r p;
-      Input.get_end r
-  | Input.Illegal ->
-      red_print "Illegal move. Please enter a valid move. \n";
-      phase_2 b g p
-
-(**[turn_handler b g p] handles the phases of player [p]'s turn, given
+(**[turn_handler b g] repeatedly executes turns for each player,
+   advanceing to the next player after each turn. Turns are executed on
    board [b] and game [g]. *)
-let rec turn_handler b g p =
+let rec turn_handler b g =
+  let p = Game.current_player g in
   print_horizontal_line ();
   (*phase 1*)
   phase_1 b g p;
@@ -70,14 +77,7 @@ let rec turn_handler b g p =
     ()
   done;
   Game.next_player g;
-  turn_handler b g p
-
-(**[turn b g phase] repeatedly executes turns for each player, beginning
-   on phase [phase] advancing to the next player and phase after every
-   turn. Turns are executed on board [b] and game [g]*)
-let rec turn b g =
-  let current_player = Game.current_player g in
-  turn_handler b g current_player
+  turn_handler b g
 
 (** [get_player_count ()] prompts the user to enter in the number of
     players until a valid (positive integer) input is read. *)
@@ -126,7 +126,7 @@ let rec play_game () =
         (* create board with number of players *)
         let game = Game.init_game board players in
         (* turn board game true *)
-        turn board game
+        turn_handler board game
       with Sys_error _ ->
         Stdlib.print_endline "board file not found";
         play_game ())

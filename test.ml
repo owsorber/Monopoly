@@ -60,7 +60,7 @@ let player_tests =
     ( "get_player_id for player 1" >:: fun _ ->
       assert_equal (get_player_id player1) "Kira" );
     ( "get_property_name_list for player 1 start of game" >:: fun _ ->
-      assert_equal (get_property_name_list player1) [] );
+      assert_equal (get_ownable_name_list player1) [] );
     get_balance_test "Player 1 starting balance" player1 1500;
     get_location_test "Player 1 starting location" player1 0;
     get_balance_test "Player 2 balance after positive transaction"
