@@ -409,7 +409,7 @@ let can_add_hotel t p name =
   in
   let check4 =
     if t.hotels_available > 0 then true
-    else raise (CannotAddHouse "No Houses Available")
+    else raise (CannotAddHouse "No Hotels Available")
   in
   check1 && check2 && check3 && check4
 

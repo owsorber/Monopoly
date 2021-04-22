@@ -144,10 +144,6 @@ let next_player_help game =
   next_player game;
   game
 
-let update_player_help player game =
-  update_player player game;
-  game
-
 (* Game Module Tests *)
 let game_tests =
   [
