@@ -29,6 +29,10 @@ exception MortgageFailure
 
 exception NotPropertyName
 
+exception CannotAddHouse of string
+
+exception CannotAddHotel of string
+
 type t = {
   board : Board.t;
   players : Player.t array;
@@ -92,7 +96,7 @@ let rec get_properties_helper g acc ownables =
   | h :: t -> (
       match get_own_status g h with
       | Property status -> get_properties_helper g (h :: acc) t
-      | _ -> get_properties_helper g acc t)
+      | _ -> get_properties_helper g acc t )
 
 (* Gets all the properties of player [p] in game [g]. *)
 let get_properties g p =
@@ -107,7 +111,7 @@ let rec has_both_utilities_helper game acc ownables =
       let new_acc =
         match get_own_status game h with
         | Utility u -> (
-            match u with U_Owned _ -> acc + 1 | _ -> acc + 1)
+            match u with U_Owned _ -> acc + 1 | _ -> acc + 1 )
         | _ -> acc
       in
       has_both_utilities_helper game new_acc t
@@ -125,7 +129,7 @@ let rec num_rrs_owned_helper game acc ownables =
       let new_acc =
         match get_own_status game h with
         | Railroad r -> (
-            match r with RR_Owned _ -> acc + 1 | _ -> acc)
+            match r with RR_Owned _ -> acc + 1 | _ -> acc )
         | _ -> acc
       in
       num_rrs_owned_helper game new_acc t
@@ -150,19 +154,19 @@ let get_rent g board_location roll =
       | P_Owned (player, houses) -> (
           match space with
           | Board.Property p -> p.rent.(houses)
-          | _ -> failwith "Ownable Status has Incorrect Ownable Type")
-      | _ -> 0)
+          | _ -> failwith "Ownable Status has Incorrect Ownable Type" )
+      | _ -> 0 )
   | Utility status -> (
       match status with
       | U_Owned player ->
           let dice_sum = fst roll + snd roll in
           let both_utilities = has_both_utilities g player in
           if both_utilities then 10 * dice_sum else 7 * dice_sum
-      | _ -> 0)
+      | _ -> 0 )
   | Railroad status -> (
       match status with
       | RR_Owned player -> 25 * num_rrs_owned g player
-      | _ -> 0)
+      | _ -> 0 )
 
 let make_ownable_owned g p o =
   match get_own_status g o with
@@ -187,20 +191,20 @@ let get_ownable_price board own =
       | Board.Property p -> p.price
       | Utility u -> u.price
       | Railroad r -> r.price
-      | _ -> raise NotOwnableSpace)
+      | _ -> raise NotOwnableSpace )
 
 let is_available t o =
   let own_status = get_own_status t o in
   match own_status with
-  | Property p -> ( match p with P_Available -> true | _ -> false)
-  | Railroad r -> ( match r with RR_Available -> true | _ -> false)
-  | Utility u -> ( match u with U_Available -> true | _ -> false)
+  | Property p -> ( match p with P_Available -> true | _ -> false )
+  | Railroad r -> ( match r with RR_Available -> true | _ -> false )
+  | Utility u -> ( match u with U_Available -> true | _ -> false )
 
 let is_mortgaged t o =
   let own_status = get_own_status t o in
   match own_status with
-  | Property p -> ( match p with P_Mortgaged _ -> true | _ -> false)
-  | Railroad r -> ( match r with RR_Mortgaged _ -> true | _ -> false)
+  | Property p -> ( match p with P_Mortgaged _ -> true | _ -> false )
+  | Railroad r -> ( match r with RR_Mortgaged _ -> true | _ -> false )
   | _ -> false
 
 let owner t o =
@@ -213,14 +217,14 @@ let owner t o =
           match p with
           | P_Owned (player, houses) -> Some player
           | P_Mortgaged player -> Some player
-          | P_Available -> None)
+          | P_Available -> None )
       | Railroad r -> (
           match r with
           | RR_Owned player -> Some player
           | RR_Mortgaged player -> Some player
-          | RR_Available -> None)
+          | RR_Available -> None )
       | Utility u -> (
-          match u with U_Owned player -> Some player | _ -> None))
+          match u with U_Owned player -> Some player | _ -> None ) )
   | true -> None
 
 (** Gets the property (space) from a ownable name*)
@@ -251,9 +255,15 @@ let get_houses g name =
   let status = get_own_status g name in
   match status with
   | Property p -> (
-      match p with P_Owned (player, houses) -> houses | _ -> 0)
+      match p with P_Owned (player, houses) -> houses | _ -> 0 )
   | Railroad r -> 0
   | Utility u -> 0
+
+(** Checks if the property with name [h] in game [g] has color [col] *)
+let is_color g h col =
+  if Board.color g.board (get_property_from_space_name g.board h) = col
+  then true
+  else false
 
 let has_houses_on_color g p col =
   let prop_list = get_properties g p in
@@ -261,14 +271,8 @@ let has_houses_on_color g p col =
     match lst with
     | [] -> false
     | h :: t ->
-        let is_color =
-          if
-            Board.color g.board (get_property_from_space_name g.board h)
-            = col
-          then true
-          else false
-        in
-        if is_color && get_houses g h > 0 then true
+        let correct_color = is_color g h col in
+        if correct_color && get_houses g h > 0 then true
         else find_house_with_col t
   in
   find_house_with_col prop_list
@@ -294,19 +298,45 @@ let check_even_build g p prop_name col =
 
 (** Checks that a player can't add another house to a property with four
     houses *)
-let check_four_houses g prop_name = get_houses g prop_name < 4
+let check_less_houses g prop_name num = get_houses g prop_name < num
 
-(** [can_add_house p property_name] returns true iff player [p] can add
-    a house on the property with name [property_name]. Raises:
-    [NotPropertyName] if [property_name] is not a property name. *)
+(* Requires: player p has a monopoly on col*)
+let check_no_mortgaged g p col =
+  let prop_list = get_properties g p in
+  let rec mortgaged_col p =
+    match p with
+    | [] -> true
+    | h :: t ->
+        let correct_color = is_color g h col in
+        let mortgaged = is_mortgaged g h in
+        if mortgaged && correct_color then false else mortgaged_col t
+  in
+  mortgaged_col prop_list
+
 let can_add_house t player property_name =
-  (* also make sure none of the properties of this color are mortgaged *)
   let space = get_property_from_space_name t.board property_name in
   let cur_space_color = Board.color t.board space in
-  has_monopoly t player cur_space_color
-  && t.houses_available > 0
-  && check_four_houses t property_name
-  && check_even_build t player property_name cur_space_color
+  let check1 =
+    if has_monopoly t player cur_space_color then true
+    else raise (CannotAddHouse "No Monopoly")
+  in
+  let check2 =
+    if t.houses_available > 0 then true
+    else raise (CannotAddHouse "No Houses Available")
+  in
+  let check3 =
+    if check_less_houses t property_name 4 then true
+    else raise (CannotAddHouse "4 Houses on Property")
+  in
+  let check4 =
+    if check_even_build t player property_name cur_space_color then true
+    else raise (CannotAddHouse "Even Build")
+  in
+  let check5 =
+    if check_no_mortgaged t player cur_space_color then true
+    else raise (CannotAddHouse "Mortgaged Property on Color")
+  in
+  check1 && check2 && check3 && check4 && check5
 
 (** Returns an updated property_status with an additional house*)
 let new_property_house t property_name : property_status =
@@ -323,23 +353,67 @@ let new_property_house t property_name : property_status =
   in
   P_Owned upd_prop_status
 
-let add_house t property_name =
+let house_step t = t.houses_available <- t.houses_available - 1
+
+let hotel_step t =
+  t.houses_available <- t.houses_available + 4;
+  t.hotels_available <- t.hotels_available - 1
+
+let add_house t property_name adding_house =
   let property_space =
     Board.space_from_space_name t.board property_name
   in
   let property_check (space : Board.space option) =
     match space with
     | Some s -> (
-        match s with Property p -> true | _ -> raise NotPropertyName)
+        match s with Property p -> true | _ -> raise NotPropertyName )
     | _ -> raise NotPropertyName
   in
+  if adding_house then house_step t else hotel_step t;
   if property_check property_space then
-    Hashtbl.add t.ownables property_name
+    Hashtbl.replace t.ownables property_name
       (Property (new_property_house t property_name))
 
-let can_add_hotel t p name = failwith "Unimplemented"
+(** requires player p has a monopoly on col *)
+let has_full_monopoly g p col =
+  let prop_list = get_properties g p in
+  let rec check_four_houses p =
+    match p with
+    | [] -> true
+    | h :: t ->
+        let correct_color = is_color g h col in
+        let correct_houses =
+          if check_less_houses g h 4 then false else true
+        in
+        if correct_color && correct_houses then check_four_houses t
+        else false
+  in
+  check_four_houses prop_list
 
-let add_hotel t name = failwith "Unimplemented"
+(** check if one hotel (five houses) on property before start, have four
+    or more houses on each property in that col,*)
+let can_add_hotel t p name =
+  let space = get_property_from_space_name t.board name in
+  let cur_space_color = Board.color t.board space in
+  let check1 =
+    if has_monopoly t p cur_space_color then true
+    else raise (CannotAddHotel "No Monopoly")
+  in
+  let check2 =
+    if has_full_monopoly t p cur_space_color then true
+    else raise (CannotAddHotel "Does Not Own Four Houses")
+  in
+  let check3 =
+    if check_less_houses t name 5 then true
+    else raise (CannotAddHotel "Already Owns Hotel on Property")
+  in
+  let check4 =
+    if t.hotels_available > 0 then true
+    else raise (CannotAddHouse "No Houses Available")
+  in
+  check1 && check2 && check3 && check4
+
+(* let add_hotel t name = failwith "Unimplemented" *)
 
 let can_mortgage g p o =
   let board = get_board g in
@@ -354,10 +428,10 @@ let can_mortgage g p o =
       | P_Owned (player, houses) ->
           let col = Board.color board space in
           player = p && houses = 0 && not (has_houses_on_color g p col)
-      | _ -> false)
+      | _ -> false )
   | Utility status -> false
   | Railroad status -> (
-      match status with RR_Owned player -> player = p | _ -> false)
+      match status with RR_Owned player -> player = p | _ -> false )
 
 let rec all_mortgagable_helper g acc p ownables =
   match ownables with

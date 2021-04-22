@@ -17,6 +17,12 @@ exception MortgageFailure
 (** Raised when a string does not correspond to a property name. *)
 exception NotPropertyName
 
+(** Raised when a house cannot be added to a property *)
+exception CannotAddHouse of string
+
+(** Raised when a hotel cannot be added to a hotel *)
+exception CannotAddHotel of string
+
 (** [get_board g] returns the board field in [game] g *)
 val get_board : t -> Board.t
 
@@ -78,11 +84,14 @@ val all_mortgagable : t -> Player.t -> ownable_name array
     Raises: [NotPropertyName] if [property_name] is not a property name. *)
 val can_add_house : t -> Player.t -> ownable_name -> bool
 
-(** [add_house g p] adds a house to the property with name [p] in game
-    [g]. Requires: [p] is a property name and a house can be added to
-    it. Raises: [NotPropertyName] if [p] does not correspond to a
-    property. *)
-val add_house : t -> ownable_name -> unit
+(** [add_house g p adding_house] adds a house to the property with name
+    [p] in game [g]. Decrements houses available if [adding_house],
+    decrements hotels available if ![adding_house]. Requires: [p] is a
+    property name and a house can be added to it. Raises:
+    [NotPropertyName] if [p] does not correspond to a property.
+    [CannotAddHouse s] if a house cannot be added to property [p] with
+    the appropriate exception message [s] *)
+val add_house : t -> ownable_name -> bool -> unit
 
 (** [can_add_hotel g p property_name] returns true iff player [p] can
     add a hotel on the property with name [property_name] in game [g].
@@ -90,11 +99,10 @@ val add_house : t -> ownable_name -> unit
     Raises: [NotPropertyName] if [property_name] is not a property name. *)
 val can_add_hotel : t -> Player.t -> ownable_name -> bool
 
-(** [add_hotel g p] adds a hotel to the property with name [p] in game
-    [g]. Requires: [p] is a property name and a house can be added to
-    it. Raises: [NotPropertyName] if [p] does not correspond to a
-    property. *)
-val add_hotel : t -> ownable_name -> unit
+(* (** [add_hotel g p] adds a hotel to the property with name [p] in
+   game [g]. Requires: [p] is a property name and a house can be added
+   to it. Raises: [NotPropertyName] if [p] does not correspond to a
+   property. *) val add_hotel : t -> ownable_name -> unit *)
 
 (** [is_available g o] returns true iff the ownable with name [o] is
     available in game [g]. Raises: [NotOwnableName] if [o] does not
