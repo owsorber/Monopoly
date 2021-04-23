@@ -45,6 +45,10 @@ val next_player : t -> unit
     the game [g]. *)
 val get_free_parking : t -> int
 
+(** [do_tax game player space] decreases the player's balance by the tax
+    amount of [space] and increases the free parking by the same amount. *)
+val do_tax : t -> Player.t -> Board.space -> unit
+
 (** [get_rent g i r] returns the rent associated with landing on the
     space with location after rolling [r] in game [g]. TODO: Raise
     Exception. *)
@@ -83,6 +87,10 @@ val all_mortgagable : t -> Player.t -> ownable_name array
     Requires: Player [p] owns property with name [property_name].
     Raises: [NotPropertyName] if [property_name] is not a property name. *)
 val can_add_house : t -> Player.t -> ownable_name -> bool
+
+(** [all_can_buy_house p] returns an array of the ownables that [p] can
+    put a house on. *)
+val all_can_buy_house : t -> Player.t -> ownable_name array
 
 (** [add_house g p adding_house] adds a house to the property with name
     [p] in game [g]. Decrements houses available if [adding_house],
