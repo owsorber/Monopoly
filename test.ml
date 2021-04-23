@@ -92,6 +92,11 @@ let start_space_test name board expected_output =
   name >:: fun _ ->
   assert_equal expected_output (start_space board) ~printer:pp_string
 
+let space_color_test name board loc expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (color board (space_from_location board loc))
+
 let test_board = Yojson.Basic.from_file "board.json" |> init_board
 
 let mediterranean_avenue_space =
@@ -117,6 +122,12 @@ let board_tests =
     space_name_test "10 is Jail" test_board 10 "Jail";
     space_name_test "Last space is Boardwalk" test_board 39 "Boardwalk";
     start_space_test "Start on Go" test_board "Go";
+    space_color_test "Color of Mediterranean Avenue" test_board 1
+      "#955438";
+    space_color_test "Color of Mediterranean Avenue" test_board 1
+      "#955438";
+    space_color_test "Color of Pennsylvania Avenue" test_board 34
+      "#1fb25a";
   ]
 
 (* Any Game Module Testing Helper Functions/Variables *)

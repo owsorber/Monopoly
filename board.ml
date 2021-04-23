@@ -104,35 +104,6 @@ let length board = Array.length board
 let space_from_location board i =
   try board.(i) with Invalid_argument _ -> raise (NotOnBoard i)
 
-let space_from_space_name_helper board space_name =
-  Array.fold_left
-    (fun i acc ->
-      match
-        try board.(i + 1)
-        with Invalid_argument s ->
-          Printers.red_print (s ^ " at index: " ^ string_of_int i);
-          failwith "invalid argument exception"
-      with
-      | Property p -> if space_name = p.name then acc + i + 1 else acc
-      | Railroad r -> if space_name = r.name then acc + i + 1 else acc
-      | Utility u -> if space_name = u.name then acc + i + 1 else acc
-      | Tax t -> if space_name = t.name then acc + i + 1 else acc
-      | Go -> if space_name = "Go" then acc + i + 1 else acc
-      | Chance -> if space_name = "Chance" then acc + i + 1 else acc
-      | CommunityChest ->
-          if space_name = "Community Chest" then acc + i + 1 else acc
-      | Quarantine -> if space_name = "Jail" then acc + i + 1 else acc
-      | FreeParking ->
-          if space_name = "Free Parking" then acc + i + 1 else acc
-      | GoToQuarantine ->
-          if space_name = "Go To Jail" then acc + i + 1 else acc)
-    (-1)
-    (Array.init (length board) (fun x -> x))
-
-let space_from_space_name board space_name =
-  let i = space_from_space_name_helper board space_name in
-  if i = -1 then raise (NameNotOnBoard space_name) else Some board.(i)
-
 let is_ownable board space =
   match space with
   | Property _ -> true
@@ -153,6 +124,15 @@ let space_name board i =
   | Quarantine -> "Jail"
   | FreeParking -> "Free Parking"
   | GoToQuarantine -> "Go To Jail"
+
+let rec space_from_space_name_helper board acc s =
+  if acc >= length board then -1
+  else if space_name board acc = s then acc
+  else space_from_space_name_helper board (acc + 1) s
+
+let space_from_space_name board space_name =
+  let i = space_from_space_name_helper board 0 space_name in
+  if i = -1 then raise (NameNotOnBoard space_name) else Some board.(i)
 
 let start_space board = space_name board 0
 
