@@ -19,6 +19,7 @@ type moves =
   | BuyHouse
   | BuyHotel
   | Mortgage
+  | UnMortgage
   | Trade
   | End
   | Quit
@@ -32,31 +33,57 @@ let string_of_move m =
   | BuyHouse -> "Buy House"
   | BuyHotel -> "Buy Hotel"
   | Mortgage -> "Mortgage"
+  | UnMortgage -> "Unmortgage"
   | Trade -> "Trade"
   | End -> "End Turn"
   | Quit -> "Quit"
   | Faulty -> "Faulty"
 
+let phase1_options = [| Roll; Quit |]
+
+let phase2_options =
+  [| Buy; BuyHouse; BuyHotel; Mortgage; UnMortgage; End; Quit |]
+
+(**[print_array a] prints the string representation of array [a]. *)
+let print_array elem_printer a =
+  Array.iteri
+    (fun i elem ->
+      yellow_print (string_of_int (i + 1));
+      white_print (": " ^ elem_printer elem))
+    a
+
+let phase2_string_of_move m p b g =
+  let move_str = string_of_move m in
+  let details =
+    match m with
+    | Buy ->
+        let current_location = Player.get_location p in
+        let current_space =
+          Board.space_from_location b current_location
+        in
+        if Board.is_ownable b current_space then
+          " (Price: "
+          ^ string_of_int
+              (Game.get_ownable_price b
+                 (Board.space_name b current_location))
+          ^ ")"
+        else "(Illegal Action)"
+    | _ -> ""
+  in
+  move_str ^ details
+
 (** [options_printer phase] is the string representation of the options
     a player can take during phase 1 if [phase] is true or phase 2 if
     [phase] is false. *)
-let options_printer phase =
+let options_printer phase p b g =
+  yellow_print
+    "Please enter the number of the action you would like to take:\n";
   match phase with
-  | true ->
-      "\n\
-       Please choose one of the options below (case sensitive): \n\
-      \ Roll \n\
-      \ Quit"
+  | true -> print_array (fun x -> string_of_move x) phase1_options
   | false ->
-      "\n\n\
-       Please choose one of the options below (case sensitive): \n\
-      \ Buy Current Space\n\
-      \ Buy House\n\
-      \ Buy Hotel\n\
-      \ Mortgage \n\
-      \ Trade \n\
-      \ End Turn \n\
-      \ Quit"
+      print_array
+        (fun x -> phase2_string_of_move x p b g)
+        phase2_options
 
 (**[string_of_list lst] is the string representation of list [lst]*)
 let string_of_list lst =
@@ -70,46 +97,21 @@ let string_of_list lst =
   in
   "[" ^ pp_elts lst ^ "]"
 
-let property_info property g =
-  let is_mortgaged = string_of_bool (Game.is_mortgaged g property) in
-  let houses = Game.get_houses g property in
-  let num_houses = string_of_int (if houses > 4 then 4 else houses) in
-  let has_hotel = string_of_bool (houses > 4) in
-  property ^ ". Houses: " ^ num_houses ^ ". Hotel: " ^ has_hotel
-  ^ ". Mortgaged: " ^ is_mortgaged
+let property_info property g b =
+  (*pattern match against property to only print useful info*)
+  property ^ Game.get_ownable_info g b property
 
-let pp_propert_list g lst =
+let pp_propert_list g b lst =
   let pp_elts lst =
     let rec loop acc = function
       | [] -> acc
       | h1 :: h2 :: t ->
-          loop (acc ^ property_info h1 g ^ "\n") (h2 :: t)
-      | h :: t -> loop (acc ^ property_info h g) t
+          loop (acc ^ property_info h1 g b ^ "\n") (h2 :: t)
+      | h :: t -> loop (acc ^ property_info h g b) t
     in
     loop "" lst
   in
   "[" ^ pp_elts lst ^ "]"
-
-(**[print_array a] prints the string representation of array [a]. *)
-let print_array elem_printer a =
-  Array.iteri
-    (fun i elem ->
-      yellow_print (string_of_int (i + 1));
-      white_print (": " ^ elem_printer elem))
-    a
-
-(** [input s o] is the desired move [s] given options [o]. *)
-let input s =
-  match s with
-  | "Roll" | "r" -> Roll
-  | "Buy Current Space" | "b" -> Buy
-  | "Buy House" -> BuyHouse
-  | "Buy Hotel" -> BuyHotel
-  | "Mortgage" | "m" -> Mortgage
-  | "Trade" | "t" -> Trade
-  | "End Turn" | "e" -> End
-  | "Quit" | "q" -> Quit
-  | _ -> Faulty
 
 (**[string_of_roll roll] returns the string represntation of roll
    [roll]. *)
@@ -127,20 +129,9 @@ let get_end t = t.is_end
 
 let landing p b g space r =
   try
-    let current_location = Player.get_location p in
-    let rent = Game.get_rent g current_location r in
-    if rent > 0 then
-      match Game.owner g space with
-      | Some player ->
-          magenta_print "You must pay ";
-          red_print (string_of_int rent);
-          magenta_print " to ";
-          yellow_print (Player.get_player_id player);
-          print_endline "";
-          Player.update_balance p (-rent)
-      | None -> ()
-    else ()
-  with _ -> ()
+    let to_print = Game.landing_on_space g p b r space in
+    magenta_print to_print
+  with _ -> red_print "something went wrong"
 
 (**[double_of_roll (a,b)] returns true if a and b are equal and false if
    not. *)
@@ -162,8 +153,13 @@ let roll p b g =
       player_id = Player.get_player_id p;
       action =
         (fun player ->
-          Player.move_player r player;
-          landing player b g new_space r);
+          try
+            Player.move_player r player;
+            landing player b g new_space r
+          with Player.InQuarantine i ->
+            red_print
+              ("You can't move yet, you're still in quarantine for "
+             ^ string_of_int i ^ " more turns."));
       is_double = double_of_roll r;
       is_end = false;
     }
@@ -236,75 +232,147 @@ let buy p b g =
         action =
           (fun p ->
             Player.buy_ownable p ownable_space_name price;
-            Game.make_ownable_owned g p ownable_space_name);
+            Game.make_ownable_owned g p ownable_space_name;
+            yellow_print
+              ("You successfully purchased " ^ ownable_space_name
+             ^ "!\n"));
         is_double = false;
         is_end = false;
       }
   else Illegal
 
+let mortgagable_details ownable b =
+  let details =
+    " (You gain: "
+    ^ string_of_int (Game.get_ownable_price b ownable / 2)
+    ^ ")"
+  in
+  ownable ^ details
+
 let mortgage p b g =
   white_print
     "Please the number of the property you would like to mortgage: ";
-  yellow_print "Possible properties to mortgage: ";
+  yellow_print "Possible properties to mortgage: \n";
   let mortgagables = Game.all_mortgagable g p in
-  print_array (fun x -> x) mortgagables;
-  if Array.length mortgagables = 0 then green_print "None.\n";
-  print_string "\n> ";
-  let property_index = read_line () in
-  (* check out of bounds *)
-  try
-    let property_name =
-      mortgagables.(int_of_string property_index - 1)
-    in
-    let legality = ref false in
+  print_array (fun x -> mortgagable_details x b) mortgagables;
+  if Array.length mortgagables = 0 then (
+    green_print "None.\n";
+    Illegal)
+  else (
+    (*if len is zero then end function*)
+    print_string "\n> ";
+    let property_index = read_line () in
+    (* check out of bounds *)
+    try
+      let property_name =
+        mortgagables.(int_of_string property_index - 1)
+      in
+      let legality = ref false in
 
-    (match Board.space_from_space_name b property_name with
-    | Some space ->
-        if Board.is_ownable b space then
-          (*check is owned by player*)
-          match Game.owner g property_name with
-          | Some player ->
-              if player = p then legality := true
-              else
+      (match Board.space_from_space_name b property_name with
+      | Some space ->
+          if Board.is_ownable b space then
+            (*check is owned by player*)
+            match Game.owner g property_name with
+            | Some player ->
+                if player = p then legality := true
+                else
+                  red_print
+                    "INFO: The property you are trying to mortgage is \
+                     owned by: ";
+                cyan_print (Player.get_player_id player);
+                print_endline ""
+            | None ->
                 red_print
-                  "INFO: The property you are trying to mortgage is \
-                   owned by: ";
-              cyan_print (Player.get_player_id player);
-              print_endline ""
-          | None ->
-              red_print
-                "INFO: The property you are tyring to mortgage is not \
-                 owned by any player\n"
-        else
+                  "INFO: The property you are tyring to mortgage is \
+                   not owned by any player\n"
+          else
+            red_print
+              "INFO: The property you entered cannot be mortgaged\n"
+      | None ->
           red_print
-            "INFO: The property you entered cannot be mortgaged\n"
-    | None ->
-        red_print "INFO: The property you entered cannot be mortgaged\n");
-    if !legality then
+            "INFO: The property you entered cannot be mortgaged\n");
+      if !legality then
+        Legal
+          {
+            player_id = Player.get_player_id p;
+            action =
+              (* handle exceptions in the function *)
+              (fun x ->
+                Player.update_balance x
+                  (Game.get_ownable_price b property_name / 2);
+                Game.make_ownable_mortgaged g x property_name);
+            is_double = false;
+            is_end = false;
+          }
+      else Illegal
+    with _ ->
+      red_print "invalid input\n";
+      Illegal)
+
+let rec find_mortgaged g acc = function
+  | [] -> acc
+  | h :: t ->
+      if Game.is_mortgaged g h then
+        find_mortgaged g (Array.append acc [| h |]) t
+      else find_mortgaged g acc t
+
+let unmortgage_details ownable b =
+  let details =
+    " (You must pay: "
+    ^ string_of_int (Game.get_ownable_price b ownable / 2)
+    ^ ")"
+  in
+  ownable ^ details
+
+let unmortgage p b g =
+  white_print
+    "Please the number of the property you would like to buy back from \
+     the bank: ";
+  yellow_print "Possible properties to buy back: \n";
+  let owned = Player.get_ownable_name_list p in
+  let mortgaged = find_mortgaged g [||] owned in
+  print_array (fun x -> unmortgage_details x b) mortgaged;
+  if Array.length mortgaged = 0 then (
+    green_print "None.\n";
+    Illegal)
+  else (
+    print_string "\n> ";
+    let property_index = read_line () in
+    (* check out of bounds *)
+    try
+      let property_name =
+        mortgaged.(int_of_string property_index - 1)
+      in
       Legal
         {
           player_id = Player.get_player_id p;
           action =
-            (* handle exceptions in the function *)
             (fun x ->
+              Game.make_ownable_owned g x property_name;
               Player.update_balance x
-                (Game.get_ownable_price b property_name / 2);
-              Game.make_ownable_mortgaged g x property_name);
+                (-Game.get_ownable_price b property_name / 2));
           is_double = false;
           is_end = false;
         }
-    else Illegal
-  with _ ->
-    red_print "invalid input\n";
-    Illegal
+    with _ ->
+      red_print "Something went wrong.\n";
+      Illegal)
+
+let house_details ownable p g =
+  let details =
+    " ( Cost: "
+    ^ string_of_int (Game.next_house_price g p ownable)
+    ^ ")"
+  in
+  ownable ^ details
 
 let buy_house p g =
   white_print
     "Please enter the number of the property you would like to buy a \
      house on: ";
-  (*need Game.property_list_of_ownable_list*)
-  let prop_array = Array.of_list (Player.get_ownable_name_list p) in
-  print_array (fun x -> x) prop_array;
+  let prop_array = Game.all_can_buy_house g p in
+  print_array (fun x -> house_details x p g) prop_array;
   print_string "\n> ";
   let property_index = read_line () in
   try
@@ -314,7 +382,11 @@ let buy_house p g =
         Legal
           {
             player_id = Player.get_player_id p;
-            action = (fun _ -> Game.add_house g property_name true);
+            action =
+              (fun _ ->
+                Game.add_house g property_name true;
+                Player.update_balance p
+                  (-Game.next_house_price g p property_name));
             is_double = false;
             is_end = false;
           }
@@ -328,13 +400,20 @@ let buy_house p g =
     red_print "invalid input\n";
     Illegal
 
+let hotel_details ownable p g =
+  let details =
+    " ( Cost: " ^ string_of_int (Game.hotel_price g p ownable) ^ ")"
+  in
+  ownable ^ details
+
 let buy_hotel p g =
   white_print
     "Please enter the number of the property you would like to buy a \
      hotel on: ";
   (*need Game.property_list_of_ownable_list*)
-  let prop_array = Array.of_list (Player.get_ownable_name_list p) in
-  print_array (fun x -> x) prop_array;
+  let prop_array = Game.all_can_buy_hotel g p in
+  (*use Game.all_can_buy_house to print only those that can add a house*)
+  print_array (fun x -> hotel_details x p g) prop_array;
   print_string "\n> ";
   let property_index = read_line () in
   try
@@ -380,12 +459,12 @@ let trade p b =
 let print_player_info b p g =
   let player_bal = string_of_int (Player.get_balance p) in
   let player_props =
-    pp_propert_list g (Player.get_ownable_name_list p)
+    pp_propert_list g b (Player.get_ownable_name_list p)
   in
   let player_loc = Board.space_name b (Player.get_location p) in
   cyan_print "Current balance: ";
   green_print (player_bal ^ "\n");
-  cyan_print "Current properties: ";
+  cyan_print "Current properties: \n";
   green_print (player_props ^ "\n");
   cyan_print "Current location: ";
   green_print player_loc
@@ -431,8 +510,21 @@ let graceful_shutdown b g =
 let turn_info b p g phase =
   print_player_info b p g;
   cyan_print "\npossible moves: ";
-  yellow_print (options_printer phase);
+  options_printer phase p b g;
   cyan_print "\n>"
+
+let function_of_move m p b g =
+  match m with
+  | Roll -> roll p b g
+  | Buy -> buy p b g
+  | BuyHouse -> buy_house p g
+  | BuyHotel -> buy_hotel p g
+  | Mortgage -> mortgage p b g
+  | UnMortgage -> unmortgage p b g
+  | Trade -> Illegal
+  | End -> end_turn p b
+  | Quit -> graceful_shutdown b g
+  | Faulty -> Illegal
 
 (**[turn p b g phase] is the representation of a single response by the
    user for player [p], given board [b] and game [g]. *)
@@ -443,22 +535,19 @@ let turn p b g phase =
       let _ = turn_info b p g phase in
       ();
       try
-        match input (read_line ()) with
-        | Roll -> roll p b g
-        | Quit -> graceful_shutdown b g
-        | _ -> Illegal
-      with _ -> Illegal)
+        let input_index = int_of_string (read_line ()) in
+        let move = phase1_options.(input_index - 1) in
+        function_of_move move p b g
+      with _ ->
+        red_print "Please enter a valid index.\n";
+        Illegal)
   | false -> (
       let _ = turn_info b p g phase in
       ();
       try
-        match input (read_line ()) with
-        | Buy -> buy p b g
-        | BuyHouse -> buy_house p g
-        | BuyHotel -> buy_hotel p g
-        | Mortgage -> mortgage p b g
-        | Trade -> Illegal
-        | End -> end_turn p b
-        | Quit -> graceful_shutdown b g
-        | _ -> Illegal
-      with _ -> Illegal)
+        let input_index = int_of_string (read_line ()) in
+        let move = phase2_options.(input_index - 1) in
+        function_of_move move p b g
+      with _ ->
+        red_print "Please enter a valid index.\n";
+        Illegal)

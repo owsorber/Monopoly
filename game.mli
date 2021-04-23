@@ -62,6 +62,10 @@ val get_ownable_status : t -> Board.space -> ownable_status option
     [o] if it is available in board [b]. *)
 val get_ownable_price : Board.t -> ownable_name -> int
 
+(** [get_ownable_info g b o] returns a string containing relevant
+    information about the space with name [ownable_name]. Requires: *)
+val get_ownable_info : t -> Board.t -> ownable_name -> string
+
 (** [get_houses g name] returns the number of houses on the space with
     [ownable_name] name*)
 val get_houses : t -> ownable_name -> int
@@ -88,9 +92,23 @@ val all_mortgagable : t -> Player.t -> ownable_name array
     Raises: [NotPropertyName] if [property_name] is not a property name. *)
 val can_add_house : t -> Player.t -> ownable_name -> bool
 
+(** [next_house_price g p property_name] returns the price of the next
+    house that would be bought on property with name [property_name].
+    Requires: Player [p] can buy a house on the property. *)
+val next_house_price : t -> Player.t -> ownable_name -> int
+
 (** [all_can_buy_house p] returns an array of the ownables that [p] can
     put a house on. *)
 val all_can_buy_house : t -> Player.t -> ownable_name array
+
+(** [all_can_buy_hotel p] returns an array of the ownables that [p] can
+    put a hotel on. *)
+val all_can_buy_hotel : t -> Player.t -> ownable_name array
+
+(** [hotel_price g p property_name] returns the price of the hotel that
+    would be bought on property with name [property_name]. Requires:
+    Player [p] can buy a hotel on the property. *)
+val hotel_price : t -> Player.t -> ownable_name -> int
 
 (** [add_house g p adding_house] adds a house to the property with name
     [p] in game [g]. Decrements houses available if [adding_house],
@@ -127,11 +145,17 @@ val is_mortgaged : t -> ownable_name -> bool
     [NotOwnableName] if [o] does not correspond to an ownable. *)
 val owner : t -> ownable_name -> Player.t option
 
-(* [has_monopoly g p col] returns true iff player [p] has a monopoly on
-   the color group [col] in game [g] i.e. [p] owns every property with
-   color [col]. *)
+(** [has_monopoly g p col] returns true iff player [p] has a monopoly on
+    the color group [col] in game [g] i.e. [p] owns every property with
+    color [col]. *)
 val has_monopoly : t -> Player.t -> string -> bool
 
-(* [has_houses_on_color g p col] returns true iff player [p] has any
-   houses on any properties with color [col] in game [g]. *)
+(** [has_houses_on_color g p col] returns true iff player [p] has any
+    houses on any properties with color [col] in game [g]. *)
 val has_houses_on_color : t -> Player.t -> string -> bool
+
+(** [landing_on_space g p b r s] returns a string of relevant
+    information, after enacting the necessary actions for player [p]
+    landing on the space with name [s], after rolling [r]. *)
+val landing_on_space :
+  t -> Player.t -> Board.t -> Player.rolled_dice -> string -> string

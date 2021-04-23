@@ -16,6 +16,8 @@ type quarantine_status =
 
 exception BalanceBelowZero
 
+exception InQuarantine of int
+
 type t = {
   player_id : player_id;
   mutable balance : balance;
@@ -57,9 +59,13 @@ let update_balance player i =
 let passes_go roll player = player.location + sums roll >= 40
 
 let move_player roll player =
-  if passes_go roll player then player.balance <- player.balance + 200;
-  let new_pos = (player.location + sums roll) mod 40 in
-  player.location <- new_pos
+  match player.quarantine_status with
+  | In i -> raise (InQuarantine i)
+  | Out ->
+      if passes_go roll player then
+        player.balance <- player.balance + 200;
+      let new_pos = (player.location + sums roll) mod 40 in
+      player.location <- new_pos
 
 let projected_space roll player board =
   let new_pos = (player.location + sums roll) mod 40 in

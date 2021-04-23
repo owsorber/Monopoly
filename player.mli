@@ -28,6 +28,10 @@ type quarantine_status =
 (** Raised when a player's Balance is below 0*)
 exception BalanceBelowZero
 
+(** Raised when a player attempts to move and is in quarantine with the
+    days remaining in quarantine*)
+exception InQuarantine of int
+
 (** [get_player_id t] returns the name of player [t]*)
 val get_player_id : t -> player_id
 
@@ -50,8 +54,8 @@ val roll : unit -> rolled_dice
 
 (** [move_player roll p] updates player [p]'s location based on the dice
     values in [roll] and updates their balance if they pass "Go".
-    Requires: [rolled_dice] is a valid roll. the player's
-    quarantine_status is out*)
+    Requires: [rolled_dice] is a valid roll. Raises: [InQuarantine i]
+    where [i] is the remaining days in quarantine *)
 val move_player : rolled_dice -> t -> unit
 
 (**[go_to_quarantine_status p] sends player [p] to quarantine by making

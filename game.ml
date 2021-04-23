@@ -261,6 +261,29 @@ let get_houses g name =
   | Railroad r -> 0
   | Utility u -> 0
 
+let get_ownable_info g board ownable_name =
+  match Board.space_from_space_name board ownable_name with
+  | Some space -> (
+      match space with
+      | Property _ ->
+          let is_mortgaged =
+            string_of_bool (is_mortgaged g ownable_name)
+          in
+          let houses = get_houses g ownable_name in
+          let num_houses =
+            string_of_int (if houses > 4 then 4 else houses)
+          in
+          let has_hotel = string_of_bool (houses > 4) in
+          ". Houses: " ^ num_houses ^ ". Hotel: " ^ has_hotel
+          ^ ". Mortgaged: " ^ is_mortgaged
+      | Railroad _ | Utility _ ->
+          let is_mortgaged =
+            string_of_bool (is_mortgaged g ownable_name)
+          in
+          ". Mortgaged: " ^ is_mortgaged
+      | _ -> "")
+  | None -> ""
+
 (** Checks if the property with name [h] in game [g] has color [col] *)
 let is_color g h col =
   if Board.color g.board (get_property_from_space_name g.board h) = col
@@ -341,6 +364,12 @@ let can_add_house t player property_name =
   check1 && check2 && check3 && check4 && check5
 
 let all_can_buy_house p = failwith "Unimplemented"
+
+let all_can_buy_hotel p = failwith "Unimplemented"
+
+let next_house_price g p property_name = failwith "Unimplemented"
+
+let hotel_price g p property_name = failwith "Unimplemented"
 
 (** Returns an updated property_status with an additional house*)
 let new_property_house t property_name : property_status =
@@ -458,3 +487,42 @@ let make_ownable_mortgaged g p o =
         Hashtbl.replace g.ownables o (Railroad (RR_Mortgaged p))
     | _ -> raise MortgageFailure
   else raise MortgageFailure
+
+let landing_on_space g p b r space_name =
+  match Board.space_from_space_name b space_name with
+  | Some space -> (
+      match space with
+      | Property _ | Railroad _ | Utility _ ->
+          let current_location = Player.get_location p in
+          let rent = get_rent g current_location r in
+          if rent > 0 then
+            match owner g space_name with
+            | Some player ->
+                if player <> p then (
+                  Player.pay p player rent;
+                  "You must pay " ^ string_of_int rent ^ " to "
+                  ^ Player.get_player_id player
+                  ^ "\n")
+                else ""
+            | None -> ""
+          else ""
+      | Tax t ->
+          Player.update_balance p (-t.cost);
+          g.free_parking <- g.free_parking + t.cost;
+          "Oh no! You landed on " ^ t.name ^ ". You must pay "
+          ^ string_of_int t.cost ^ "\n"
+      | Chance -> "You landed on Chance!\nDrawing a card...\n"
+      | CommunityChest ->
+          "You landed on Community Chest!\nDrawing a card...\n"
+      | Quarantine -> "You're just here for a visit... for now\n"
+      | FreeParking ->
+          Player.update_balance p g.free_parking;
+          g.free_parking <- 0;
+          "You landed on Free Parking! You get to collect "
+          ^ string_of_int g.free_parking
+          ^ "\n"
+      | GoToQuarantine ->
+          Player.go_to_quarantine_status p;
+          "Oh no! You tested positive and need to go into quarantine!\n"
+      | Go -> "")
+  | None -> "something went wrong"
