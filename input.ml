@@ -82,7 +82,8 @@ let pp_propert_list g lst =
   let pp_elts lst =
     let rec loop acc = function
       | [] -> acc
-      | h1 :: h2 :: t -> loop (acc ^ property_info h1 g ^ "\n") (h2 :: t)
+      | h1 :: h2 :: t ->
+          loop (acc ^ property_info h1 g ^ "\n") (h2 :: t)
       | h :: t -> loop (acc ^ property_info h g) t
     in
     loop "" lst
@@ -216,10 +217,10 @@ let buy p b g =
               | Game.NotOwnableName -> red_print "not ownable name\n"
               | Board.NameNotOnBoard s ->
                   red_print (s ^ " not on board\n")
-              | _ -> red_print "somewhere else\n" )
+              | _ -> red_print "somewhere else\n")
         with Game.NotOwnableName ->
           red_print
-            "INFO: The space you are currently on cannot be bought\n" )
+            "INFO: The space you are currently on cannot be bought\n")
     | None ->
         red_print
           "INFO: The space you are currently on cannot be bought\n"
@@ -257,7 +258,7 @@ let mortgage p b g =
     in
     let legality = ref false in
 
-    ( match Board.space_from_space_name b property_name with
+    (match Board.space_from_space_name b property_name with
     | Some space ->
         if Board.is_ownable b space then
           (*check is owned by player*)
@@ -278,15 +279,17 @@ let mortgage p b g =
           red_print
             "INFO: The property you entered cannot be mortgaged\n"
     | None ->
-        red_print "INFO: The property you entered cannot be mortgaged\n"
-    );
+        red_print "INFO: The property you entered cannot be mortgaged\n");
     if !legality then
       Legal
         {
           player_id = Player.get_player_id p;
           action =
             (* handle exceptions in the function *)
-            (fun x -> Game.make_ownable_mortgaged g x property_name);
+            (fun x ->
+              Player.update_balance x
+                (Game.get_ownable_price b property_name / 2);
+              Game.make_ownable_mortgaged g x property_name);
           is_double = false;
           is_end = false;
         }
@@ -317,7 +320,7 @@ let buy_house p g =
           }
       else (
         red_print "you cannot add a house on this property";
-        Illegal )
+        Illegal)
     with Game.NotPropertyName ->
       red_print "The given name is not a valid property";
       Illegal
@@ -347,7 +350,7 @@ let buy_hotel p g =
           }
       else (
         red_print "you cannot add a hotel on this property";
-        Illegal )
+        Illegal)
     with Game.NotPropertyName ->
       red_print "The given name is not a valid property";
       Illegal
@@ -413,8 +416,8 @@ let print_endgame b g =
   green_print (Player.get_player_id max_properties);
   magenta_print " with ";
   green_print
-    ( max_properties |> Player.get_ownable_name_list |> List.length
-    |> string_of_int );
+    (max_properties |> Player.get_ownable_name_list |> List.length
+   |> string_of_int);
   magenta_print " properties.\n"
 
 (**[graceful_shutdown b g] ends the game [g] given board [b]. *)
@@ -444,7 +447,7 @@ let turn p b g phase =
         | Roll -> roll p b g
         | Quit -> graceful_shutdown b g
         | _ -> Illegal
-      with _ -> Illegal )
+      with _ -> Illegal)
   | false -> (
       let _ = turn_info b p g phase in
       ();
@@ -458,4 +461,4 @@ let turn p b g phase =
         | End -> end_turn p b
         | Quit -> graceful_shutdown b g
         | _ -> Illegal
-      with _ -> Illegal )
+      with _ -> Illegal)
