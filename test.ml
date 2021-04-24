@@ -147,13 +147,246 @@ let board = get_board test_game
 let cur_player = current_player test_game
 
 let current_player_test name game expected_output =
-  name >:: fun _ ->
-  assert_equal expected_output (current_player game)
-    ~printer:get_player_id
+  name >:: fun _ -> assert_equal expected_output (current_player game)
+
+let get_all_players_test name game expected_output =
+  name >:: fun _ -> assert_equal expected_output (get_all_players game)
 
 let next_player_help game =
   next_player game;
   game
+
+let get_free_parking_test name game expected_output =
+  name >:: fun _ -> assert_equal expected_output (get_free_parking game)
+
+let do_tax_test name game player spc expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    ( Game.do_tax game player spc;
+      Player.get_balance player )
+
+let get_rent_test name game location_index dice expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (get_rent game location_index dice)
+
+let get_ownable_status_test name game spc expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (get_ownable_status game spc)
+
+let get_ownable_price_test name board own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (get_ownable_price board own_name)
+
+let get_ownable_info_test name game board own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (get_ownable_info game board own_name)
+
+let get_houses_test name game own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (get_houses game own_name)
+
+(* uses Game.owner *)
+let make_ownable_owned_test name game player own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    ( make_ownable_owned game player own_name;
+      owner game own_name )
+
+let make_ownable_mortgaged_test
+    name
+    game
+    player
+    own_name
+    expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    ( make_ownable_owned game player own_name;
+      is_mortgaged game own_name && owner game own_name = Some player )
+
+let make_ownable_mortgaged_exn name game player own_name expected_output
+    =
+  name >:: fun _ ->
+  assert_raises MortgageFailure (fun () ->
+      make_ownable_mortgaged game player own_name)
+
+let all_mortgagable_test name game player expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (all_mortgagable game player)
+
+let can_add_house_test name game player own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (can_add_house game player own_name)
+
+let can_add_house_property_exn name game player own_name expected_output
+    =
+  name >:: fun _ ->
+  assert_raises NotPropertyName (fun () ->
+      can_add_house game player own_name)
+
+let can_add_house_monopoly_exn name game player own_name expected_output
+    =
+  name >:: fun _ ->
+  assert_raises (CannotAddHouse "No Monopoly") (fun () ->
+      can_add_house game player own_name)
+
+let can_add_house_available_exn
+    name
+    game
+    player
+    own_name
+    expected_output =
+  name >:: fun _ ->
+  assert_raises (CannotAddHouse "No Houses Available") (fun () ->
+      can_add_house game player own_name)
+
+let can_add_house_four_houses_exn
+    name
+    game
+    player
+    own_name
+    expected_output =
+  name >:: fun _ ->
+  assert_raises (CannotAddHouse "4 Houses on Property") (fun () ->
+      can_add_house game player own_name)
+
+let can_add_house_even_build_exn
+    name
+    game
+    player
+    own_name
+    expected_output =
+  name >:: fun _ ->
+  assert_raises (CannotAddHouse "Even Build") (fun () ->
+      can_add_house game player own_name)
+
+let can_add_house_mortgaged_exn
+    name
+    game
+    player
+    own_name
+    expected_output =
+  name >:: fun _ ->
+  assert_raises (CannotAddHouse "Mortgaged Property on Color")
+    (fun () -> can_add_house game player own_name)
+
+let next_house_price_test name game player own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (next_house_price game player own_name)
+
+let all_can_buy_house_test name game player expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (all_can_buy_house game player)
+
+let all_can_buy_hotel_test name game player expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (all_can_buy_hotel game player)
+
+let hotel_price_test name game player own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (hotel_price game player own_name)
+
+(* assumes a call to add_house will always add an house, thus
+   incrementing number of houses by one TODO: check num houses properly
+   decrements*)
+let add_house_test name game own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (let num_houses = get_houses game own_name in
+     let player =
+       match owner game own_name with
+       | Some p -> p
+       | _ -> failwith "Impossible Branch"
+     in
+     let upd_houses =
+       if can_add_house game player own_name then num_houses + 1
+       else num_houses
+     in
+     add_house game own_name true;
+     upd_houses > num_houses)
+
+let add_house_exn name game own_name adding_house expected_output =
+  name >:: fun _ ->
+  assert_raises NotPropertyName (fun () ->
+      add_house game own_name adding_house)
+
+let can_add_hotel_test name game player own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (can_add_hotel game player own_name)
+
+let can_add_hotel_property_exn name game player own_name expected_output
+    =
+  name >:: fun _ ->
+  assert_raises NotPropertyName (fun () ->
+      can_add_hotel game player own_name)
+
+let can_add_hotel_monopoly_exn name game player own_name expected_output
+    =
+  name >:: fun _ ->
+  assert_raises (CannotAddHotel "No Monopoly") (fun () ->
+      can_add_hotel game player own_name)
+
+let can_add_hotel_four_houses_exn
+    name
+    game
+    player
+    own_name
+    expected_output =
+  name >:: fun _ ->
+  assert_raises (CannotAddHotel "Does Not Own Four Houses") (fun () ->
+      can_add_hotel game player own_name)
+
+let can_add_hotel_already_own_exn
+    name
+    game
+    player
+    own_name
+    expected_output =
+  name >:: fun _ ->
+  assert_raises (CannotAddHotel "Already Owns Hotel on Property")
+    (fun () -> can_add_hotel game player own_name)
+
+let can_add_house_no_hotels_exn
+    name
+    game
+    player
+    own_name
+    expected_output =
+  name >:: fun _ ->
+  assert_raises (CannotAddHotel "No Hotels Available") (fun () ->
+      can_add_hotel game player own_name)
+
+let is_available_test name game own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (is_available game own_name)
+
+let is_available_exn name game own_name expected_output =
+  name >:: fun _ ->
+  assert_raises NotOwnableName (fun () -> is_available game own_name)
+
+let is_mortgaged_test name game own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (is_mortgaged game own_name)
+
+let is_mortgaged_exn name game own_name expected_output =
+  name >:: fun _ ->
+  assert_raises NotOwnableName (fun () -> is_mortgaged game own_name)
+
+let owner_test name game own_name expected_output =
+  name >:: fun _ -> assert_equal expected_output (owner game own_name)
+
+let owner_exn name game own_name expected_output =
+  name >:: fun _ ->
+  assert_raises NotOwnableName (fun () -> owner game own_name)
+
+let has_monopoly_test name game player color expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (has_monopoly game player color)
+
+let has_houses_on_color_test name game player color expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (has_houses_on_color game player color)
+
+(* NOTE: Not testing landing_on_space *)
 
 (* Game Module Tests *)
 let game_tests =
@@ -161,10 +394,8 @@ let game_tests =
     space_from_location_test "Income Tax" board 4 income_tax_space;
     space_name_test "10 is Jail" board 10 "Jail";
     start_space_test "Start on Go" board "Go";
-    ( "get_all_players in game" >:: fun _ ->
-      assert_equal
-        (get_all_players test_game)
-        [| player1; player2; player3; player4 |] );
+    get_all_players_test "get all four players in test game" test_game
+      [| player1; player2; player3; player4 |];
     current_player_test "Player 1 starts the game" test_game player1;
     current_player_test "Player 2 moves after Player 1"
       (next_player_help test_game_two)

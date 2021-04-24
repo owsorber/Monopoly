@@ -50,7 +50,7 @@ val get_free_parking : t -> int
 val do_tax : t -> Player.t -> Board.space -> unit
 
 (** [get_rent g i r] returns the rent associated with landing on the
-    space with location after rolling [r] in game [g]. TODO: Raise
+    space with location [i] after rolling [r] in game [g]. TODO: Raise
     Exception. *)
 val get_rent : t -> int -> Player.rolled_dice -> int
 
@@ -89,7 +89,9 @@ val all_mortgagable : t -> Player.t -> ownable_name array
 (** [can_add_house g p property_name] returns true iff player [p] can
     add a house on the property with name [property_name] in game [g].
     Requires: Player [p] owns property with name [property_name].
-    Raises: [NotPropertyName] if [property_name] is not a property name. *)
+    Raises: [NotPropertyName] if [property_name] is not a property name.
+    [CannotAddHouse s] if a house cannot be added to property [p] with
+    the appropriate exception message [s].*)
 val can_add_house : t -> Player.t -> ownable_name -> bool
 
 (** [next_house_price g p property_name] returns the price of the next
@@ -114,15 +116,15 @@ val hotel_price : t -> Player.t -> ownable_name -> int
     [p] in game [g]. Decrements houses available if [adding_house],
     decrements hotels available if ![adding_house]. Requires: [p] is a
     property name and a house can be added to it. Raises:
-    [NotPropertyName] if [p] does not correspond to a property.
-    [CannotAddHouse s] if a house cannot be added to property [p] with
-    the appropriate exception message [s] *)
+    [NotPropertyName] if [p] does not correspond to a property. *)
 val add_house : t -> ownable_name -> bool -> unit
 
 (** [can_add_hotel g p property_name] returns true iff player [p] can
     add a hotel on the property with name [property_name] in game [g].
     Requires: Player [p] owns property with name [property_name].
-    Raises: [NotPropertyName] if [property_name] is not a property name. *)
+    Raises: [NotPropertyName] if [property_name] is not a property name.
+    [CannotAddHotel s] if [adding_house] is false and a hotel cannot be
+    added to property [p]*)
 val can_add_hotel : t -> Player.t -> ownable_name -> bool
 
 (* (** [add_hotel g p] adds a hotel to the property with name [p] in
