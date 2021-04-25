@@ -60,19 +60,16 @@
       "hotels": 100
     },
     {
-      "number": 11,
       "title": "Pay poor tax of $15",
       "action": "removefunds",
       "extra": "-15"
     },
     {
-      "number": 12,
       "title": "Take a trip to Reading Railroad - If you pass Go, collect $200",
       "action": "move",
       "extra": "Reading Railroad"
     },
     {
-      "number": 13,
       "title": "Take a walk on the Boardwalk - Advance token to Boardwalk",
       "action": "move",
       "extra": "Boardwalk"

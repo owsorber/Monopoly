@@ -105,4 +105,9 @@ val pay : t -> t -> int -> unit
     val move_player_to : t -> location -> unit
 
 val got_gooq_card : t -> unit
+
 val used_gooq_card : t -> unit
+
+val leave_quarantine : t-> unit
+
+val have_gooq: t-> bool

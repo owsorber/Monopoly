@@ -82,6 +82,8 @@ let decrement_day_quarantine player =
   |In i -> if i = 1 then player.quarantine_status <- Out 
   else player.quarantine_status <-In (i - 1)
 
+let leave_quarantine player = player.quarantine_status <- Out 
+
 let quarantine player = player.quarantine_status
 
 let buy_ownable p prop i =
@@ -92,12 +94,12 @@ let pay p1 p2 i =
   update_balance p1 (-i);
   update_balance p2 i
 
-
 let move_player_to p l =
   let o = p.location in 
   if o = l then () else (if o > l then (update_balance p 200; 
   p.location <- l;) else p.location <- l) 
 
+let have_gooq player = player.get_out_of_quarantine_card
 
 let got_gooq_card player = player.get_out_of_quarantine_card <- true
 
