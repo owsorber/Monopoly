@@ -450,8 +450,9 @@ let has_full_monopoly g p col =
         let correct_houses =
           if check_less_houses g h 4 then false else true
         in
-        if correct_color && correct_houses then check_four_houses t
-        else false
+        if correct_color then
+          if correct_houses then check_four_houses t else false
+        else check_four_houses t
   in
   check_four_houses prop_list
 

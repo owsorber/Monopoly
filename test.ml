@@ -279,17 +279,19 @@ let all_can_buy_house_test name game player expected_output =
   name >:: fun _ ->
   assert_equal expected_output (all_can_buy_house game player)
 
+let print_arr arr = Array.fold_left (fun x y -> x ^ y) "" arr
+
 let all_can_buy_hotel_test name game player expected_output =
   name >:: fun _ ->
-  assert_equal expected_output (all_can_buy_hotel game player)
+  assert_equal ~printer:print_arr expected_output
+    (all_can_buy_hotel game player)
 
 let hotel_price_test name game player own_name expected_output =
   name >:: fun _ ->
   assert_equal expected_output (hotel_price game player own_name)
 
 (* assumes a call to add_house will always add an house, thus
-   incrementing number of houses by one TODO: check num houses properly
-   decrements*)
+   incrementing number of houses by one. Property-based test *)
 let add_house_test name game own_name expected_output =
   name >:: fun _ ->
   assert_equal expected_output
@@ -357,7 +359,7 @@ let can_add_hotel_already_own_exn
   assert_raises (CannotAddHotel "Already Owns Hotel on Property")
     (fun () -> can_add_hotel game player own_name)
 
-let can_add_house_no_hotels_exn
+let can_add_hotel_no_hotels_exn
     name
     game
     player
@@ -412,6 +414,8 @@ let game_one = init_game test_board [| p1; p2; p3; p4 |]
 
 let () = update_balance p1 100000
 
+let () = update_balance p4 10000
+
 (* buys a list of ownables for a player*)
 let rec buy_ownable_lst game board player name_lst =
   match name_lst with
@@ -451,17 +455,62 @@ let () =
       "Reading Railroad";
     ]
 
-let () = add_house game_one "Oriental Avenue" true
+let () =
+  add_num_houses_lst game_one
+    [ "Connecticut Avenue"; "Vermont Avenue"; "Oriental Avenue" ]
+    true [ 4; 3; 4 ]
 
 let () = make_ownable_mortgaged game_one p1 "Reading Railroad"
 
 let () =
   buy_ownable_lst game_one test_board p2
-    [ "Electric Company"; "Water Works" ]
+    [ "Electric Company"; "Water Works"; "Virginia Avenue" ]
 
 let () =
   buy_ownable_lst game_one test_board p3
-    [ "Shortline"; "B. & O. Railroad" ]
+    [
+      "Shortline";
+      "B. & O. Railroad";
+      "Kentucky Avenue";
+      "Indiana Avenue";
+      "Illinois Avenue";
+    ]
+
+let () =
+  add_num_houses_lst game_one
+    [ "Kentucky Avenue"; "Indiana Avenue"; "Illinois Avenue" ]
+    true [ 4; 4; 4 ]
+
+let () = add_house game_one "Kentucky Avenue" false
+
+let () = add_house game_one "Illinois Avenue" false
+
+let () =
+  buy_ownable_lst game_one test_board p4
+    [
+      "Baltic Avenue";
+      "Park Place";
+      "Boardwalk";
+      "Pennsylvania Avenue";
+      "North Carolina Avenue";
+      "Pacific Avenue";
+      "Marvin Gardens";
+      "Ventnor Avenue";
+      "Atlantic Avenue";
+    ]
+
+let () = make_ownable_mortgaged game_one p4 "Pennsylvania Avenue"
+
+let () =
+  add_num_houses_lst game_one
+    [
+      "Park Place";
+      "Boardwalk";
+      "Marvin Gardens";
+      "Ventnor Avenue";
+      "Atlantic Avenue";
+    ]
+    true [ 2; 1; 5; 4; 4 ]
 
 (* Game Module Tests *)
 let game_tests =
@@ -482,8 +531,8 @@ let game_tests =
       0;
     (* do_tax test unimplemented*)
     get_rent_test
-      "Landing on owned Connecticut Avenue with 0 houses costs $8"
-      game_one 9 (1, 2) 8;
+      "Landing on owned Connecticut Avenue with 4 houses costs $8"
+      game_one 9 (1, 2) 450;
     get_rent_test "Landing on a mortgaged railroad costs $0" game_one 5
       (2, 3) 0;
     get_rent_test
@@ -494,7 +543,7 @@ let game_tests =
        dice roll"
       game_one 12 (5, 6) 110;
     get_ownable_status_test
-      "Getting the status of an owned property with no houses" game_one
+      "Getting the status of an owned property with 4 houses" game_one
       (Property
          {
            name = "Connecticut Avenue";
@@ -503,7 +552,7 @@ let game_tests =
            color = "#aae0fa";
            rent = [| 8; 40; 100; 300; 450; 600 |];
          })
-      (Some (Property (P_Owned (p1, 0))));
+      (Some (Property (P_Owned (p1, 4))));
     get_ownable_status_test
       "Getting the status of a property with no owner" game_one
       (Property
@@ -522,10 +571,10 @@ let game_tests =
       "Park Place" 350;
     get_ownable_price_test "Price to buy Shortline RR is 200" test_board
       "Shortline" 200;
-    get_houses_test "No houses on Connecticut Avenue" game_one
-      "Connecticut Avenue" 0;
-    get_houses_test "One house on Oriental Avenue" game_one
-      "Oriental Avenue" 1;
+    get_houses_test "No houses on Virginia Avenue" game_one
+      "Virginia Avenue" 0;
+    get_houses_test "Four houses on Oriental Avenue" game_one
+      "Oriental Avenue" 4;
     make_ownable_mortgaged_exn "Cannot mortgage a utility" game_one p2
       "Water Works" "exn";
     make_ownable_mortgaged_exn "p1 does not own Shortline" game_one p1
@@ -537,6 +586,48 @@ let game_tests =
       [| "B. & O. Railroad"; "Shortline" |];
     can_add_house_test "p1 can add a house to Vermont" game_one p1
       "Vermont Avenue" true;
+    can_add_house_monopoly_exn "p3 does not have a monopoly on brown"
+      game_one p3 "Mediterranean Avenue" "exn";
+    (* add can_add_house_available exn last *)
+    can_add_house_four_houses_exn
+      "Connecticut Avenue already has four houses" game_one p1
+      "Connecticut Avenue" "exn";
+    can_add_house_even_build_exn
+      "Cannot build a house on Park Place due to even build rule"
+      game_one p4 "Park Place" "exn";
+    can_add_house_mortgaged_exn "Green property mortgaged" game_one p4
+      "Pacific Avenue" "exn";
+    (* TODO: discuss next_house_price and hotel_price *)
+    (* next_house_price_test "A hotel on Connecticut Avenue costs $50"
+       game_one p1 "Connecticut Avenue" 50; *)
+    all_can_buy_house_test "p1 can put a house on Vermont Avenue"
+      game_one p1 [| "Vermont Avenue" |];
+    all_can_buy_hotel_test "p4 can put a hotel on Ventnor and Atlantic"
+      game_one p4
+      [| "Atlantic Avenue"; "Ventnor Avenue" |];
+    can_add_hotel_test "" game_one p4 "Ventnor Avenue" true;
+    (* can_add_hotel_property_exn "Water Works is not a property"
+       game_one p4 "Water Works" "exn"; *)
+    can_add_hotel_monopoly_exn "p4 does not have a monopoly on orange"
+      game_one p4 "New York Avenue" "exn";
+    can_add_hotel_four_houses_exn
+      "p1 does not have a full monopoly on light blue" game_one p1
+      "Vermont Avenue" "exn";
+    can_add_hotel_already_own_exn "Kentucky Avenue already has a hotel"
+      game_one p3 "Kentucky Avenue" "exn";
+    (* test no hotels available *)
+    is_available_test "Kentucky Avenue is not available" game_one
+      "Kentucky Avenue" false;
+    is_available_exn "Chance is not ownable" game_one "Chance" false;
+    is_mortgaged_test "Pennsylvania Avenue is mortgaged" game_one
+      "Pennsylvania Avenue" true;
+    is_mortgaged_exn "Chance is not ownable" game_one "Chance" false;
+    owner_test "Shortline owned by p3" game_one "Shortline" (Some p3);
+    owner_exn "Chance is not ownable" game_one "Chance" None;
+    has_monopoly_test "p1 has a monopoly on #aae0fa" game_one p1
+      "#aae0fa" true;
+    has_houses_on_color_test "p1 has houses on #aae0fa" game_one p1
+      "#aae0fa" true;
   ]
 
 (* Any Input Module Testing Helper Functions/Variables *)
