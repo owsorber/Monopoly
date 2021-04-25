@@ -68,8 +68,6 @@ let move_card loc p board=
 
 let change_funds p funds = Player.update_balance p (int_of_string funds)
 
-let change_others_funds = failwith "unimplemented"
-
 let jail_card p extra =
   match extra with
   |"go to" -> Player.go_to_quarantine_status p
@@ -79,6 +77,8 @@ let jail_card p extra =
 let move_nearest = failwith "unimplemented"
 
 let property_charges = failwith "unimplemented"
+
+let change_others_funds = failwith "unimplemented"
 
 let do_card card p board=
   match card.action with
