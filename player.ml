@@ -24,6 +24,7 @@ type t = {
   mutable location : location;
   mutable ownable_name_list : ownable_name_list;
   mutable quarantine_status : quarantine_status;
+  mutable get_out_of_quarantine_card: bool;
 }
 
 let get_player_id player = player.player_id
@@ -41,6 +42,7 @@ let make_player id =
     location = 0;
     ownable_name_list = [];
     quarantine_status = Out;
+    get_out_of_quarantine_card = false
   }
 
 (* [sums roll] is the sum of the two value die in [roll] *)
@@ -71,11 +73,16 @@ let projected_space roll player board =
   let new_pos = (player.location + sums roll) mod 40 in
   Board.space_name board new_pos
 
-let go_to_quarantine_status player = ()
+let go_to_quarantine_status player = player.quarantine_status <- In 3; 
+  player.location <- 10 
 
-let decrement_day_quarantine player = failwith "unimplemented"
+let decrement_day_quarantine player = 
+  match player.quarantine_status with
+  |Out -> player.quarantine_status <- Out
+  |In i -> if i = 1 then player.quarantine_status <- Out 
+  else player.quarantine_status <-In (i - 1)
 
-let quarantine player = failwith "unimplemented"
+let quarantine player = player.quarantine_status
 
 let buy_ownable p prop i =
   update_balance p (-i);
@@ -84,3 +91,14 @@ let buy_ownable p prop i =
 let pay p1 p2 i =
   update_balance p1 (-i);
   update_balance p2 i
+
+
+let move_player_to p l =
+  let o = p.location in 
+  if o = l then () else (if o > l then (update_balance p 200; 
+  p.location <- l;) else p.location <- l) 
+
+
+let got_gooq_card player = player.get_out_of_quarantine_card <- true
+
+let used_gooq_card player = player.get_out_of_quarantine_card <- false

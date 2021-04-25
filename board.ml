@@ -175,3 +175,7 @@ let color board space =
 let num_of_color board color =
   try Hashtbl.find board.num_color color
   with Not_found -> raise (BoardDoesNotHaveColor color)
+
+
+let  location_from_space_name board name =
+  space_from_space_name_helper board 0 name

@@ -3,7 +3,24 @@ type t
 
 type ownable_name = string
 
-type ownable_status
+type property_status =
+  | P_Owned of (Player.t * int)
+  | P_Mortgaged of Player.t
+  | P_Available
+
+type rr_status =
+  | RR_Owned of Player.t
+  | RR_Mortgaged of Player.t
+  | RR_Available
+
+type util_status =
+  | U_Owned of Player.t
+  | U_Available
+
+type ownable_status =
+  | Property of property_status
+  | Railroad of rr_status
+  | Utility of util_status
 
 (** Raised when a space cannot be owned. *)
 exception NotOwnableSpace
@@ -44,6 +61,14 @@ val next_player : t -> unit
 (** [get_free_parking g] returns the accumulated free parking amount in
     the game [g]. *)
 val get_free_parking : t -> int
+
+(** [get_houses_available g] returns the number of houses available in
+    the game [g]. *)
+val get_houses_available : t -> int
+
+(** [get_hotels_available g] returns the number of hotels available in
+    the game [g]. *)
+val get_hotels_available : t -> int
 
 (** [do_free_parking game player] increases the player's balance by the
     total amount of money accumulated at the free parking spot, and
