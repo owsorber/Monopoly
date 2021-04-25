@@ -85,6 +85,10 @@ let next_player t =
 
 let get_free_parking t = t.free_parking
 
+let get_houses_available t = t.houses_available
+
+let get_hotels_available t = t.hotels_available
+
 let do_tax g p s = failwith "Unimplemnted"
 
 let get_own_status t o =
@@ -163,7 +167,7 @@ let get_rent g board_location roll =
       | U_Owned player ->
           let dice_sum = fst roll + snd roll in
           let both_utilities = has_both_utilities g player in
-          if both_utilities then 10 * dice_sum else 7 * dice_sum
+          if both_utilities then 10 * dice_sum else 4 * dice_sum
       | _ -> 0 )
   | Railroad status -> (
       match status with

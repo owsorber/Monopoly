@@ -99,7 +99,7 @@ let space_color_test name board loc expected_output =
 
 let test_board = Yojson.Basic.from_file "board.json" |> init_board
 
-let mediterranean_avenue_space =
+let mediterranean_avenue_space : Board.space =
   Property
     {
       name = "Mediterranean Avenue";
@@ -177,6 +177,7 @@ let get_ownable_price_test name board own_name expected_output =
   name >:: fun _ ->
   assert_equal expected_output (get_ownable_price board own_name)
 
+(* not tested*)
 let get_ownable_info_test name game board own_name expected_output =
   name >:: fun _ ->
   assert_equal expected_output (get_ownable_info game board own_name)
@@ -185,13 +186,14 @@ let get_houses_test name game own_name expected_output =
   name >:: fun _ ->
   assert_equal expected_output (get_houses game own_name)
 
-(* uses Game.owner *)
+(* don't need to test; used in constructing board *)
 let make_ownable_owned_test name game player own_name expected_output =
   name >:: fun _ ->
   assert_equal expected_output
     ( make_ownable_owned game player own_name;
       owner game own_name )
 
+(* don't need to test, used in construct board*)
 let make_ownable_mortgaged_test
     name
     game
@@ -292,17 +294,27 @@ let add_house_test name game own_name expected_output =
   name >:: fun _ ->
   assert_equal expected_output
     (let num_houses = get_houses game own_name in
-     let player =
-       match owner game own_name with
-       | Some p -> p
-       | _ -> failwith "Impossible Branch"
-     in
-     let upd_houses =
-       if can_add_house game player own_name then num_houses + 1
-       else num_houses
-     in
+     let num_houses_available = get_houses_available game in
      add_house game own_name true;
-     upd_houses > num_houses)
+     let upd_houses = get_houses game own_name in
+     let upd_houses_available = get_houses_available game in
+     upd_houses = num_houses + 1
+     && upd_houses_available = num_houses_available - 1)
+
+(* add_hotel should always result in a property having 5 houses *)
+let add_hotel_test name game own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (let num_houses_available = get_houses_available game in
+     let num_hotels_available = get_hotels_available game in
+     add_house game own_name false;
+     let upd_houses = get_houses game own_name in
+     let upd_houses_available = get_houses_available game in
+     let upd_hotels_available = get_hotels_available game in
+     add_house game own_name true;
+     upd_houses = 5
+     && upd_houses_available = num_houses_available + 4
+     && upd_hotels_available = num_hotels_available - 1)
 
 let add_house_exn name game own_name adding_house expected_output =
   name >:: fun _ ->
@@ -388,6 +400,69 @@ let has_houses_on_color_test name game player color expected_output =
 
 (* NOTE: Not testing landing_on_space *)
 
+let p1 = make_player "p1"
+
+let p2 = make_player "p2"
+
+let p3 = make_player "p3"
+
+let p4 = make_player "p4"
+
+let game_one = init_game test_board [| p1; p2; p3; p4 |]
+
+let () = update_balance p1 100000
+
+(* buys a list of ownables for a player*)
+let rec buy_ownable_lst game board player name_lst =
+  match name_lst with
+  | [] -> ()
+  | h :: t ->
+      buy_ownable player h (get_ownable_price board h);
+      make_ownable_owned game player h;
+      buy_ownable_lst game board player t
+
+(* adds [num] houses to property [name] *)
+let rec add_num_houses game name adding_house num =
+  match num with
+  | 0 -> ()
+  | n ->
+      add_house game name adding_house;
+      add_num_houses game name adding_house (n - 1)
+
+(* adds a list of houses (with num houses) to properties. Ex: name_lst =
+   [A;B;C;D] with num_lst [1;2;2;1] adds 1 house to A and D, and 2
+   houses to B and C. *)
+let rec add_num_houses_lst game name_lst adding_house num_lst =
+  match name_lst with
+  | [] -> ()
+  | h :: t -> (
+      match num_lst with
+      | [] -> ()
+      | n :: t1 ->
+          add_num_houses game h adding_house n;
+          add_num_houses_lst game t adding_house t1 )
+
+let () =
+  buy_ownable_lst game_one test_board p1
+    [
+      "Connecticut Avenue";
+      "Vermont Avenue";
+      "Oriental Avenue";
+      "Reading Railroad";
+    ]
+
+let () = add_house game_one "Oriental Avenue" true
+
+let () = make_ownable_mortgaged game_one p1 "Reading Railroad"
+
+let () =
+  buy_ownable_lst game_one test_board p2
+    [ "Electric Company"; "Water Works" ]
+
+let () =
+  buy_ownable_lst game_one test_board p3
+    [ "Shortline"; "B. & O. Railroad" ]
+
 (* Game Module Tests *)
 let game_tests =
   [
@@ -403,6 +478,65 @@ let game_tests =
     current_player_test "Player 1 moves after Player 2 with 2 players"
       (next_player_help test_game_three)
       player1;
+    get_free_parking_test "A game starts with $0 free parking" game_one
+      0;
+    (* do_tax test unimplemented*)
+    get_rent_test
+      "Landing on owned Connecticut Avenue with 0 houses costs $8"
+      game_one 9 (1, 2) 8;
+    get_rent_test "Landing on a mortgaged railroad costs $0" game_one 5
+      (2, 3) 0;
+    get_rent_test
+      "Landing on a railroad where the owner owns two costs $50"
+      game_one 25 (2, 3) 50;
+    get_rent_test
+      "Landing on a utility when both are owned by owner costs 10 * \
+       dice roll"
+      game_one 12 (5, 6) 110;
+    get_ownable_status_test
+      "Getting the status of an owned property with no houses" game_one
+      (Property
+         {
+           name = "Connecticut Avenue";
+           price = 120;
+           house_price = 50;
+           color = "#aae0fa";
+           rent = [| 8; 40; 100; 300; 450; 600 |];
+         })
+      (Some (Property (P_Owned (p1, 0))));
+    get_ownable_status_test
+      "Getting the status of a property with no owner" game_one
+      (Property
+         {
+           name = "St. Charles Place";
+           price = 140;
+           house_price = 100;
+           color = "#d93a96";
+           rent = [| 10; 50; 150; 450; 625; 750 |];
+         })
+      (Some (Property P_Available));
+    get_ownable_status_test
+      "Getting the status of a non ownable property" game_one Chance
+      None;
+    get_ownable_price_test "Price to buy Park Place is 350" test_board
+      "Park Place" 350;
+    get_ownable_price_test "Price to buy Shortline RR is 200" test_board
+      "Shortline" 200;
+    get_houses_test "No houses on Connecticut Avenue" game_one
+      "Connecticut Avenue" 0;
+    get_houses_test "One house on Oriental Avenue" game_one
+      "Oriental Avenue" 1;
+    make_ownable_mortgaged_exn "Cannot mortgage a utility" game_one p2
+      "Water Works" "exn";
+    make_ownable_mortgaged_exn "p1 does not own Shortline" game_one p1
+      "Shortline" "exn";
+    all_mortgagable_test "p1 cannot mortgage any properties" game_one p1
+      [||];
+    all_mortgagable_test
+      "p3 can mortgage Shortline and B. & O. Railroad" game_one p3
+      [| "B. & O. Railroad"; "Shortline" |];
+    can_add_house_test "p1 can add a house to Vermont" game_one p1
+      "Vermont Avenue" true;
   ]
 
 (* Any Input Module Testing Helper Functions/Variables *)
