@@ -74,7 +74,7 @@ let projected_space roll player board =
   Board.space_name board new_pos
 
 let go_to_quarantine_status player = player.quarantine_status <- In 3; 
-  player.location <- 10 
+  player.location <- 9
 
 let decrement_day_quarantine player = 
   match player.quarantine_status with

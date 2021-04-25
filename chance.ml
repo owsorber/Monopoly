@@ -51,13 +51,14 @@ let init_board json = {
   }
 
 let draw_chance_card t = 
-  if t.chance_int > (Array.length t.chance_deck - 1) 
+  if t.chance_int < (Array.length t.chance_deck - 1) 
     then Array.get t.chance_deck t.chance_int 
+  (** change int*)
     else (let c = Array.get t.chance_deck t.chance_int in (t.chance_deck 
     <-shuffle t.chance_deck); t.chance_int <- 0; c;)
 
 let draw_community_chest_card t = 
-  if t.community_chest_int > (Array.length t.community_chest_deck - 1) 
+  if t.community_chest_int < (Array.length t.community_chest_deck - 1) 
     then Array.get t.community_chest_deck t.community_chest_int 
     else (let c = Array.get t.community_chest_deck t.community_chest_int in 
     (t.community_chest_deck <-shuffle t.community_chest_deck); 
@@ -76,6 +77,7 @@ let jail_card p extra =
 
 let move_nearest = failwith "unimplemented"
 
+(* from game- 5th house is hotel *)
 let property_charges = failwith "unimplemented"
 
 let change_others_funds = failwith "unimplemented"

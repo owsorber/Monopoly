@@ -1,7 +1,8 @@
 
 type card = {
     message: string;
-    action : string
+    action : string;
+    extra : string
   }
   
 exception NotValidCard
