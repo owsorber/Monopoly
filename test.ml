@@ -271,9 +271,9 @@ let can_add_house_mortgaged_exn
   assert_raises (CannotAddHouse "Mortgaged Property on Color")
     (fun () -> can_add_house game player own_name)
 
-let next_house_price_test name game player own_name expected_output =
+let house_price_test name game player own_name expected_output =
   name >:: fun _ ->
-  assert_equal expected_output (next_house_price game player own_name)
+  assert_equal expected_output (house_price game player own_name)
 
 let all_can_buy_house_test name game player expected_output =
   name >:: fun _ ->
@@ -288,7 +288,7 @@ let all_can_buy_hotel_test name game player expected_output =
 
 let hotel_price_test name game player own_name expected_output =
   name >:: fun _ ->
-  assert_equal expected_output (hotel_price game player own_name)
+  assert_equal expected_output (house_price game player own_name)
 
 (* assumes a call to add_house will always add an house, thus
    incrementing number of houses by one. Property-based test *)
@@ -597,9 +597,8 @@ let game_tests =
       game_one p4 "Park Place" "exn";
     can_add_house_mortgaged_exn "Green property mortgaged" game_one p4
       "Pacific Avenue" "exn";
-    (* TODO: discuss next_house_price and hotel_price *)
-    (* next_house_price_test "A hotel on Connecticut Avenue costs $50"
-       game_one p1 "Connecticut Avenue" 50; *)
+    house_price_test "A hotel on Connecticut Avenue costs $50" game_one
+      p1 "Connecticut Avenue" 50;
     all_can_buy_house_test "p1 can put a house on Vermont Avenue"
       game_one p1 [| "Vermont Avenue" |];
     all_can_buy_hotel_test "p4 can put a hotel on Ventnor and Atlantic"
