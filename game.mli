@@ -124,11 +124,6 @@ val all_mortgagable : t -> Player.t -> ownable_name array
     the appropriate exception message [s].*)
 val can_add_house : t -> Player.t -> ownable_name -> bool
 
-(** [next_house_price g p property_name] returns the price of the next
-    house that would be bought on property with name [property_name].
-    Requires: Player [p] can buy a house on the property. *)
-val next_house_price : t -> Player.t -> ownable_name -> int
-
 (** [all_can_buy_house p] returns an array of the ownables that [p] can
     put a house on. *)
 val all_can_buy_house : t -> Player.t -> ownable_name array
@@ -137,10 +132,9 @@ val all_can_buy_house : t -> Player.t -> ownable_name array
     put a hotel on. *)
 val all_can_buy_hotel : t -> Player.t -> ownable_name array
 
-(** [hotel_price g p property_name] returns the price of the hotel that
-    would be bought on property with name [property_name]. Requires:
-    Player [p] can buy a hotel on the property. *)
-val hotel_price : t -> Player.t -> ownable_name -> int
+(** [house_price g p property_name] returns the price of a house that
+    could be bought on property with name [property_name]. *)
+val house_price : t -> Player.t -> ownable_name -> int
 
 (** [add_house g p adding_house] adds a house to the property with name
     [p] in game [g]. Decrements houses available if [adding_house],
