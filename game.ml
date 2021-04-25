@@ -530,7 +530,8 @@ let make_ownable_mortgaged g p o =
     | _ -> raise MortgageFailure
   else raise MortgageFailure
 
-let landing_on_space g p b r space_name =
+let landing_on_space g p r space_name =
+  let b = get_board g in
   match Board.space_from_space_name b space_name with
   | Some space -> (
       match space with
@@ -549,8 +550,7 @@ let landing_on_space g p b r space_name =
             | None -> ""
           else ""
       | Tax t ->
-          Player.update_balance p (-t.cost);
-          g.free_parking <- g.free_parking + t.cost;
+          do_tax g p space;
           "Oh no! You landed on " ^ t.name ^ ". You must pay "
           ^ string_of_int t.cost ^ "\n"
       | Chance -> "You landed on Chance!\nDrawing a card...\n"
@@ -558,8 +558,7 @@ let landing_on_space g p b r space_name =
           "You landed on Community Chest!\nDrawing a card...\n"
       | Quarantine -> "You're just here for a visit... for now\n"
       | FreeParking ->
-          Player.update_balance p g.free_parking;
-          g.free_parking <- 0;
+          do_free_parking g p;
           "You landed on Free Parking! You get to collect "
           ^ string_of_int g.free_parking
           ^ "\n"

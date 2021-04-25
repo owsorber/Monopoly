@@ -184,4 +184,4 @@ val has_houses_on_color : t -> Player.t -> string -> bool
     information, after enacting the necessary actions for player [p]
     landing on the space with name [s], after rolling [r]. *)
 val landing_on_space :
-  t -> Player.t -> Board.t -> Player.rolled_dice -> string -> string
+  t -> Player.t -> Player.rolled_dice -> string -> string

@@ -129,7 +129,7 @@ let get_end t = t.is_end
 
 let landing p b g space r =
   try
-    let to_print = Game.landing_on_space g p b r space in
+    let to_print = Game.landing_on_space g p r space in
     magenta_print to_print
   with _ -> red_print "something went wrong"
 
@@ -361,9 +361,7 @@ let unmortgage p b g =
 
 let house_details ownable p g =
   let details =
-    " ( Cost: "
-    ^ string_of_int (Game.next_house_price g p ownable)
-    ^ ")"
+    " ( Cost: " ^ string_of_int (Game.house_price g p ownable) ^ ")"
   in
   ownable ^ details
 
@@ -386,7 +384,7 @@ let buy_house p g =
               (fun _ ->
                 Game.add_house g property_name true;
                 Player.update_balance p
-                  (-Game.next_house_price g p property_name));
+                  (-Game.house_price g p property_name));
             is_double = false;
             is_end = false;
           }
@@ -402,7 +400,7 @@ let buy_house p g =
 
 let hotel_details ownable p g =
   let details =
-    " ( Cost: " ^ string_of_int (Game.hotel_price g p ownable) ^ ")"
+    " ( Cost: " ^ string_of_int (Game.house_price g p ownable) ^ ")"
   in
   ownable ^ details
 
