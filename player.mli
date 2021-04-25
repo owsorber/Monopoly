@@ -97,3 +97,12 @@ val buy_ownable : t -> ownable_name -> int -> unit
 (**[play p1 p2 amount] deducts [amount] from [p1].balance and adds
    [amount] to [p2].balance. P1 pays P2 [amount]. *)
 val pay : t -> t -> int -> unit
+
+(** [move_player_to p l] updates player [p]'s location to [l]
+    updates their balance if they pass "Go".
+    Raises: [InQuarantine i]
+    where [i] is the remaining days in quarantine *)
+    val move_player_to : t -> location -> unit
+
+val got_gooq_card : t -> unit
+val used_gooq_card : t -> unit

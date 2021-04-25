@@ -1,21 +1,19 @@
 
+   {"chance":
    [ {
-      "number": 1,
       "title": "Advance to Go (Collect $200)",
       "action": "move",
-      "tileid": "go"
+      "tileid": "Go"
     },
     {
-      "number": 2,
       "title": "Advance to Illinois Avenue - If you pass Go, collect $200",
       "action": "move",
-      "tileid": "illinoiseave"
+      "tileid": "Illinois Avenue"
     },
     {
-      "number": 3,
       "title": "Advance to St. Charles Place - If you pass Go, collect $200",
       "action": "move",
-      "tileid": "stcharlesplace"
+      "tileid": "St. Charles Place"
     },
     {
       "number": 4,
@@ -32,10 +30,9 @@
       "rentmultiplier": 2
     },
     {
-      "number": 6,
       "title": "Bank pays you dividend of $50",
       "action": "addfunds",
-      "amount": 50
+      "amount": "50"
     },
     {
       "number": 7,
@@ -46,8 +43,8 @@
     {
       "number": 8,
       "title": "Go Back 3 Spaces",
-      "action": "move",
-      "count": -3
+      "action": "movenum",
+      "count": "-3"
     },
     {
       "number": 9,
@@ -66,29 +63,113 @@
       "number": 11,
       "title": "Pay poor tax of $15",
       "action": "removefunds",
-      "amount": 15
+      "amount": "-15"
     },
     {
       "number": 12,
       "title": "Take a trip to Reading Railroad - If you pass Go, collect $200",
       "action": "move",
-      "tileid": "readingrailroad"
+      "tileid": "Reading Railroad"
     },
     {
       "number": 13,
       "title": "Take a walk on the Boardwalk - Advance token to Boardwalk",
       "action": "move",
-      "tileid": "boardwalk"
+      "tileid": "Boardwalk"
     },
     {
        "number": 14,
       "title": "You have been elected Chairman of the Board - Pay each player $50",
       "action": "removefundstoplayers",
-      "amount": 50
+      "amount": "-50"
     },
     {
       "number": 15,
       "title": "Your building loan matures - Collect $150",
       "action": "addfunds",
-      "amount": 50
-    }]
+      "amount": "50"
+    }],
+
+    "communitychest": [
+    {
+      "title": "Advance to Go (Collect $200)",
+      "action": "move",
+      "tileid": "Go"
+    },
+    {
+      "title": "Bank error in your favor - Collect $200 ",
+      "action": "addfunds",
+      "amount": "200"
+    },
+    {
+      "title": "Doctor fee - Pay $50",
+      "action": "removefunds",
+      "amount": "-50"
+    },
+    {
+      "title": "From sale of stock you get $50",
+      "action": "addfunds",
+      "amount": "50"
+    },
+    {
+      "title": "Get Out of Jail Free",
+      "action": "jail",
+      "subaction": "getout"
+    },
+    {
+      "title": "Go to Jail - Go directly to jail - Do not pass Go - Do not collect $200",
+      "action": "jail",
+      "subaction": "goto"
+    },
+    {
+      "title": "Grand Opera Night - Collect $50 from every player for opening night seats",
+      "action": "addfundsfromplayers",
+      "amount": "50"
+    },
+    {
+      "title": "Holiday Fund matures - Receive $100",
+      "action": "addfunds",
+      "amount": "100"
+    },
+    {
+      "title": "Income tax refund - Collect $20",
+      "action": "addfunds",
+      "amount": "20"
+    },
+    {
+      "title": "Life insurance matures - Collect $100",
+      "action": "addfunds",
+      "amount": "100"
+    },
+    {
+      "title": "Pay hospital fees of $100",
+      "action": "removefunds",
+      "amount": "-100"
+    },
+    {
+      "title": "Pay school fees of $150",
+      "action": "removefunds",
+      "amount": "-150"
+    },
+    {
+      "title": "Receive $25 consultancy fee",
+      "action": "addfunds",
+      "amount": "-25"
+    },
+    {
+      "title": "You are assessed for street repairs - $40 per house - $115 per hotel",
+      "action": "propertycharges",
+      "buildings": 40,
+      "hotels": 115
+    },
+    {
+      "title": "You have won second prize in a beauty contest - Collect $10",
+      "action": "addfunds",
+      "amount": "10"
+    },
+    {
+      "title": "You inherit $100",
+      "action": "addfunds",
+      "amount": "100"
+    }
+  ]}
