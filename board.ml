@@ -151,9 +151,9 @@ let space_name board i =
   | Go -> "Go"
   | Chance -> "Chance"
   | CommunityChest -> "Community Chest"
-  | Quarantine -> "Jail"
+  | Quarantine -> "Quarantine"
   | FreeParking -> "Free Parking"
-  | GoToQuarantine -> "Go To Jail"
+  | GoToQuarantine -> "Go To Quarantine"
 
 let rec space_from_space_name_helper board acc s =
   if acc >= length board then -1
