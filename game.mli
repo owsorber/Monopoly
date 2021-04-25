@@ -58,6 +58,10 @@ val init_game : Board.t -> Player.t array -> t
     turn it is. *)
 val next_player : t -> unit
 
+(** [get_properties g p] returns the list of the names of the properties
+    owned by player [p] in game [g]. *)
+val get_properties : t -> Player.t -> ownable_name list
+
 (** [get_free_parking g] returns the accumulated free parking amount in
     the game [g]. *)
 val get_free_parking : t -> int
