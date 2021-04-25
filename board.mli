@@ -40,6 +40,9 @@ exception NameNotOnBoard of string
     color on the Monopoly board. *)
 exception SpaceDoesNotHaveColor
 
+(** Raised when a color does not exist on a board. *)
+exception BoardDoesNotHaveColor of string
+
 (** [init_board json] returns the board represented by [json]. Requires:
     [json] is a valid JSON representation of a standard Monopoly Board. *)
 val init_board : Yojson.Basic.t -> t
@@ -78,9 +81,10 @@ val space_name : t -> int -> string
     on in [board]. *)
 val start_space : t -> string
 
-(* [color board s] returns the color of space [s]. *)
+(* [color board s] returns the color of space [s]. Raises *)
 val color : t -> space -> string
 
 (* [num_of_color board col] returns the number of properties in [board]
-   with the color [col]. *)
+   with the color [col]. Raises: [BoardDoesNotHaveColor col] if [col] is
+   not the color of any property in [board]. *)
 val num_of_color : t -> string -> int

@@ -45,6 +45,11 @@ val next_player : t -> unit
     the game [g]. *)
 val get_free_parking : t -> int
 
+(** [do_free_parking game player] increases the player's balance by the
+    total amount of money accumulated at the free parking spot, and
+    resets the free parking spot to $0. *)
+val do_free_parking : t -> Player.t -> unit
+
 (** [do_tax game player space] decreases the player's balance by the tax
     amount of [space] and increases the free parking by the same amount. *)
 val do_tax : t -> Player.t -> Board.space -> unit
