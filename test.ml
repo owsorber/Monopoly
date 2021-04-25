@@ -119,7 +119,7 @@ let board_tests =
     space_from_location_test "Income Tax" test_board 4 income_tax_space;
     space_from_location_test "Chance" test_board 7 Chance;
     space_name_test "0 is Go" test_board 0 "Go";
-    space_name_test "10 is Jail" test_board 10 "Jail";
+    space_name_test "10 is Quarantine" test_board 10 "Quarantine";
     space_name_test "Last space is Boardwalk" test_board 39 "Boardwalk";
     start_space_test "Start on Go" test_board "Go";
     space_color_test "Color of Mediterranean Avenue" test_board 1
@@ -516,7 +516,7 @@ let () =
 let game_tests =
   [
     space_from_location_test "Income Tax" board 4 income_tax_space;
-    space_name_test "10 is Jail" board 10 "Jail";
+    space_name_test "10 is Quarantine" board 10 "Quarantine";
     start_space_test "Start on Go" board "Go";
     get_all_players_test "get all four players in test game" test_game
       [| player1; player2; player3; player4 |];
