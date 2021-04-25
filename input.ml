@@ -158,8 +158,8 @@ let roll p b g =
             landing player b g new_space r
           with Player.InQuarantine i ->
             red_print
-              ( "You can't move yet, you're still in quarantine for "
-              ^ string_of_int i ^ " more turns." ));
+              ("You can't move yet, you're still in quarantine for "
+             ^ string_of_int i ^ " more turns.\n"));
       is_double = double_of_roll r;
       is_end = false;
     }
@@ -213,10 +213,10 @@ let buy p b g =
               | Game.NotOwnableName -> red_print "not ownable name\n"
               | Board.NameNotOnBoard s ->
                   red_print (s ^ " not on board\n")
-              | _ -> red_print "somewhere else\n" )
+              | _ -> red_print "somewhere else\n")
         with Game.NotOwnableName ->
           red_print
-            "INFO: The space you are currently on cannot be bought\n" )
+            "INFO: The space you are currently on cannot be bought\n")
     | None ->
         red_print
           "INFO: The space you are currently on cannot be bought\n"
@@ -234,8 +234,8 @@ let buy p b g =
             Player.buy_ownable p ownable_space_name price;
             Game.make_ownable_owned g p ownable_space_name;
             yellow_print
-              ( "You successfully purchased " ^ ownable_space_name
-              ^ "!\n" ));
+              ("You successfully purchased " ^ ownable_space_name
+             ^ "!\n"));
         is_double = false;
         is_end = false;
       }
@@ -257,7 +257,7 @@ let mortgage p b g =
   print_array (fun x -> mortgagable_details x b) mortgagables;
   if Array.length mortgagables = 0 then (
     green_print "None.\n";
-    Illegal )
+    Illegal)
   else (
     (*if len is zero then end function*)
     print_string "\n> ";
@@ -269,7 +269,7 @@ let mortgage p b g =
       in
       let legality = ref false in
 
-      ( match Board.space_from_space_name b property_name with
+      (match Board.space_from_space_name b property_name with
       | Some space ->
           if Board.is_ownable b space then
             (*check is owned by player*)
@@ -291,7 +291,7 @@ let mortgage p b g =
               "INFO: The property you entered cannot be mortgaged\n"
       | None ->
           red_print
-            "INFO: The property you entered cannot be mortgaged\n" );
+            "INFO: The property you entered cannot be mortgaged\n");
       if !legality then
         Legal
           {
@@ -308,7 +308,7 @@ let mortgage p b g =
       else Illegal
     with _ ->
       red_print "invalid input\n";
-      Illegal )
+      Illegal)
 
 let rec find_mortgaged g acc = function
   | [] -> acc
@@ -335,7 +335,7 @@ let unmortgage p b g =
   print_array (fun x -> unmortgage_details x b) mortgaged;
   if Array.length mortgaged = 0 then (
     green_print "None.\n";
-    Illegal )
+    Illegal)
   else (
     print_string "\n> ";
     let property_index = read_line () in
@@ -357,7 +357,7 @@ let unmortgage p b g =
         }
     with _ ->
       red_print "Something went wrong.\n";
-      Illegal )
+      Illegal)
 
 let house_details ownable p g =
   let details =
@@ -392,7 +392,7 @@ let buy_house p g =
           }
       else (
         red_print "you cannot add a house on this property";
-        Illegal )
+        Illegal)
     with Game.NotPropertyName ->
       red_print "The given name is not a valid property";
       Illegal
@@ -429,7 +429,7 @@ let buy_hotel p g =
           }
       else (
         red_print "you cannot add a hotel on this property";
-        Illegal )
+        Illegal)
     with Game.NotPropertyName ->
       red_print "The given name is not a valid property";
       Illegal
@@ -495,8 +495,8 @@ let print_endgame b g =
   green_print (Player.get_player_id max_properties);
   magenta_print " with ";
   green_print
-    ( max_properties |> Player.get_ownable_name_list |> List.length
-    |> string_of_int );
+    (max_properties |> Player.get_ownable_name_list |> List.length
+   |> string_of_int);
   magenta_print " properties.\n"
 
 (**[graceful_shutdown b g] ends the game [g] given board [b]. *)
@@ -540,7 +540,7 @@ let turn p b g phase =
         function_of_move move p b g
       with _ ->
         red_print "Please enter a valid index.\n";
-        Illegal )
+        Illegal)
   | false -> (
       let _ = turn_info b p g phase in
       ();
@@ -550,4 +550,4 @@ let turn p b g phase =
         function_of_move move p b g
       with _ ->
         red_print "Please enter a valid index.\n";
-        Illegal )
+        Illegal)
