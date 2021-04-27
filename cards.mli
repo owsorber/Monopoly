@@ -14,17 +14,24 @@ type t =  {
     mutable community_chest_int: int;
   }
   
-(** provides a shuffles list of ints that represent cards*)
-val shuffle : unit -> int list
+(** [shuffle deck] returns a sheffled array of the cards in [deck] using
+    knuth's algorithum*)
+val shuffle : card array -> card array
 
-(** picks the card that is on the top of the int and pops that card off the top
-    if it is the last card then it reshufffles the deck*)
-val draw_chance_card: int list -> t
+(** [draw_chance_card t] returns the card that at the location chance_int in 
+    the chance_deck provided by [t] and changes chance_int to chance_int + 1.
+    if chance_int is the location of the last card in the chance_deck, that card
+      is picked and the deck is then reshuffled and chance_int is set to 0 *)
+val draw_chance_card: t -> card
 
-(** picks the card that is on the top of the int and pops that card off the top
-    if it is the last card then it reshufffles the deck*)
-val draw_community_chest_card: int list -> t
+(** [draw_community_chest t] returns the card that at the location 
+    community_chest_int in the community_chest_deck provided by [t] and changes 
+    community_chest to community_chest + 1. if community_chest_int is the 
+    location of the last card in the community_chest_deck, that card is picked 
+    and the deck is then reshuffled and community_chest_int is set to 0 *)
+val draw_community_chest_card: t -> card
 
 
-(**does the action the card says and then returns the cards message*)
-val do_card: card -> Player.t -> string
+(**[do_card card player board game] preforms the action dicated by [card] on
+    [player] in [game] with [board]*)
+val do_card: card -> Player.t -> Board.t -> Game.t -> unit
