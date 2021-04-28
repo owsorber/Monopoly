@@ -100,18 +100,20 @@ val pay : t -> t -> int -> unit
 
 (** [move_player_to p l] updates player [p]'s location to [l] and
     updates their balance if they pass "Go". *)
-    val move_player_to : t -> location -> unit
+val move_player_to : t -> location -> unit
 
 (** [got_gooq_card player] updates [player]'s get_out_of_quarantine_card
     status to true, implying the player has a get_out_of_quarantine_card *)
 val got_gooq_card : t -> unit
 
-(** [used_gooq_card player] updates [player]'s get_out_of_quarantine_card
-    status to false, implying the player used their get_out_of_quarantine_card*)
+(** [used_gooq_card player] updates [player]'s
+    get_out_of_quarantine_card status to false, implying the player used
+    their get_out_of_quarantine_card*)
 val used_gooq_card : t -> unit
 
 (** [got_gooq_card player] updates [player]'s quarentine status to Out *)
-val leave_quarantine : t-> unit
+val leave_quarantine : t -> unit
 
-(** [have_gooq player] returns  [player]'s get_out_of_quarantine_card status *)
-val have_gooq: t-> bool
+(** [have_gooq player] returns [player]'s get_out_of_quarantine_card
+    status *)
+val have_gooq : t -> bool

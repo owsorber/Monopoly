@@ -156,37 +156,6 @@ let num_rrs_owned game player =
   let ownables = Player.get_ownable_name_list player in
   num_rrs_owned_helper game 0 ownables
 
-(* add rent for house *)
-let get_rent g board_location roll =
-  let board = get_board g in
-  let space = Board.space_from_location board board_location in
-  let o = Board.space_name board board_location in
-  let o_status =
-    try get_own_status g o
-    with NotOwnableName ->
-      failwith
-        "Get rent supplied a board location that isn't an ownable."
-  in
-  match o_status with
-  | Property status -> (
-      match status with
-      | P_Owned (player, houses) -> (
-          match space with
-          | Board.Property p -> p.rent.(houses)
-          | _ -> failwith "Ownable Status has Incorrect Ownable Type")
-      | _ -> 0)
-  | Utility status -> (
-      match status with
-      | U_Owned player ->
-          let dice_sum = fst roll + snd roll in
-          let both_utilities = has_both_utilities g player in
-          if both_utilities then 10 * dice_sum else 4 * dice_sum
-      | _ -> 0)
-  | Railroad status -> (
-      match status with
-      | RR_Owned player -> 25 * num_rrs_owned g player
-      | _ -> 0)
-
 let make_ownable_owned g p o =
   match get_own_status g o with
   | Property _ ->
@@ -530,6 +499,40 @@ let make_ownable_mortgaged g p o =
         Hashtbl.replace g.ownables o (Railroad (RR_Mortgaged p))
     | _ -> raise MortgageFailure
   else raise MortgageFailure
+
+let get_rent g board_location roll =
+  let board = get_board g in
+  let space = Board.space_from_location board board_location in
+  let o = Board.space_name board board_location in
+  let o_status =
+    try get_own_status g o
+    with NotOwnableName ->
+      failwith
+        "Get rent supplied a board location that isn't an ownable."
+  in
+  match o_status with
+  | Property status -> (
+      match status with
+      | P_Owned (player, houses) -> (
+          match space with
+          | Board.Property p ->
+              if houses = 0 && has_monopoly g player p.color then
+                (* double rent for monopoly with zero houses *)
+                2 * p.rent.(0)
+              else p.rent.(houses)
+          | _ -> failwith "Ownable Status has Incorrect Ownable Type")
+      | _ -> 0)
+  | Utility status -> (
+      match status with
+      | U_Owned player ->
+          let dice_sum = fst roll + snd roll in
+          let both_utilities = has_both_utilities g player in
+          if both_utilities then 10 * dice_sum else 4 * dice_sum
+      | _ -> 0)
+  | Railroad status -> (
+      match status with
+      | RR_Owned player -> 25 * num_rrs_owned g player
+      | _ -> 0)
 
 let delete_player g p =
   let players_lst = Array.to_list g.players in

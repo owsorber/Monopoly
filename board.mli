@@ -89,7 +89,7 @@ val color : t -> space -> string
    not the color of any property in [board]. *)
 val num_of_color : t -> string -> int
 
-(** [space_from_space_name b str] returns the location if there exists space s
-    on board [b] with name [str]. 
-    requires: [str] is the only space with that name*)
+(** [space_from_space_name b str] returns the location if there exists
+    space s on board [b] with name [str]. requires: [str] is the only
+    space with that name*)
 val location_from_space_name : t -> string -> int

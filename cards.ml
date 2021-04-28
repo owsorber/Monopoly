@@ -57,11 +57,11 @@ let init_cards filename =
 
 let draw_chance_card t =
   if t.chance_int < Array.length t.chance_deck - 1 then (
-    let c = Array.get t.chance_deck t.chance_int in
+    let c = t.chance_deck.(t.chance_int) in
     t.chance_int <- t.chance_int + 1;
     c)
   else
-    let c = Array.get t.chance_deck t.chance_int in
+    let c = t.chance_deck.(t.chance_int) in
     t.chance_deck <- shuffle t.chance_deck;
     t.chance_int <- 0;
     c
@@ -69,11 +69,11 @@ let draw_chance_card t =
 let draw_community_chest_card t =
   if t.community_chest_int < Array.length t.community_chest_deck - 1
   then (
-    let c = Array.get t.community_chest_deck t.community_chest_int in
+    let c = t.community_chest_deck.(t.community_chest_int) in
     t.community_chest_int <- t.community_chest_int + 1;
     c)
   else
-    let c = Array.get t.community_chest_deck t.community_chest_int in
+    let c = t.community_chest_deck.(t.community_chest_int) in
     t.community_chest_deck <- shuffle t.community_chest_deck;
     t.community_chest_int <- 0;
     c
