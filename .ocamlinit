@@ -2,7 +2,9 @@
 #require "ounit2";;
 #require "yojson";;
 #require "ANSITerminal";;
+#load "printers.cmo";;
 #load "board.cmo";;
 #load "player.cmo";;
 #load "game.cmo";;
+#load "cards.cmo";;
 #load "input.cmo";;
