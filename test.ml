@@ -510,7 +510,7 @@ let () =
       "Ventnor Avenue";
       "Atlantic Avenue";
     ]
-    true [ 2; 1; 5; 4; 4 ]
+    true [ 2; 0; 5; 4; 4 ]
 
 (* Game Module Tests *)
 let game_tests =
@@ -529,7 +529,6 @@ let game_tests =
       player1;
     get_free_parking_test "A game starts with $0 free parking" game_one
       0;
-    (* do_tax test unimplemented*)
     get_rent_test
       "Landing on owned Connecticut Avenue with 4 houses costs $8"
       game_one 9 (1, 2) 450;
@@ -538,6 +537,13 @@ let game_tests =
     get_rent_test
       "Landing on a railroad where the owner owns two costs $50"
       game_one 25 (2, 3) 50;
+    get_rent_test
+      "Landing on Park Place with 2 houses and owner monopoly costs \
+       $500"
+      game_one 37 (1, 2) 500;
+    get_rent_test
+      "Landing on Boardwalk with 0 houses and owner monopoly costs $100"
+      game_one 39 (1, 2) 100;
     get_rent_test
       "Landing on a utility when both are owned by owner costs 10 * \
        dice roll"
@@ -588,7 +594,6 @@ let game_tests =
       "Vermont Avenue" true;
     can_add_house_monopoly_exn "p3 does not have a monopoly on brown"
       game_one p3 "Mediterranean Avenue" "exn";
-    (* add can_add_house_available exn last *)
     can_add_house_four_houses_exn
       "Connecticut Avenue already has four houses" game_one p1
       "Connecticut Avenue" "exn";
@@ -614,7 +619,6 @@ let game_tests =
       "Vermont Avenue" "exn";
     can_add_hotel_already_own_exn "Kentucky Avenue already has a hotel"
       game_one p3 "Kentucky Avenue" "exn";
-    (* test no hotels available *)
     is_available_test "Kentucky Avenue is not available" game_one
       "Kentucky Avenue" false;
     is_available_exn "Chance is not ownable" game_one "Chance" false;
