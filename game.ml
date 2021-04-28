@@ -35,7 +35,7 @@ exception CannotAddHotel of string
 
 type t = {
   board : Board.t;
-  players : Player.t array;
+  mutable players : Player.t array;
   mutable cur_player : int;
   mutable free_parking : int;
   mutable houses_available : int;
@@ -92,7 +92,8 @@ let get_hotels_available t = t.hotels_available
 let do_free_parking g p =
   let free_parking_val = get_free_parking g in
   Player.update_balance p free_parking_val;
-  g.free_parking <- 0
+  g.free_parking <- 0;
+  free_parking_val
 
 let do_tax g p s =
   match s with
@@ -530,40 +531,8 @@ let make_ownable_mortgaged g p o =
     | _ -> raise MortgageFailure
   else raise MortgageFailure
 
-let landing_on_space g p r space_name =
-  let b = get_board g in
-  match Board.space_from_space_name b space_name with
-  | Some space -> (
-      match space with
-      | Property _ | Railroad _ | Utility _ ->
-          let current_location = Player.get_location p in
-          let rent = get_rent g current_location r in
-          if rent > 0 then
-            match owner g space_name with
-            | Some player ->
-                if player <> p then (
-                  Player.pay p player rent;
-                  "You must pay " ^ string_of_int rent ^ " to "
-                  ^ Player.get_player_id player
-                  ^ "\n")
-                else ""
-            | None -> ""
-          else ""
-      | Tax t ->
-          do_tax g p space;
-          "Oh no! You landed on " ^ t.name ^ ". You must pay "
-          ^ string_of_int t.cost ^ "\n"
-      | Chance -> "You landed on Chance!\nDrawing a card...\n"
-      | CommunityChest ->
-          "You landed on Community Chest!\nDrawing a card...\n"
-      | Quarantine -> "You're just here for a visit... for now\n"
-      | FreeParking ->
-          do_free_parking g p;
-          "You landed on Free Parking! You get to collect "
-          ^ string_of_int g.free_parking
-          ^ "\n"
-      | GoToQuarantine ->
-          Player.go_to_quarantine_status p;
-          "Oh no! You tested positive and need to go into quarantine!\n"
-      | Go -> "")
-  | None -> "something went wrong"
+let delete_player g p =
+  let players_lst = Array.to_list g.players in
+  let new_players_lst = List.filter (fun x -> x <> p) players_lst in
+  let new_players_array = Array.of_list new_players_lst in
+  g.players <- new_players_array

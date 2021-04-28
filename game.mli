@@ -76,8 +76,9 @@ val get_hotels_available : t -> int
 
 (** [do_free_parking game player] increases the player's balance by the
     total amount of money accumulated at the free parking spot, and
-    resets the free parking spot to $0. *)
-val do_free_parking : t -> Player.t -> unit
+    resets the free parking spot to $0, and returns the amount paid to
+    [player] *)
+val do_free_parking : t -> Player.t -> int
 
 (** [do_tax game player space] decreases the player's balance by the tax
     amount of [space] and increases the free parking by the same amount. *)
@@ -184,8 +185,5 @@ val has_monopoly : t -> Player.t -> string -> bool
     houses on any properties with color [col] in game [g]. *)
 val has_houses_on_color : t -> Player.t -> string -> bool
 
-(** [landing_on_space g p b r s] returns a string of relevant
-    information, after enacting the necessary actions for player [p]
-    landing on the space with name [s], after rolling [r]. *)
-val landing_on_space :
-  t -> Player.t -> Player.rolled_dice -> string -> string
+(** [delete_player g p] removes player [p] from game [g]. *)
+val delete_player : t -> Player.t -> unit

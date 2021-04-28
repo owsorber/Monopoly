@@ -127,11 +127,71 @@ let get_double t = t.is_double
 
 let get_end t = t.is_end
 
-let landing p b g space r =
-  try
-    let to_print = Game.landing_on_space g p r space in
-    magenta_print to_print
-  with _ -> red_print "something went wrong"
+let landing p g space_name r cards =
+  let b = Game.get_board g in
+  match Board.space_from_space_name b space_name with
+  | Some space -> (
+      match space with
+      | Property _ | Railroad _ | Utility _ ->
+          let current_location = Player.get_location p in
+          let rent = Game.get_rent g current_location r in
+          if rent > 0 then
+            match Game.owner g space_name with
+            | Some player ->
+                if player <> p then
+                  if rent > Player.get_balance p then (
+                    red_print
+                      "You do not have enough money to pay for rent! \
+                       You go bankrupt and all of your assets go to: ";
+                    cyan_print (Player.get_player_id player);
+                    print_endline "";
+                    Game.delete_player g p)
+                  else (
+                    Player.pay p player rent;
+                    magenta_print "You must pay ";
+                    red_print (string_of_int rent);
+                    magenta_print " to ";
+                    cyan_print (Player.get_player_id player);
+                    print_endline "")
+                else ()
+            | None -> ()
+          else ()
+      | Tax t ->
+          Game.do_tax g p space;
+          magenta_print "Oh no! You landed on ";
+          yellow_print t.name;
+          magenta_print ". You must pay ";
+          red_print (string_of_int t.cost);
+          print_endline ""
+      | Chance ->
+          magenta_print "You landed on Chance!\nDrawing a card...\n";
+          let card = Cards.draw_chance_card cards in
+          magenta_print "Your card says:\n";
+          cyan_print card.message;
+          print_endline "\n";
+          Cards.do_card card p b g
+      | CommunityChest ->
+          magenta_print
+            "You landed on Community Chest!\nDrawing a card...\n";
+          let card = Cards.draw_community_chest_card cards in
+          magenta_print "Your card says:\n";
+          cyan_print card.message;
+          print_endline "\n";
+          Cards.do_card card p b g
+      | Quarantine ->
+          magenta_print "You're just here for a visit... for now\n"
+      | FreeParking ->
+          let received = Game.do_free_parking g p in
+          magenta_print
+            "You landed on Free Parking! You get to collect ";
+          green_print (string_of_int received);
+          print_endline ""
+      | GoToQuarantine ->
+          Player.go_to_quarantine_status p;
+          magenta_print
+            "Oh no! You tested positive and need to go into quarantine!\n"
+      | Go -> ())
+  | None -> ()
 
 (**[double_of_roll (a,b)] returns true if a and b are equal and false if
    not. *)
@@ -139,7 +199,7 @@ let double_of_roll (a, b) = if a = b then true else false
 
 (**[roll p b] returns a Legal result of the action representing a roll
    by player [p], given board [b]. *)
-let roll p b g =
+let roll p b g cards =
   let r = Player.roll () in
   magenta_print (string_of_roll r);
   if Player.passes_go r p then
@@ -155,11 +215,11 @@ let roll p b g =
         (fun player ->
           try
             Player.move_player r player;
-            landing player b g new_space r
+            landing player g new_space r cards
           with Player.InQuarantine i ->
             red_print
-              ( "You can't move yet, you're still in quarantine for "
-              ^ string_of_int i ^ " more turns.\n" ));
+              ("You can't move yet, you're still in quarantine for "
+             ^ string_of_int i ^ " more turns.\n"));
       is_double = double_of_roll r;
       is_end = false;
     }
@@ -213,10 +273,10 @@ let buy p b g =
               | Game.NotOwnableName -> red_print "not ownable name\n"
               | Board.NameNotOnBoard s ->
                   red_print (s ^ " not on board\n")
-              | _ -> red_print "somewhere else\n" )
+              | _ -> red_print "somewhere else\n")
         with Game.NotOwnableName ->
           red_print
-            "INFO: The space you are currently on cannot be bought\n" )
+            "INFO: The space you are currently on cannot be bought\n")
     | None ->
         red_print
           "INFO: The space you are currently on cannot be bought\n"
@@ -234,8 +294,8 @@ let buy p b g =
             Player.buy_ownable p ownable_space_name price;
             Game.make_ownable_owned g p ownable_space_name;
             yellow_print
-              ( "You successfully purchased " ^ ownable_space_name
-              ^ "!\n" ));
+              ("You successfully purchased " ^ ownable_space_name
+             ^ "!\n"));
         is_double = false;
         is_end = false;
       }
@@ -257,7 +317,7 @@ let mortgage p b g =
   print_array (fun x -> mortgagable_details x b) mortgagables;
   if Array.length mortgagables = 0 then (
     green_print "None.\n";
-    Illegal )
+    Illegal)
   else (
     (*if len is zero then end function*)
     print_string "\n> ";
@@ -269,7 +329,7 @@ let mortgage p b g =
       in
       let legality = ref false in
 
-      ( match Board.space_from_space_name b property_name with
+      (match Board.space_from_space_name b property_name with
       | Some space ->
           if Board.is_ownable b space then
             (*check is owned by player*)
@@ -291,7 +351,7 @@ let mortgage p b g =
               "INFO: The property you entered cannot be mortgaged\n"
       | None ->
           red_print
-            "INFO: The property you entered cannot be mortgaged\n" );
+            "INFO: The property you entered cannot be mortgaged\n");
       if !legality then
         Legal
           {
@@ -308,7 +368,7 @@ let mortgage p b g =
       else Illegal
     with _ ->
       red_print "invalid input\n";
-      Illegal )
+      Illegal)
 
 let rec find_mortgaged g acc = function
   | [] -> acc
@@ -335,7 +395,7 @@ let unmortgage p b g =
   print_array (fun x -> unmortgage_details x b) mortgaged;
   if Array.length mortgaged = 0 then (
     green_print "None.\n";
-    Illegal )
+    Illegal)
   else (
     print_string "\n> ";
     let property_index = read_line () in
@@ -357,7 +417,7 @@ let unmortgage p b g =
         }
     with _ ->
       red_print "Something went wrong.\n";
-      Illegal )
+      Illegal)
 
 let house_details ownable p g =
   let details =
@@ -390,7 +450,7 @@ let buy_house p g =
           }
       else (
         red_print "you cannot add a house on this property";
-        Illegal )
+        Illegal)
     with Game.NotPropertyName ->
       red_print "The given name is not a valid property";
       Illegal
@@ -427,7 +487,7 @@ let buy_hotel p g =
           }
       else (
         red_print "you cannot add a hotel on this property";
-        Illegal )
+        Illegal)
     with Game.NotPropertyName ->
       red_print "The given name is not a valid property";
       Illegal
@@ -438,7 +498,8 @@ let buy_hotel p g =
 let trade p b =
   white_print "Please enter which player you would like to trade with: ";
   print_string "> ";
-  let trade_partner = read_line () in
+
+  (* let trade_partner = read_line () in *)
 
   (*check is a player*)
   (* if Game.player_exists trade_partner then (* continue *) else
@@ -493,8 +554,8 @@ let print_endgame b g =
   green_print (Player.get_player_id max_properties);
   magenta_print " with ";
   green_print
-    ( max_properties |> Player.get_ownable_name_list |> List.length
-    |> string_of_int );
+    (max_properties |> Player.get_ownable_name_list |> List.length
+   |> string_of_int);
   magenta_print " properties.\n"
 
 (**[graceful_shutdown b g] ends the game [g] given board [b]. *)
@@ -511,9 +572,9 @@ let turn_info b p g phase =
   options_printer phase p b g;
   cyan_print "\n>"
 
-let function_of_move m p b g =
+let function_of_move m p b g cards =
   match m with
-  | Roll -> roll p b g
+  | Roll -> roll p b g cards
   | Buy -> buy p b g
   | BuyHouse -> buy_house p g
   | BuyHotel -> buy_hotel p g
@@ -524,9 +585,9 @@ let function_of_move m p b g =
   | Quit -> graceful_shutdown b g
   | Faulty -> Illegal
 
-(**[turn p b g phase] is the representation of a single response by the
-   user for player [p], given board [b] and game [g]. *)
-let turn p b g phase =
+(**[turn p b g phase cards] is the representation of a single response
+   by the user for player [p], given board [b] and game [g]. *)
+let turn p b g phase cards =
   match phase with
   | true -> (
       cyan_print ("\n" ^ Player.get_player_id p ^ "'s turn.\n");
@@ -535,17 +596,17 @@ let turn p b g phase =
       try
         let input_index = int_of_string (read_line ()) in
         let move = phase1_options.(input_index - 1) in
-        function_of_move move p b g
+        function_of_move move p b g cards
       with _ ->
         red_print "Please enter a valid index.\n";
-        Illegal )
+        Illegal)
   | false -> (
       let _ = turn_info b p g phase in
       ();
       try
         let input_index = int_of_string (read_line ()) in
         let move = phase2_options.(input_index - 1) in
-        function_of_move move p b g
+        function_of_move move p b g cards
       with _ ->
         red_print "Please enter a valid index.\n";
-        Illegal )
+        Illegal)

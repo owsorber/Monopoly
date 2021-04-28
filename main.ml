@@ -1,5 +1,7 @@
 open Printers
 
+let cards = Cards.init_cards "cards.json"
+
 (**[take_action result p g phase] executes the action given by result
    [result], if one exists, on player [p] given game [g] during phase
    [phase]. *)
@@ -18,7 +20,7 @@ let take_action result p g phase =
       false
 
 let rec phase_2 b g p =
-  let result = Input.turn p b g false in
+  let result = Input.turn p b g false cards in
   (* let _ = take_action result p g false in *)
   match result with
   | Input.Legal r ->
@@ -36,7 +38,7 @@ let rec double_turn b g p =
     ()
   done;
 
-  let result = Input.turn p b g true in
+  let result = Input.turn p b g true cards in
   let _ = take_action result p g true in
   match result with
   | Input.Legal r ->
@@ -50,7 +52,7 @@ let rec double_turn b g p =
       double_turn b g p
 
 let rec phase_1 b g p =
-  let result = Input.turn p b g true in
+  let result = Input.turn p b g true cards in
   (* let _ = take_action result p g true in *)
   match result with
   | Input.Legal r ->
