@@ -58,10 +58,8 @@ let phase2_string_of_move m p b g =
     match m with
     | Buy ->
         let current_location = Player.get_location p in
-        let current_space =
-          Board.space_from_location b current_location
-        in
-        if Board.is_ownable b current_space then
+        let space_name = Board.space_name b current_location in
+        if Game.is_available g space_name then
           " (Price: "
           ^ string_of_int
               (Game.get_ownable_price b
