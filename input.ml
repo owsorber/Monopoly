@@ -352,7 +352,13 @@ let mortgage p b g =
   print_array (fun x -> mortgagable_details x b) mortgagables;
   if Array.length mortgagables = 0 then (
     green_print "None.\n";
-    Illegal)
+    Legal
+      {
+        player_id = Player.get_player_id p;
+        action = (fun _ -> ());
+        is_double = false;
+        is_end = false;
+      })
   else (
     (*if len is zero then end function*)
     print_string "\n> ";
@@ -430,7 +436,13 @@ let unmortgage p b g =
   print_array (fun x -> unmortgage_details x b) mortgaged;
   if Array.length mortgaged = 0 then (
     green_print "None.\n";
-    Illegal)
+    Legal
+      {
+        player_id = Player.get_player_id p;
+        action = (fun _ -> ());
+        is_double = false;
+        is_end = false;
+      })
   else (
     print_string "\n> ";
     let property_index = read_line () in
@@ -446,7 +458,10 @@ let unmortgage p b g =
             (fun x ->
               Game.make_ownable_owned g x property_name;
               Player.update_balance x
-                (-Game.get_ownable_price b property_name / 2));
+                (int_of_float
+                   (1.1
+                   *. float_of_int
+                        (-Game.get_ownable_price b property_name / 2))));
           is_double = false;
           is_end = false;
         }
@@ -461,37 +476,49 @@ let house_details ownable p g =
   ownable ^ details
 
 let buy_house p g =
-  white_print
-    "Please enter the number of the property you would like to buy a \
-     house on: ";
   let prop_array = Game.all_can_buy_house g p in
-  print_array (fun x -> house_details x p g) prop_array;
-  print_string "\n> ";
-  let property_index = read_line () in
-  try
-    let property_name = prop_array.(int_of_string property_index - 1) in
+  if Array.length prop_array = 0 then (
+    green_print "None.\n";
+    Legal
+      {
+        player_id = Player.get_player_id p;
+        action = (fun _ -> ());
+        is_double = false;
+        is_end = false;
+      })
+  else (
+    white_print
+      "Please enter the number of the property you would like to buy a \
+       house on: ";
+    print_array (fun x -> house_details x p g) prop_array;
+    print_string "\n> ";
+    let property_index = read_line () in
     try
-      if Game.can_add_house g p property_name then
-        Legal
-          {
-            player_id = Player.get_player_id p;
-            action =
-              (fun _ ->
-                Game.add_house g property_name true;
-                Player.update_balance p
-                  (-Game.house_price g p property_name));
-            is_double = false;
-            is_end = false;
-          }
-      else (
-        red_print "you cannot add a house on this property";
-        Illegal)
-    with Game.NotPropertyName ->
-      red_print "The given name is not a valid property";
-      Illegal
-  with _ ->
-    red_print "invalid input\n";
-    Illegal
+      let property_name =
+        prop_array.(int_of_string property_index - 1)
+      in
+      try
+        if Game.can_add_house g p property_name then
+          Legal
+            {
+              player_id = Player.get_player_id p;
+              action =
+                (fun _ ->
+                  Game.add_house g property_name true;
+                  Player.update_balance p
+                    (-Game.house_price g p property_name));
+              is_double = false;
+              is_end = false;
+            }
+        else (
+          red_print "you cannot add a house on this property";
+          Illegal)
+      with Game.NotPropertyName ->
+        red_print "The given name is not a valid property";
+        Illegal
+    with _ ->
+      red_print "invalid input\n";
+      Illegal)
 
 let hotel_details ownable p g =
   let details =
@@ -500,35 +527,48 @@ let hotel_details ownable p g =
   ownable ^ details
 
 let buy_hotel p g =
-  white_print
-    "Please enter the number of the property you would like to buy a \
-     hotel on: ";
   (*need Game.property_list_of_ownable_list*)
   let prop_array = Game.all_can_buy_hotel g p in
-  (*use Game.all_can_buy_house to print only those that can add a house*)
-  print_array (fun x -> hotel_details x p g) prop_array;
-  print_string "\n> ";
-  let property_index = read_line () in
-  try
-    let property_name = prop_array.(int_of_string property_index - 1) in
+  if Array.length prop_array = 0 then (
+    green_print "None.\n";
+    Legal
+      {
+        player_id = Player.get_player_id p;
+        action = (fun _ -> ());
+        is_double = false;
+        is_end = false;
+      })
+  else (
+    white_print
+      "Please enter the number of the property you would like to buy a \
+       hotel on: ";
+    (*use Game.all_can_buy_house to print only those that can add a
+      house*)
+    print_array (fun x -> hotel_details x p g) prop_array;
+    print_string "\n> ";
+    let property_index = read_line () in
     try
-      if Game.can_add_hotel g p property_name then
-        Legal
-          {
-            player_id = Player.get_player_id p;
-            action = (fun _ -> Game.add_house g property_name false);
-            is_double = false;
-            is_end = false;
-          }
-      else (
-        red_print "you cannot add a hotel on this property";
-        Illegal)
-    with Game.NotPropertyName ->
-      red_print "The given name is not a valid property";
-      Illegal
-  with _ ->
-    red_print "invalid input\n";
-    Illegal
+      let property_name =
+        prop_array.(int_of_string property_index - 1)
+      in
+      try
+        if Game.can_add_hotel g p property_name then
+          Legal
+            {
+              player_id = Player.get_player_id p;
+              action = (fun _ -> Game.add_house g property_name false);
+              is_double = false;
+              is_end = false;
+            }
+        else (
+          red_print "you cannot add a hotel on this property";
+          Illegal)
+      with Game.NotPropertyName ->
+        red_print "The given name is not a valid property";
+        Illegal
+    with _ ->
+      red_print "invalid input\n";
+      Illegal)
 
 let trade p b =
   white_print "Please enter which player you would like to trade with: ";
