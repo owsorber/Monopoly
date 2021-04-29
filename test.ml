@@ -581,8 +581,6 @@ let game_tests =
       "Virginia Avenue" 0;
     get_houses_test "Four houses on Oriental Avenue" game_one
       "Oriental Avenue" 4;
-    make_ownable_mortgaged_exn "Cannot mortgage a utility" game_one p2
-      "Water Works" "exn";
     make_ownable_mortgaged_exn "p1 does not own Shortline" game_one p1
       "Shortline" "exn";
     all_mortgagable_test "p1 cannot mortgage any properties" game_one p1
@@ -610,8 +608,8 @@ let game_tests =
       game_one p4
       [| "Atlantic Avenue"; "Ventnor Avenue" |];
     can_add_hotel_test "" game_one p4 "Ventnor Avenue" true;
-    (* can_add_hotel_property_exn "Water Works is not a property"
-       game_one p4 "Water Works" "exn"; *)
+    can_add_hotel_property_exn "Water Works is not a property" game_one
+      p4 "Water Works" "exn";
     can_add_hotel_monopoly_exn "p4 does not have a monopoly on orange"
       game_one p4 "New York Avenue" "exn";
     can_add_hotel_four_houses_exn
