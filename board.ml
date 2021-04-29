@@ -144,7 +144,7 @@ let is_ownable board space =
 let space_name board i =
   let s = space_from_location board i in
   match s with
-  | Property p -> p.name ^ "(" ^ p.color ^ ")"
+  | Property p -> p.name
   | Railroad r -> r.name
   | Utility u -> u.name
   | Tax t -> t.name
