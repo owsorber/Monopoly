@@ -14,6 +14,7 @@ type rr_status =
 
 type util_status =
   | U_Owned of Player.t
+  | U_Mortgaged of Player.t
   | U_Available
 
 type ownable_status =
@@ -193,7 +194,7 @@ let is_mortgaged t o =
   match own_status with
   | Property p -> ( match p with P_Mortgaged _ -> true | _ -> false)
   | Railroad r -> ( match r with RR_Mortgaged _ -> true | _ -> false)
-  | _ -> false
+  | Utility u -> ( match u with U_Mortgaged _ -> true | _ -> false)
 
 let owner t o =
   let available = is_available t o in
@@ -457,7 +458,8 @@ let can_mortgage g p o =
           let col = Board.color board space in
           player = p && houses = 0 && not (has_houses_on_color g p col)
       | _ -> false)
-  | Utility status -> false
+  | Utility status -> (
+      match status with U_Owned player -> player = p | _ -> false)
   | Railroad status -> (
       match status with RR_Owned player -> player = p | _ -> false)
 
@@ -497,7 +499,8 @@ let make_ownable_mortgaged g p o =
         Hashtbl.replace g.ownables o (Property (P_Mortgaged p))
     | Railroad _ ->
         Hashtbl.replace g.ownables o (Railroad (RR_Mortgaged p))
-    | _ -> raise MortgageFailure
+    | Utility _ ->
+        Hashtbl.replace g.ownables o (Utility (U_Mortgaged p))
   else raise MortgageFailure
 
 let get_rent g board_location roll =
