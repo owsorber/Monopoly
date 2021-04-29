@@ -209,16 +209,32 @@ let roll p b g cards =
     green_print "You passed go! You gained $200!\n";
   match Player.quarantine p with
   | In i ->
-      red_print
-        ("You can't move yet, you're still in quarantine for "
-       ^ string_of_int i ^ " more turns.\n");
-      Legal
-        {
-          player_id = Player.get_player_id p;
-          action = (fun x -> Player.decrement_day_quarantine x);
-          is_double = double_of_roll r;
-          is_end = false;
-        }
+      if double_of_roll r then (
+        green_print
+          "congrats! you rolled doubles and can leave quarantine! (you \
+           tested negative)";
+        Player.leave_quarantine p;
+        Legal
+          {
+            player_id = Player.get_player_id p;
+            action =
+              (fun player ->
+                Player.move_player r player;
+                landing player g (Player.projected_space r p b) r cards);
+            is_double = double_of_roll r;
+            is_end = false;
+          })
+      else (
+        red_print
+          ("You can't move yet, you're still in quarantine for "
+         ^ string_of_int i ^ " more turns.\n");
+        Legal
+          {
+            player_id = Player.get_player_id p;
+            action = (fun x -> Player.decrement_day_quarantine x);
+            is_double = double_of_roll r;
+            is_end = false;
+          })
   | Out ->
       let new_space = Player.projected_space r p b in
       magenta_print "You landed on: ";

@@ -30,9 +30,10 @@ let rec phase_2 b g p =
       red_print "Illegal move. Please enter a valid move. \n";
       phase_2 b g p
 
-(**[double_turn b g p] handles taking another roll phase for player [p]
-   given board [b] and game [g]. *)
-let rec double_turn b g p =
+(**[double_turn b g p i] handles taking another roll phase for player
+   [p] given board [b] and game [g] and having rolled doubles [i] + 1
+   times. *)
+let rec double_turn b g p i =
   (*phase 2*)
   while phase_2 b g p = false do
     ()
@@ -43,13 +44,19 @@ let rec double_turn b g p =
   match result with
   | Input.Legal r ->
       let double = Input.get_double r in
-      if double then
-        green_print
-          "WOW! Doubles again?! Sadly that's it for rolling. \n\n"
+      if double then (
+        green_print "WOW! Doubles again?!\n\n";
+        if i < 2 then double_turn b g p (i + 1)
+        else
+          red_print
+            "you pushed your luck and rolled doubles three times... \
+             given this luck we're worried you might have covid. You \
+             have to go to quarantine";
+        Player.go_to_quarantine_status p)
       else ()
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move. \n";
-      double_turn b g p
+      double_turn b g p i
 
 let rec phase_1 b g p =
   let result = Input.turn p b g true cards in
