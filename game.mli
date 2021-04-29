@@ -15,6 +15,7 @@ type rr_status =
 
 type util_status =
   | U_Owned of Player.t
+  | U_Mortgage of Player.t
   | U_Available
 
 type ownable_status =
