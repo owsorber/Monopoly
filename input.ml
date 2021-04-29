@@ -58,13 +58,18 @@ let phase2_string_of_move m p b g =
     match m with
     | Buy ->
         let current_location = Player.get_location p in
+        let current_space =
+          Board.space_from_location b current_location
+        in
         let space_name = Board.space_name b current_location in
-        if Game.is_available g space_name then
-          " (Price: "
-          ^ string_of_int
-              (Game.get_ownable_price b
-                 (Board.space_name b current_location))
-          ^ ")"
+        if Board.is_ownable b current_space then
+          if Game.is_available g space_name then
+            " (Price: "
+            ^ string_of_int
+                (Game.get_ownable_price b
+                   (Board.space_name b current_location))
+            ^ ")"
+          else "(Illegal Action)"
         else "(Illegal Action)"
     | _ -> ""
   in
@@ -419,7 +424,7 @@ let unmortgage p b g =
 
 let house_details ownable p g =
   let details =
-    " ( Cost: " ^ string_of_int (Game.house_price g p ownable) ^ ")"
+    " (Cost: " ^ string_of_int (Game.house_price g p ownable) ^ ")"
   in
   ownable ^ details
 
@@ -458,7 +463,7 @@ let buy_house p g =
 
 let hotel_details ownable p g =
   let details =
-    " ( Cost: " ^ string_of_int (Game.house_price g p ownable) ^ ")"
+    " (Cost: " ^ string_of_int (Game.house_price g p ownable) ^ ")"
   in
   ownable ^ details
 

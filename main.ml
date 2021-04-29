@@ -123,10 +123,10 @@ let game1 () =
   let p1 = Player.make_player "player1" in
   Player.update_balance p1 10000;
   let g = Game.init_game board [| p1 |] in
-  Player.buy_ownable p1 "Mediterranean Avenue" 60;
-  Game.make_ownable_owned g p1 "Mediterranean Avenue";
-  Player.buy_ownable p1 "Baltic Avenue" 60;
-  Game.make_ownable_owned g p1 "Baltic Avenue";
+  Player.buy_ownable p1 "Mediterranean Avenue(#955438)" 60;
+  Game.make_ownable_owned g p1 "Mediterranean Avenue(#955438)";
+  Player.buy_ownable p1 "Baltic Avenue(#955438)" 60;
+  Game.make_ownable_owned g p1 "Baltic Avenue(#955438)";
   g
 
 (* buys a list of ownables for a player*)
