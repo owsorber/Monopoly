@@ -42,18 +42,21 @@ let rec double_turn b g p i =
   let result = Input.turn p b g true cards in
   let _ = take_action result p g true in
   match result with
-  | Input.Legal r ->
-      let double = Input.get_double r in
-      if double then (
-        green_print "WOW! Doubles again?!\n\n";
-        if i < 2 then double_turn b g p (i + 1)
-        else
-          red_print
-            "you pushed your luck and rolled doubles three times... \
-             given this luck we're worried you might have covid. You \
-             have to go to quarantine";
-        Player.go_to_quarantine_status p)
-      else ()
+  | Input.Legal r -> (
+      match Player.quarantine p with
+      | In _ -> ()
+      | Out ->
+          let double = Input.get_double r in
+          if double then (
+            green_print "WOW! Doubles again?!\n\n";
+            if i < 2 then double_turn b g p (i + 1)
+            else
+              red_print
+                "you pushed your luck and rolled doubles three \
+                 times... given this luck we're worried you might have \
+                 covid. You have to go to quarantine\n";
+            Player.go_to_quarantine_status p)
+          else ())
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move. \n";
       double_turn b g p i

@@ -102,7 +102,12 @@ let string_of_list lst =
 
 let property_info property g b =
   (*pattern match against property to only print useful info*)
-  property ^ Game.get_ownable_info g b property
+  match Board.space_from_space_name b property with
+  | Some space ->
+      property
+      ^ Game.get_ownable_info g b property
+      ^ Board.color b space
+  | None -> "impossible"
 
 let pp_propert_list g b lst =
   let pp_elts lst =
@@ -212,7 +217,7 @@ let roll p b g cards =
       if double_of_roll r then (
         green_print
           "congrats! you rolled doubles and can leave quarantine! (you \
-           tested negative)";
+           tested negative)\n";
         Player.leave_quarantine p;
         Legal
           {
