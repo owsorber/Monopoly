@@ -138,7 +138,7 @@ let get_double t = t.is_double
 
 let get_end t = t.is_end
 
-let landing p g space_name r cards =
+let rec landing p g space_name r cards =
   let b = Game.get_board g in
   match Board.space_from_space_name b space_name with
   | Some space -> (
@@ -175,20 +175,28 @@ let landing p g space_name r cards =
           red_print (string_of_int t.cost);
           print_endline ""
       | Chance ->
+          let location = Player.get_location p in
           magenta_print "You landed on Chance!\nDrawing a card...\n";
           let card = Cards.draw_chance_card cards in
           magenta_print "Your card says:\n";
           cyan_print card.message;
           print_endline "\n";
-          Cards.do_card card p b g
+          Cards.do_card card p b g;
+          if Player.get_location p <> location then
+            landing p g space_name r cards
+          else ()
       | CommunityChest ->
+          let location = Player.get_location p in
           magenta_print
             "You landed on Community Chest!\nDrawing a card...\n";
           let card = Cards.draw_community_chest_card cards in
           magenta_print "Your card says:\n";
           cyan_print card.message;
           print_endline "\n";
-          Cards.do_card card p b g
+          Cards.do_card card p b g;
+          if Player.get_location p <> location then
+            landing p g space_name r cards
+          else ()
       | Quarantine ->
           magenta_print "You're just here for a visit... for now\n"
       | FreeParking ->
