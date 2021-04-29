@@ -70,7 +70,7 @@ let rec phase_1 b g p =
       let double = Input.get_double r in
       if double then (
         green_print "Yay! You rolled doubles. You may roll again! \n";
-        double_turn b g p)
+        double_turn b g p 0)
       else ()
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move. \n";
@@ -133,10 +133,10 @@ let game1 () =
   let p1 = Player.make_player "player1" in
   Player.update_balance p1 10000;
   let g = Game.init_game board [| p1 |] in
-  Player.buy_ownable p1 "Mediterranean Avenue(#955438)" 60;
-  Game.make_ownable_owned g p1 "Mediterranean Avenue(#955438)";
-  Player.buy_ownable p1 "Baltic Avenue(#955438)" 60;
-  Game.make_ownable_owned g p1 "Baltic Avenue(#955438)";
+  Player.buy_ownable p1 "Mediterranean Avenue" 60;
+  Game.make_ownable_owned g p1 "Mediterranean Avenue";
+  Player.buy_ownable p1 "Baltic Avenue" 60;
+  Game.make_ownable_owned g p1 "Baltic Avenue";
   g
 
 (* buys a list of ownables for a player*)
@@ -197,6 +197,7 @@ let rec play_game () =
   with _ ->
     red_print "Please enter a valid index.\n";
     play_game ()
+
 (* match read_line () with | exception End_of_file -> () | f -> ( try
    let board = Board.init_board (Yojson.Basic.from_file f) in (*query
    number of players*) let n = get_player_count () in let players =
