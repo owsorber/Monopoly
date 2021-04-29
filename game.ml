@@ -533,6 +533,9 @@ let delete_player g p =
   let players_lst = Array.to_list g.players in
   let new_players_lst = List.filter (fun x -> x <> p) players_lst in
   let new_players_array = Array.of_list new_players_lst in
+  Printers.red_print "Player ";
+  Printers.cyan_print (Player.get_player_id p);
+  Printers.red_print " went bankrupt. They have lost the game.\n";
   g.players <- new_players_array
 
 let do_tax g p s =
