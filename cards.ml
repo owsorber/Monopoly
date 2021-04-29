@@ -103,7 +103,7 @@ let rec num_houses game list house hotel =
   | [] -> (house, hotel)
   | h :: t ->
       let num = Game.get_houses game h in
-      if num = 5 then num_houses game t (house + 4) (hotel + 1)
+      if num = 5 then num_houses game t house (hotel + 1)
       else num_houses game t (house + num) hotel
 
 let rec string_to_int_list str =
