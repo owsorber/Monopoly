@@ -16,20 +16,6 @@
       "extra": "St. Charles Place"
     },
     {
-      "title": "Advance token to nearest Utility. If unowned, you may buy it from the Bank. If owned, throw dice and pay owner a total ten times the amount thrown.",
-      "action": "movenearest",
-      "extra": "utility",
-      "groupid": "utility",
-      "rentmultiplier": 10
-    },
-    {
-      "title": "Advance token to the nearest Railroad and pay owner twice the rental to which he/she is otherwise entitled. If Railroad is unowned, you may buy it from the Bank.",
-      "action": "movenearest",
-      "extra": "rr",
-      "groupid": "railroad",
-      "rentmultiplier": 2
-    },
-    {
       "title": "Bank pays you dividend of $50",
       "action": "addfunds",
       "extra": "50"
