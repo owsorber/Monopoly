@@ -201,8 +201,15 @@ let rec landing p g space_name r cards =
               (Board.space_name b (Player.get_location p))
               r cards
           else ()
-      | Quarantine ->
-          magenta_print "You're just here for a visit... for now\n"
+      | Quarantine -> (
+          match Player.quarantine p with
+          | In _ ->
+              magenta_print
+                "you stare out your window and notice a couple on a \
+                 nice stroll. you can't remember the last time you \
+                 felt the wind... or anything really"
+          | Out ->
+              magenta_print "You're just here for a visit... for now\n")
       | FreeParking ->
           let received = Game.do_free_parking g p in
           magenta_print
