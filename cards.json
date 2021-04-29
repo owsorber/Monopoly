@@ -1,6 +1,6 @@
-
-   {"chance":
-   [ {
+{
+  "chance": [
+    {
       "title": "Advance to Go (Collect $200)",
       "action": "move",
       "extra": "Go"
@@ -18,14 +18,14 @@
     {
       "title": "Advance token to nearest Utility. If unowned, you may buy it from the Bank. If owned, throw dice and pay owner a total ten times the amount thrown.",
       "action": "movenearest",
-      "extra" : "utility",
+      "extra": "utility",
       "groupid": "utility",
       "rentmultiplier": 10
     },
     {
       "title": "Advance token to the nearest Railroad and pay owner twice the rental to which he/she is otherwise entitled. If Railroad is unowned, you may buy it from the Bank.",
       "action": "movenearest",
-      "extra" : "rr",
+      "extra": "rr",
       "groupid": "railroad",
       "rentmultiplier": 2
     },
@@ -53,7 +53,7 @@
       "number": 10,
       "title": "Make general repairs on all your property - For each house pay $25 - For each hotel $100",
       "action": "propertycharges",
-      "extra" : "25 100",
+      "extra": "25 100",
       "buildings": 25,
       "hotels": 100
     },
@@ -73,7 +73,7 @@
       "extra": "Boardwalk"
     },
     {
-       "number": 14,
+      "number": 14,
       "title": "You have been elected Chairman of the Board - Pay each player $50",
       "action": "removefundstoplayers",
       "extra": "-50"
@@ -83,9 +83,9 @@
       "title": "Your building loan matures - Collect $150",
       "action": "addfunds",
       "extra": "150"
-    }],
-
-    "communitychest": [
+    }
+  ],
+  "communitychest": [
     {
       "title": "Advance to Go (Collect $200)",
       "action": "move",
@@ -154,7 +154,7 @@
     {
       "title": "You are assessed for street repairs - $40 per house - $115 per hotel",
       "action": "propertycharges",
-      "extra" : "40, 115",
+      "extra": "40, 115",
       "buildings": 40,
       "hotels": 115
     },
@@ -168,4 +168,5 @@
       "action": "addfunds",
       "extra": "100"
     }
-  ]}
+  ]
+}
