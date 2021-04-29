@@ -48,10 +48,11 @@ let make_player id =
 (* [sums roll] is the sum of the two value die in [roll] *)
 let sums roll = fst roll + snd roll
 
-let roll () = (2, 2)
-
-(* ( (Random.self_init (); Random.int 6 + 1), (Random.self_init ();
-   Random.int 6 + 1) ) *)
+let roll () =
+  ( (Random.self_init ();
+     Random.int 6 + 1),
+    (Random.self_init ();
+     Random.int 6 + 1) )
 
 let update_balance player i =
   if player.balance + i < 0 then raise BalanceBelowZero
@@ -92,8 +93,8 @@ let buy_ownable p prop i =
   p.ownable_name_list <- prop :: p.ownable_name_list
 
 let pay p1 p2 i =
-  update_balance p1 (-i);
-  update_balance p2 i
+  update_balance p2 i;
+  update_balance p1 (-i)
 
 let move_player_to p l =
   let o = p.location in

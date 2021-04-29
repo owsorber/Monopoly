@@ -156,6 +156,15 @@ let make_ownable_owned g p o =
   | Utility _ -> Hashtbl.replace g.ownables o (Utility (U_Owned p))
   | Railroad _ -> Hashtbl.replace g.ownables o (Railroad (RR_Owned p))
 
+(* makes an ownable available, and happens when a player gets bankrupt *)
+let make_ownable_available g p o =
+  let space =
+    match Board.space_from_space_name (get_board g) o with
+    | Some s -> s
+    | None -> failwith "This isn't a space name."
+  in
+  Hashtbl.replace g.ownables o (init_ownable space)
+
 let get_ownable_status g space =
   match space with
   | Board.Property p -> Some (get_own_status g p.name)
@@ -529,10 +538,18 @@ let get_rent g board_location roll =
       | RR_Owned player -> 25 * num_rrs_owned g player
       | _ -> 0)
 
+(* makes all of a player's ownables available *)
+let rec make_player_ownables_available g p = function
+  | [] -> ()
+  | h :: t ->
+      make_ownable_available g p h;
+      make_player_ownables_available g p t
+
 let delete_player g p =
   let players_lst = Array.to_list g.players in
   let new_players_lst = List.filter (fun x -> x <> p) players_lst in
   let new_players_array = Array.of_list new_players_lst in
+  make_player_ownables_available g p (Player.get_ownable_name_list p);
   Printers.red_print "Player ";
   Printers.cyan_print (Player.get_player_id p);
   Printers.red_print " went bankrupt. They have lost the game.\n";

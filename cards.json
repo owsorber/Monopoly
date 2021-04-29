@@ -21,11 +21,6 @@
       "extra": "50"
     },
     {
-      "title": "Get out of Quarantine Free - This card may be kept until needed, or traded/sold",
-      "action": "quarantine",
-      "extra": "get out"
-    },
-    {
       "title": "Go Back 3 Spaces",
       "action": "movenum",
       "extra": "-3"
@@ -36,7 +31,6 @@
       "extra": "go to"
     },
     {
-      "number": 10,
       "title": "Make general repairs on all your property - For each house pay $25 - For each hotel $100",
       "action": "propertycharges",
       "extra": "25 100",
@@ -59,13 +53,11 @@
       "extra": "Boardwalk"
     },
     {
-      "number": 14,
       "title": "You have been elected Chairman of the Board - Pay each player $50",
       "action": "removefundstoplayers",
-      "extra": "-50"
+      "extra": "50"
     },
     {
-      "number": 15,
       "title": "Your building loan matures - Collect $150",
       "action": "addfunds",
       "extra": "150"
@@ -91,11 +83,6 @@
       "title": "From sale of stock you get $50",
       "action": "addfunds",
       "extra": "50"
-    },
-    {
-      "title": "Get Out of Quarantine Free",
-      "action": "quarantine",
-      "extra": "get out"
     },
     {
       "title": "Go to Quarantine - Go directly to Quarantine - Do not pass Go - Do not collect $200",
@@ -140,7 +127,7 @@
     {
       "title": "You are assessed for street repairs - $40 per house - $115 per hotel",
       "action": "propertycharges",
-      "extra": "40, 115",
+      "extra": "40 115",
       "buildings": 40,
       "hotels": 115
     },
