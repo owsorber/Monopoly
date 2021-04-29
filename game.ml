@@ -96,14 +96,6 @@ let do_free_parking g p =
   g.free_parking <- 0;
   free_parking_val
 
-let do_tax g p s =
-  match s with
-  | Board.Tax t ->
-      let tax_cost = t.cost in
-      Player.update_balance p (-tax_cost);
-      g.free_parking <- g.free_parking + tax_cost
-  | _ -> failwith "Tried to complete a tax on a non-tax space."
-
 let get_own_status t o =
   match Hashtbl.find_opt t.ownables o with
   | None -> raise NotOwnableName
@@ -542,3 +534,12 @@ let delete_player g p =
   let new_players_lst = List.filter (fun x -> x <> p) players_lst in
   let new_players_array = Array.of_list new_players_lst in
   g.players <- new_players_array
+
+let do_tax g p s =
+  match s with
+  | Board.Tax t ->
+      let tax_cost = t.cost in
+      (try Player.update_balance p (-tax_cost)
+       with Player.BalanceBelowZero -> delete_player g p);
+      g.free_parking <- g.free_parking + tax_cost
+  | _ -> failwith "Tried to complete a tax on a non-tax space."

@@ -80,7 +80,9 @@ let draw_community_chest_card t =
 
 let move_card loc p = Player.move_player_to p loc
 
-let change_funds p funds = Player.update_balance p (int_of_string funds)
+let change_funds p g funds =
+  try Player.update_balance p (int_of_string funds)
+  with Player.BalanceBelowZero -> Game.delete_player g p
 
 let quarantine_card p extra =
   match extra with
@@ -112,26 +114,37 @@ let rec string_to_int_list str =
 let property_charges game player extra =
   let num = num_houses game (Game.get_properties game player) 0 0 in
   let list = string_to_int_list (String.split_on_char ' ' extra) in
-  Player.update_balance player
-    (-((fst num * List.hd list) + (snd num * List.nth list 1)))
+  try
+    Player.update_balance player
+      (-((fst num * List.hd list) + (snd num * List.nth list 1)))
+  with Player.BalanceBelowZero -> Game.delete_player game player
 
 let add_others_funds player game amount =
   Array.iter
-    (fun p -> Player.pay p player amount)
+    (fun p ->
+      try Player.pay p player amount
+      with Player.BalanceBelowZero -> Game.delete_player game p)
+    (Game.get_all_players game)
+
+let receive_others_funds player game amount =
+  Array.iter
+    (fun p ->
+      try Player.pay player p amount
+      with Player.BalanceBelowZero -> Game.delete_player game player)
     (Game.get_all_players game)
 
 let do_card card p board game =
   match card.action with
   | "move" ->
       move_card (Board.location_from_space_name board card.extra) p
-  | "addfunds" -> change_funds p card.extra
+  | "addfunds" -> change_funds p game card.extra
   | "quarantine" -> quarantine_card p card.extra
-  | "removefunds" -> change_funds p card.extra
+  | "removefunds" -> change_funds p game card.extra
   | "movenum" ->
       move_card (Player.get_location p + int_of_string card.extra) p
   | "propertycharges" -> property_charges game p card.extra
   | "removefundstoplayers" ->
-      add_others_funds p game (int_of_string card.extra)
+      receive_others_funds p game (int_of_string card.extra)
   | "addfundsfromplayers" ->
       add_others_funds p game (int_of_string card.extra)
   | _ -> raise NotValidCard
