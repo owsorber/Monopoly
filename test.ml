@@ -124,8 +124,6 @@ let board_tests =
     start_space_test "Start on Go" test_board "Go";
     space_color_test "Color of Mediterranean Avenue" test_board 1
       "#955438";
-    space_color_test "Color of Mediterranean Avenue" test_board 1
-      "#955438";
     space_color_test "Color of Pennsylvania Avenue" test_board 34
       "#1fb25a";
   ]
@@ -608,8 +606,6 @@ let game_tests =
       game_one p4
       [| "Atlantic Avenue"; "Ventnor Avenue" |];
     can_add_hotel_test "" game_one p4 "Ventnor Avenue" true;
-    can_add_hotel_property_exn "Water Works is not a property" game_one
-      p4 "Water Works" "exn";
     can_add_hotel_monopoly_exn "p4 does not have a monopoly on orange"
       game_one p4 "New York Avenue" "exn";
     can_add_hotel_four_houses_exn
