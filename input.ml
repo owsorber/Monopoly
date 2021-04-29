@@ -69,8 +69,8 @@ let phase2_string_of_move m p b g =
                 (Game.get_ownable_price b
                    (Board.space_name b current_location))
             ^ ")"
-          else "(Illegal Action)"
-        else "(Illegal Action)"
+          else " (Illegal Action)"
+        else " (Illegal Action)"
     | _ -> ""
   in
   move_str ^ details
@@ -106,7 +106,7 @@ let property_info property g b =
   | Some space ->
       property
       ^ Game.get_ownable_info g b property
-      ^ "color: " ^ Board.color b space
+      ^ ". Color: " ^ Board.color b space
   | None -> "impossible"
 
 let pp_propert_list g b lst =
