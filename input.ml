@@ -215,7 +215,7 @@ let roll p b g cards =
       Legal
         {
           player_id = Player.get_player_id p;
-          action = (fun x -> ());
+          action = (fun x -> Player.decrement_day_quarantine x);
           is_double = double_of_roll r;
           is_end = false;
         }
