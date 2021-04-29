@@ -207,25 +207,27 @@ let roll p b g cards =
   magenta_print (string_of_roll r);
   if Player.passes_go r p then
     green_print "You passed go! You gained $200!\n";
-  let new_space = Player.projected_space r p b in
-  magenta_print "You landed on: ";
-  yellow_print new_space;
-  print_endline "\n";
-  Legal
-    {
-      player_id = Player.get_player_id p;
-      action =
-        (fun player ->
-          try
-            Player.move_player r player;
-            landing player g new_space r cards
-          with Player.InQuarantine i ->
-            red_print
-              ("You can't move yet, you're still in quarantine for "
-             ^ string_of_int i ^ " more turns.\n"));
-      is_double = double_of_roll r;
-      is_end = false;
-    }
+  match Player.quarantine p with
+  | In i ->
+      red_print
+        ("You can't move yet, you're still in quarantine for "
+       ^ string_of_int i ^ " more turns.\n");
+      Illegal
+  | Out ->
+      let new_space = Player.projected_space r p b in
+      magenta_print "You landed on: ";
+      yellow_print new_space;
+      print_endline "\n";
+      Legal
+        {
+          player_id = Player.get_player_id p;
+          action =
+            (fun player ->
+              Player.move_player r player;
+              landing player g new_space r cards);
+          is_double = double_of_roll r;
+          is_end = false;
+        }
 
 (**[end_turn p b] is the representative result of type t for player [p]
    on board [b] to end their turn. *)
