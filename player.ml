@@ -48,11 +48,10 @@ let make_player id =
 (* [sums roll] is the sum of the two value die in [roll] *)
 let sums roll = fst roll + snd roll
 
-let roll () =
-  ( (Random.self_init ();
-     Random.int 6 + 1),
-    (Random.self_init ();
-     Random.int 6 + 1) )
+let roll () = (2, 2)
+
+(* ( (Random.self_init (); Random.int 6 + 1), (Random.self_init ();
+   Random.int 6 + 1) ) *)
 
 let update_balance player i =
   if player.balance + i < 0 then raise BalanceBelowZero

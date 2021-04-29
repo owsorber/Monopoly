@@ -70,7 +70,7 @@ let rec phase_1 b g p =
       let double = Input.get_double r in
       if double then (
         green_print "Yay! You rolled doubles. You may roll again! \n";
-        double_turn b g p 0)
+        double_turn b g p 1)
       else ()
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move. \n";
