@@ -207,7 +207,7 @@ let rec landing p g space_name r cards =
               magenta_print
                 "you stare out your window and notice a couple on a \
                  nice stroll. you can't remember the last time you \
-                 felt the wind... or anything really"
+                 felt the wind... or anything really\n"
           | Out ->
               magenta_print "You're just here for a visit... for now\n")
       | FreeParking ->
