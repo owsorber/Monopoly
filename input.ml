@@ -183,7 +183,9 @@ let rec landing p g space_name r cards =
           print_endline "\n";
           Cards.do_card card p b g;
           if Player.get_location p <> location then
-            landing p g space_name r cards
+            landing p g
+              (Board.space_name b (Player.get_location p))
+              r cards
           else ()
       | CommunityChest ->
           let location = Player.get_location p in
@@ -195,7 +197,9 @@ let rec landing p g space_name r cards =
           print_endline "\n";
           Cards.do_card card p b g;
           if Player.get_location p <> location then
-            landing p g space_name r cards
+            landing p g
+              (Board.space_name b (Player.get_location p))
+              r cards
           else ()
       | Quarantine ->
           magenta_print "You're just here for a visit... for now\n"
