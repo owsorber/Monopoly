@@ -153,7 +153,7 @@ let rec landing p g space_name r cards =
                   if rent > Player.get_balance p then (
                     red_print
                       "You do not have enough money to pay for rent! \
-                       You go bankrupt and all of your assets go to: ";
+                       You go bankrupt";
                     cyan_print (Player.get_player_id player);
                     print_endline "";
                     Game.delete_player g p)
