@@ -194,7 +194,7 @@ let rec play_game () =
       Board.init_board (Yojson.Basic.from_file "board.json")
     in
     turn_handler board (game ())
-  with _ ->
+  with Invalid_argument _ ->
     red_print "Please enter a valid index.\n";
     play_game ()
 

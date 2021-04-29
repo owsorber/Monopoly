@@ -106,7 +106,7 @@ let property_info property g b =
   | Some space ->
       property
       ^ Game.get_ownable_info g b property
-      ^ Board.color b space
+      ^ "color: " ^ Board.color b space
   | None -> "impossible"
 
 let pp_propert_list g b lst =
