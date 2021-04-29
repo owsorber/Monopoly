@@ -212,7 +212,13 @@ let roll p b g cards =
       red_print
         ("You can't move yet, you're still in quarantine for "
        ^ string_of_int i ^ " more turns.\n");
-      Illegal
+      Legal
+        {
+          player_id = Player.get_player_id p;
+          action = (fun x -> ());
+          is_double = double_of_roll r;
+          is_end = false;
+        }
   | Out ->
       let new_space = Player.projected_space r p b in
       magenta_print "You landed on: ";
