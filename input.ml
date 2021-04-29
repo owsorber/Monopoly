@@ -103,10 +103,13 @@ let string_of_list lst =
 let property_info property g b =
   (*pattern match against property to only print useful info*)
   match Board.space_from_space_name b property with
-  | Some space ->
-      property
-      ^ Game.get_ownable_info g b property
-      ^ ". Color: " ^ Board.color b space
+  | Some space -> (
+      match space with
+      | Property _ ->
+          property
+          ^ Game.get_ownable_info g b property
+          ^ ". Color: " ^ Board.color b space
+      | _ -> property ^ Game.get_ownable_info g b property)
   | None -> "impossible"
 
 let pp_propert_list g b lst =
