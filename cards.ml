@@ -96,11 +96,6 @@ let rec find_nearest board loc typ =
       if typ = "utility" then loc else find_nearest board (loc + 1) typ
   | _ -> find_nearest board (loc + 1) typ
 
-let move_nearest player board extra game =
-  move_card
-    (find_nearest board (Player.get_location player) extra)
-    player
-
 let rec num_houses game list house hotel =
   match list with
   | [] -> (house, hotel)
@@ -134,7 +129,6 @@ let do_card card p board game =
   | "removefunds" -> change_funds p card.extra
   | "movenum" ->
       move_card (Player.get_location p + int_of_string card.extra) p
-  | "movenearest" -> move_nearest p board card.extra game
   | "propertycharges" -> property_charges game p card.extra
   | "removefundstoplayers" ->
       add_others_funds p game (int_of_string card.extra)
