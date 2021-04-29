@@ -131,8 +131,9 @@ let default_game () =
 let game1 () =
   let board = Board.init_board (Yojson.Basic.from_file "board.json") in
   let p1 = Player.make_player "player1" in
+  let p2 = Player.make_player "player2" in
   Player.update_balance p1 10000;
-  let g = Game.init_game board [| p1 |] in
+  let g = Game.init_game board [| p1; p2 |] in
   Player.buy_ownable p1 "Mediterranean Avenue" 60;
   Game.make_ownable_owned g p1 "Mediterranean Avenue";
   Player.buy_ownable p1 "Baltic Avenue" 60;
