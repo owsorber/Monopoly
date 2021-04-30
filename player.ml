@@ -49,10 +49,10 @@ let make_player id =
 let sums roll = fst roll + snd roll
 
 let roll () =
-  ( (Random.self_init ();
-     Random.int 6 + 1),
-    (Random.self_init ();
-     Random.int 6 + 1) )
+  ( ( Random.self_init ();
+      Random.int 6 + 1 ),
+    ( Random.self_init ();
+      Random.int 6 + 1 ) )
 
 let update_balance player i =
   if player.balance + i < 0 then raise BalanceBelowZero
@@ -96,12 +96,12 @@ let pay p1 p2 i =
   update_balance p2 i;
   update_balance p1 (-i)
 
-let move_player_to p l =
+let move_player_to p l can_pass =
   let o = p.location in
   if o = l then ()
-  else if o > l then (
+  else if o > l && can_pass then (
     update_balance p 200;
-    p.location <- l)
+    p.location <- l )
   else p.location <- l
 
 let have_gooq player = player.get_out_of_quarantine_card

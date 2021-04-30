@@ -98,9 +98,9 @@ val buy_ownable : t -> ownable_name -> int -> unit
    [amount] to [p2].balance. P1 pays P2 [amount]. *)
 val pay : t -> t -> int -> unit
 
-(** [move_player_to p l] updates player [p]'s location to [l] and
-    updates their balance if they pass "Go". *)
-val move_player_to : t -> location -> unit
+(** [move_player_to p l can_pass] updates player [p]'s location to [l]
+    and updates their balance if they pass "Go" and [can_pass] is true. *)
+val move_player_to : t -> location -> bool -> unit
 
 (** [got_gooq_card player] updates [player]'s get_out_of_quarantine_card
     status to true, implying the player has a get_out_of_quarantine_card *)

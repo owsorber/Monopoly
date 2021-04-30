@@ -50,8 +50,8 @@ let init_cards filename =
     chance_int = 0;
     community_chest_deck =
       init_shuffle
-        (to_list (json |> member "communitychest")
-        |> init_deck_builder []);
+        ( to_list (json |> member "communitychest")
+        |> init_deck_builder [] );
     community_chest_int = 0;
   }
 
@@ -59,7 +59,7 @@ let draw_chance_card t =
   if t.chance_int < Array.length t.chance_deck - 1 then (
     let c = t.chance_deck.(t.chance_int) in
     t.chance_int <- t.chance_int + 1;
-    c)
+    c )
   else
     let c = t.chance_deck.(t.chance_int) in
     t.chance_deck <- shuffle t.chance_deck;
@@ -71,14 +71,14 @@ let draw_community_chest_card t =
   then (
     let c = t.community_chest_deck.(t.community_chest_int) in
     t.community_chest_int <- t.community_chest_int + 1;
-    c)
+    c )
   else
     let c = t.community_chest_deck.(t.community_chest_int) in
     t.community_chest_deck <- shuffle t.community_chest_deck;
     t.community_chest_int <- 0;
     c
 
-let move_card loc p = Player.move_player_to p loc
+let move_card loc p can_pass = Player.move_player_to p loc can_pass
 
 let change_funds p g funds =
   try Player.update_balance p (int_of_string funds)
@@ -136,12 +136,14 @@ let receive_others_funds player game amount =
 let do_card card p board game =
   match card.action with
   | "move" ->
-      move_card (Board.location_from_space_name board card.extra) p
+      move_card (Board.location_from_space_name board card.extra) p true
   | "addfunds" -> change_funds p game card.extra
   | "quarantine" -> quarantine_card p card.extra
   | "removefunds" -> change_funds p game card.extra
   | "movenum" ->
-      move_card (Player.get_location p + int_of_string card.extra) p
+      move_card
+        (Player.get_location p + int_of_string card.extra)
+        p false
   | "propertycharges" -> property_charges game p card.extra
   | "removefundstoplayers" ->
       receive_others_funds p game (int_of_string card.extra)
