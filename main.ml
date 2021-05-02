@@ -50,12 +50,12 @@ let rec double_turn b g p i =
           if double then (
             green_print "WOW! Doubles again?!\n\n";
             if i < 2 then double_turn b g p (i + 1)
-            else
+            else (
               red_print
                 "you pushed your luck and rolled doubles three \
                  times... given this luck we're worried you might have \
                  covid. You have to go to quarantine\n";
-            Player.go_to_quarantine_status p)
+              Player.go_to_quarantine_status p))
           else ())
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move. \n";
@@ -195,7 +195,7 @@ let rec play_game () =
       Board.init_board (Yojson.Basic.from_file "board.json")
     in
     turn_handler board (game ())
-  with Invalid_argument _ ->
+  with Invalid_argument _ | Failure _ ->
     red_print "Please enter a valid index.\n";
     play_game ()
 
