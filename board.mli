@@ -24,13 +24,24 @@ type space =
   | Go
   | Chance
   | CommunityChest
-  | Jail
+  | Quarantine
   | FreeParking
-  | GoToJail
+  | GoToQuarantine
 
 (** Raised when an integer does not refer to a valid 0-indexed location
     on the Monopoly board. *)
 exception NotOnBoard of int
+
+(** Raised when a space name is provided but is not present on the
+    board. *)
+exception NameNotOnBoard of string
+
+(** Raised when the color is asked for from a space that does not have a
+    color on the Monopoly board. *)
+exception SpaceDoesNotHaveColor
+
+(** Raised when a color does not exist on a board. *)
+exception BoardDoesNotHaveColor of string
 
 (** [init_board json] returns the board represented by [json]. Requires:
     [json] is a valid JSON representation of a standard Monopoly Board. *)
@@ -46,6 +57,15 @@ val length : t -> int
     [NotOnBoard] if [i] does not indicate a valid space on [board] *)
 val space_from_location : t -> int -> space
 
+(** [space_from_space_name b str] returns Some s if there exists space s
+    on board [b] with name [str]. *)
+val space_from_space_name : t -> string -> space option
+
+(** [is_ownable s] returns true iff [s] is an ownable space. More
+    specifically, an "ownable space" is either a property, railroad, or
+    utility. *)
+val is_ownable : t -> space -> bool
+
 (** [space_name board i] returns a string holding the name of the space
     at location [i] on [board], starting from "Go" at 0 and counting up
     by 1 around the board clockwise.
@@ -60,3 +80,16 @@ val space_name : t -> int -> string
 (** [start_space board] returns the name of the space all players start
     on in [board]. *)
 val start_space : t -> string
+
+(* [color board s] returns the color of space [s]. Raises *)
+val color : t -> space -> string
+
+(* [num_of_color board col] returns the number of properties in [board]
+   with the color [col]. Raises: [BoardDoesNotHaveColor col] if [col] is
+   not the color of any property in [board]. *)
+val num_of_color : t -> string -> int
+
+(** [space_from_space_name b str] returns the location if there exists
+    space s on board [b] with name [str]. requires: [str] is the only
+    space with that name*)
+val location_from_space_name : t -> string -> int

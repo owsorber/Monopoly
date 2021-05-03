@@ -23,13 +23,22 @@ type space =
   | Go
   | Chance
   | CommunityChest
-  | Jail
+  | Quarantine
   | FreeParking
-  | GoToJail
+  | GoToQuarantine
 
 exception NotOnBoard of int
 
-type t = space array
+exception NameNotOnBoard of string
+
+exception SpaceDoesNotHaveColor
+
+exception BoardDoesNotHaveColor of string
+
+type t = {
+  spaces : space array;
+  num_color : (string, int) Hashtbl.t;
+}
 
 (* Creates a rent array from a JSON list of rent values *)
 let create_rent_array j =
@@ -79,9 +88,9 @@ let space_from_json j =
   | "go" -> Go
   | "chance" -> Chance
   | "community-chest" -> CommunityChest
-  | "jail" -> Jail
+  | "jail" -> Quarantine
   | "free-parking" -> FreeParking
-  | "go-to-jail" -> GoToJail
+  | "go-to-jail" -> GoToQuarantine
   | _ ->
       failwith ("Board JSON File gave invalid space type " ^ space_type)
 
@@ -91,14 +100,46 @@ let rec init_board_helper builder spaces =
   | [] -> builder
   | h :: t -> init_board_helper (space_from_json h :: builder) t
 
-let init_board json =
+let init_spaces json =
   let board_list = to_list json |> init_board_helper [] in
   List.rev board_list |> Array.of_list
 
-let length board = Array.length board
+let make_color_hashmap spaces hashtbl =
+  let () =
+    for i = 0 to Array.length spaces - 1 do
+      match spaces.(i) with
+      | Property p ->
+          let color = p.color in
+          if Hashtbl.mem hashtbl color then
+            Hashtbl.replace hashtbl color
+              (Hashtbl.find hashtbl color + 1)
+          else Hashtbl.add hashtbl color 1
+      | _ -> ()
+    done
+  in
+  hashtbl
+
+let init_board json =
+  let space_array = init_spaces json in
+  {
+    spaces = space_array;
+    num_color =
+      Array.length space_array
+      |> Hashtbl.create
+      |> make_color_hashmap space_array;
+  }
+
+let length board = Array.length board.spaces
 
 let space_from_location board i =
-  try board.(i) with Invalid_argument _ -> raise (NotOnBoard i)
+  try board.spaces.(i) with Invalid_argument _ -> raise (NotOnBoard i)
+
+let is_ownable board space =
+  match space with
+  | Property _ -> true
+  | Railroad _ -> true
+  | Utility _ -> true
+  | _ -> false
 
 let space_name board i =
   let s = space_from_location board i in
@@ -110,8 +151,30 @@ let space_name board i =
   | Go -> "Go"
   | Chance -> "Chance"
   | CommunityChest -> "Community Chest"
-  | Jail -> "Jail"
+  | Quarantine -> "Quarantine"
   | FreeParking -> "Free Parking"
-  | GoToJail -> "Go To Jail"
+  | GoToQuarantine -> "Go To Quarantine"
+
+let rec space_from_space_name_helper board acc s =
+  if acc >= length board then -1
+  else if space_name board acc = s then acc
+  else space_from_space_name_helper board (acc + 1) s
+
+let space_from_space_name board space_name =
+  let i = space_from_space_name_helper board 0 space_name in
+  if i = -1 then raise (NameNotOnBoard space_name)
+  else Some board.spaces.(i)
 
 let start_space board = space_name board 0
+
+let color board space =
+  match space with
+  | Property p -> p.color
+  | _ -> raise SpaceDoesNotHaveColor
+
+let num_of_color board color =
+  try Hashtbl.find board.num_color color
+  with Not_found -> raise (BoardDoesNotHaveColor color)
+
+let location_from_space_name board name =
+  space_from_space_name_helper board 0 name

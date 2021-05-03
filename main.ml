@@ -1,5 +1,10 @@
 open Printers
 
+let cards = Cards.init_cards "cards.json"
+
+(**[take_action result p g phase] executes the action given by result
+   [result], if one exists, on player [p] given game [g] during phase
+   [phase]. *)
 let take_action result p g phase =
   match result with
   | Input.Legal r ->
@@ -14,15 +19,77 @@ let take_action result p g phase =
       red_print "Illegal move. Please enter a valid move.\n";
       false
 
-let rec turn b g phase =
-  (*do current player turn*)
-  let current_player = Game.current_player g in
-  let move = Input.turn current_player b g phase in
-  let progress = take_action move current_player g phase in
-  (*advance to next player in game*)
-  match progress with
-  | true -> turn b g (not phase)
-  | false -> turn b g phase
+let rec phase_2 b g p =
+  let result = Input.turn p b g false cards in
+  (* let _ = take_action result p g false in *)
+  match result with
+  | Input.Legal r ->
+      Input.get_action r p;
+      Input.get_end r
+  | Input.Illegal ->
+      red_print "Illegal move. Please enter a valid move. \n";
+      phase_2 b g p
+
+(**[double_turn b g p i] handles taking another roll phase for player
+   [p] given board [b] and game [g] and having rolled doubles [i] + 1
+   times. *)
+let rec double_turn b g p i =
+  (*phase 2*)
+  while phase_2 b g p = false do
+    ()
+  done;
+
+  let result = Input.turn p b g true cards in
+  let _ = take_action result p g true in
+  match result with
+  | Input.Legal r -> (
+      match Player.quarantine p with
+      | In _ -> ()
+      | Out ->
+          let double = Input.get_double r in
+          if double then (
+            green_print "WOW! Doubles again?!\n\n";
+            if i < 2 then double_turn b g p (i + 1)
+            else (
+              red_print
+                "you pushed your luck and rolled doubles three \
+                 times... given this luck we're worried you might have \
+                 covid. You have to go to quarantine\n";
+              Player.go_to_quarantine_status p))
+          else ())
+  | Input.Illegal ->
+      red_print "Illegal move. Please enter a valid move. \n";
+      double_turn b g p i
+
+let rec phase_1 b g p =
+  let result = Input.turn p b g true cards in
+  (* let _ = take_action result p g true in *)
+  match result with
+  | Input.Legal r ->
+      Input.get_action r p;
+      let double = Input.get_double r in
+      if double then (
+        green_print "Yay! You rolled doubles. You may roll again! \n";
+        double_turn b g p 1)
+      else ()
+  | Input.Illegal ->
+      red_print "Illegal move. Please enter a valid move. \n";
+      phase_1 b g p
+
+(**[turn_handler b g] repeatedly executes turns for each player,
+   advanceing to the next player after each turn. Turns are executed on
+   board [b] and game [g]. *)
+let rec turn_handler b g =
+  let p = Game.current_player g in
+  print_horizontal_line ();
+  (*phase 1*)
+  phase_1 b g p;
+  (*phase 2*)
+  while phase_2 b g p = false do
+    ()
+  done;
+  Game.next_player g;
+  turn_handler b g
 
 (** [get_player_count ()] prompts the user to enter in the number of
     players until a valid (positive integer) input is read. *)
@@ -48,32 +115,99 @@ let rec get_player_count () =
     print_string "Invalid input. Please enter a positive integer. \n";
     get_player_count ()
 
+let default_game () =
+  let board = Board.init_board (Yojson.Basic.from_file "board.json") in
+  (*query number of players*)
+  let n = get_player_count () in
+  let players = Array.make n (Player.make_player "") in
+  for i = 1 to n do
+    players.(i - 1) <-
+      Player.make_player
+        (yellow_print ("Enter Player " ^ string_of_int i ^ "'s name: ");
+         read_line ())
+  done;
+  Game.init_game board players
+
+let game1 () =
+  let board = Board.init_board (Yojson.Basic.from_file "board.json") in
+  let p1 = Player.make_player "player1" in
+  let p2 = Player.make_player "player2" in
+  Player.update_balance p1 10000;
+  let g = Game.init_game board [| p1; p2 |] in
+  Player.buy_ownable p1 "Mediterranean Avenue" 60;
+  Game.make_ownable_owned g p1 "Mediterranean Avenue";
+  Player.buy_ownable p1 "Baltic Avenue" 60;
+  Game.make_ownable_owned g p1 "Baltic Avenue";
+  g
+
+(* buys a list of ownables for a player*)
+let rec buy_ownable_lst game board player name_lst =
+  match name_lst with
+  | [] -> ()
+  | h :: t ->
+      Player.buy_ownable player h (Game.get_ownable_price board h);
+      Game.make_ownable_owned game player h;
+      buy_ownable_lst game board player t
+
+let ownable_lst_of_default_board board =
+  let lst = ref [] in
+  for i = 0 to 39 do
+    let space_name = Board.space_name board i in
+    match Board.space_from_space_name board space_name with
+    | Some space ->
+        if Board.is_ownable board space then lst := space_name :: !lst
+        else ()
+    | None -> ()
+  done;
+  !lst
+
+let game2 () =
+  let board = Board.init_board (Yojson.Basic.from_file "board.json") in
+  let p1 = Player.make_player "player1" in
+  let p2 = Player.make_player "player2" in
+  Player.update_balance p1 (-1500);
+  Player.update_balance p2 1000000;
+  let ownable_lst = ownable_lst_of_default_board board in
+  let g = Game.init_game board [| p1; p2 |] in
+  buy_ownable_lst g board p2 ownable_lst;
+  g
+
+let games = [| default_game; game1; game2 |]
+
+let game_choices () =
+  yellow_print "1: ";
+  white_print "New Game.";
+  yellow_print "2: ";
+  white_print "Test game. Capable of buying house.";
+  yellow_print "3: ";
+  white_print
+    "Test game. Player1 has zero balance and Player2 owns all ownables."
+
 (** [play_game b] starts the game given board file f. *)
 let rec play_game () =
-  print_string
-    "Please enter the name of the board file you want to load.\n";
+  print_string "Please enter the number of the game you want to play.\n";
+  game_choices ();
   print_string "> ";
-  match read_line () with
-  | exception End_of_file -> ()
-  | f -> (
-      try
-        let board = Board.init_board (Yojson.Basic.from_file f) in
-        (*query number of players*)
-        let n = get_player_count () in
-        let players = Array.make n (Player.make_player "") in
-        for i = 1 to n do
-          players.(i - 1) <-
-            Player.make_player
-              (yellow_print
-                 ("Enter Player " ^ string_of_int i ^ "'s name: ");
-               read_line ())
-        done;
-        (* create board with number of players *)
-        let game = Game.init_game board players in
-        turn board game true
-      with Sys_error _ ->
-        Stdlib.print_endline "board file not found";
-        play_game ())
+  try
+    let index = int_of_string (read_line ()) in
+    let game = games.(index - 1) in
+    let board =
+      Board.init_board (Yojson.Basic.from_file "board.json")
+    in
+    turn_handler board (game ())
+  with Invalid_argument _ | Failure _ ->
+    red_print "Please enter a valid index.\n";
+    play_game ()
+
+(* match read_line () with | exception End_of_file -> () | f -> ( try
+   let board = Board.init_board (Yojson.Basic.from_file f) in (*query
+   number of players*) let n = get_player_count () in let players =
+   Array.make n (Player.make_player "") in for i = 1 to n do players.(i
+   - 1) <- Player.make_player (yellow_print ("Enter Player " ^
+   string_of_int i ^ "'s name: "); read_line ()) done; (* create board
+   with number of players *) let game = Game.init_game board players in
+   (* turn board game true *) turn_handler board game with Sys_error _
+   -> Stdlib.print_endline "board file not found"; play_game ()) *)
 
 (** [main ()] prompts for the board to use, then starts it. *)
 let main () =

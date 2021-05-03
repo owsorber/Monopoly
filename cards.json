@@ -1,0 +1,141 @@
+{
+  "chance": [
+    {
+      "title": "Advance to Go (Collect $200)",
+      "action": "move",
+      "extra": "Go"
+    },
+    {
+      "title": "Advance to Illinois Avenue - If you pass Go, collect $200",
+      "action": "move",
+      "extra": "Illinois Avenue"
+    },
+    {
+      "title": "Advance to St. Charles Place - If you pass Go, collect $200",
+      "action": "move",
+      "extra": "St. Charles Place"
+    },
+    {
+      "title": "Bank pays you dividend of $50",
+      "action": "addfunds",
+      "extra": "50"
+    },
+    {
+      "title": "Go Back 3 Spaces",
+      "action": "movenum",
+      "extra": "-3"
+    },
+    {
+      "title": "Go to Quarantine - Go directly to Quarantine - Do not pass Go, do not collect $200",
+      "action": "quarantine",
+      "extra": "go to"
+    },
+    {
+      "title": "Make general repairs on all your property - For each house pay $25 - For each hotel $100",
+      "action": "propertycharges",
+      "extra": "25 100"
+    },
+    {
+      "title": "Pay poor tax of $15",
+      "action": "removefunds",
+      "extra": "-15"
+    },
+    {
+      "title": "Take a trip to Reading Railroad - If you pass Go, collect $200",
+      "action": "move",
+      "extra": "Reading Railroad"
+    },
+    {
+      "title": "Take a walk on the Boardwalk - Advance token to Boardwalk",
+      "action": "move",
+      "extra": "Boardwalk"
+    },
+    {
+      "title": "You have been elected Chairman of the Board - Pay each player $50",
+      "action": "removefundstoplayers",
+      "extra": "50"
+    },
+    {
+      "title": "Your building loan matures - Collect $150",
+      "action": "addfunds",
+      "extra": "150"
+    }
+  ],
+  "communitychest": [
+    {
+      "title": "Advance to Go (Collect $200)",
+      "action": "move",
+      "extra": "Go"
+    },
+    {
+      "title": "Bank error in your favor - Collect $200 ",
+      "action": "addfunds",
+      "extra": "200"
+    },
+    {
+      "title": "Doctor fee - Pay $50",
+      "action": "removefunds",
+      "extra": "-50"
+    },
+    {
+      "title": "From sale of stock you get $50",
+      "action": "addfunds",
+      "extra": "50"
+    },
+    {
+      "title": "Go to Quarantine - Go directly to Quarantine - Do not pass Go - Do not collect $200",
+      "action": "quarantine",
+      "extra": "go to"
+    },
+    {
+      "title": "Grand Opera Night - Collect $50 from every player for opening night seats",
+      "action": "addfundsfromplayers",
+      "extra": "50"
+    },
+    {
+      "title": "Holiday Fund matures - Receive $100",
+      "action": "addfunds",
+      "extra": "100"
+    },
+    {
+      "title": "Income tax refund - Collect $20",
+      "action": "addfunds",
+      "extra": "20"
+    },
+    {
+      "title": "Life insurance matures - Collect $100",
+      "action": "addfunds",
+      "extra": "100"
+    },
+    {
+      "title": "Pay hospital fees of $100",
+      "action": "removefunds",
+      "extra": "-100"
+    },
+    {
+      "title": "Pay school fees of $150",
+      "action": "removefunds",
+      "extra": "-150"
+    },
+    {
+      "title": "Receive $25 consultancy fee",
+      "action": "addfunds",
+      "extra": "-25"
+    },
+    {
+      "title": "You are assessed for street repairs - $40 per house - $115 per hotel",
+      "action": "propertycharges",
+      "extra": "40 115"
+    },
+    {
+      "title": "You have won second prize in a beauty contest - Collect $10",
+      "action": "addfunds",
+      "extra": "10"
+    },
+    {
+      "title": "You inherit $100",
+      "action": "addfunds",
+      "extra": "100"
+    }
+  ]
+}
