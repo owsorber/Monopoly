@@ -20,6 +20,8 @@ Working on MS3 (Release)
 - Runs our code through our test cases
 ### `make play`
 - Runs the game interface
+### `make gui`
+- Runs the `main` function in `gui.ml` to test the GUI.
 ### `make clean`
 - Runs `ocaml build -clean` to get rid of our `_build` directory
 ### `make zip`
