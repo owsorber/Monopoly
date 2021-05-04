@@ -421,8 +421,6 @@ let sell_house t property_name selling_house =
   Hashtbl.replace t.ownables property_name
     (Property (new_property_house t property_name false))
 
-let sell_all t p = failwith "Unimplemented"
-
 (** requires player p has a monopoly on col *)
 let has_full_monopoly g p col =
   let prop_list = get_properties g p in
@@ -463,9 +461,29 @@ let can_add_hotel t p name =
   in
   check1 && check2 && check3 && check4
 
-let can_sell_house t p name = failwith "Unimplemented"
+(* checks that there is less than 4 and greater than 0 houses on that
+   property, as well as even build *)
+let can_sell_house t p name =
+  let space = get_property_from_space_name t.board name in
+  let cur_space_color = Board.color t.board space in
+  let check1 =
+    if check_even_build t p name cur_space_color false then true
+    else raise (CannotSellHouse "Even Build")
+  in
+  let check2 =
+    if check_less_houses t name 5 then true
+    else raise (CannotSellHouse "Hotel on Property")
+  in
+  let check3 =
+    if get_houses t name > 0 then true
+    else raise (CannotSellHouse "No houses on Property")
+  in
+  check1 && check2 && check3
 
-let can_sell_hotel t p name = failwith "Unimplemented"
+(* checks that a hotel is on property name, assumes player owns name *)
+let can_sell_hotel t p name =
+  if get_houses t name = 5 then true
+  else raise (CannotSellHotel "No hotel on Property")
 
 let can_mortgage g p o =
   let board = get_board g in
@@ -576,6 +594,36 @@ let rec make_player_ownables_available g p = function
   | h :: t ->
       make_ownable_available g p h;
       make_player_ownables_available g p t
+
+(* sells all houses on a property, and updates available fields.
+   Requires: [name] is a property owned by p *)
+let sell_houses_on_prop g p name =
+  let houses = get_houses g name in
+  if houses < 5 then g.houses_available <- g.houses_available + houses
+  else g.hotels_available <- g.hotels_available + 1;
+  Hashtbl.replace g.ownables name (Property (P_Owned (p, 0)))
+
+(* sells all houses/hotels owned by player [p], doesn't update balance *)
+let rec sell_all_houses g p properties =
+  match properties with
+  | [] -> ()
+  | h :: t ->
+      sell_houses_on_prop g p h;
+      sell_all_houses g p t
+
+let sell_all g p =
+  Player.update_balance p (get_net_worth g p);
+  let ownables = Player.get_ownable_name_list p in
+  let properties = get_properties g p in
+  sell_all_houses g p properties;
+  let rec mortgage_all lst =
+    match lst with
+    | [] -> ()
+    | h :: t ->
+        make_ownable_mortgaged g p h;
+        mortgage_all t
+  in
+  mortgage_all ownables
 
 let delete_player g p =
   let players_lst = Array.to_list g.players in
