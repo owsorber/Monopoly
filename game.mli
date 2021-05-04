@@ -38,8 +38,14 @@ exception NotPropertyName
 (** Raised when a house cannot be added to a property *)
 exception CannotAddHouse of string
 
-(** Raised when a hotel cannot be added to a hotel *)
+(** Raised when a hotel cannot be added to a property *)
 exception CannotAddHotel of string
+
+(** Raised when a house cannot be sold on a property *)
+exception CannotSellHouse of string
+
+(** Raised when a hotel cannot be sold on a property *)
+exception CannotSellHotel of string
 
 (** [get_board g] returns the board field in [game] g *)
 val get_board : t -> Board.t
@@ -145,22 +151,51 @@ val house_price : t -> Player.t -> ownable_name -> int
 (** [add_house g p adding_house] adds a house to the property with name
     [p] in game [g]. Decrements houses available if [adding_house],
     decrements hotels available if ![adding_house]. Requires: [p] is a
-    property name and a house can be added to it. Raises:
-    [NotPropertyName] if [p] does not correspond to a property. *)
+    property name and a house can be added to it. *)
 val add_house : t -> ownable_name -> bool -> unit
 
 (** [can_add_hotel g p property_name] returns true iff player [p] can
     add a hotel on the property with name [property_name] in game [g].
     Requires: Player [p] owns property with name [property_name].
     Raises: [NotPropertyName] if [property_name] is not a property name.
-    [CannotAddHotel s] if [adding_house] is false and a hotel cannot be
-    added to property [p]*)
+    [CannotAddHotel s] if a hotel cannot be added to property [p] *)
 val can_add_hotel : t -> Player.t -> ownable_name -> bool
 
-(* (** [add_hotel g p] adds a hotel to the property with name [p] in
-   game [g]. Requires: [p] is a property name and a house can be added
-   to it. Raises: [NotPropertyName] if [p] does not correspond to a
-   property. *) val add_hotel : t -> ownable_name -> unit *)
+(** [get_net_worth g p] returns player [p]'s balance + (value of owned
+    assets) *)
+val get_net_worth : t -> Player.t -> int
+
+(** [sell_house g o selling_house] sells a house on the property with
+    name [o] in game [g]. Increments houses available if
+    [selling_house], increments hotels available if ![selling_house]. *)
+val sell_house : t -> ownable_name -> bool -> unit
+
+(** [sell_all g p] sells all houses and hotels owned by player [p] in
+    game [g] and mortgages all owned spaces of player [p], updating
+    balance accordingly. *)
+val sell_all : t -> Player.t -> unit
+
+(** [can_sell_house g p property_name] returns true iff player [p] can
+    sell a house on the property with name [property_name] in game [g].
+    Requires: Player [p] owns property with name [property_name].
+    Raises: [NotPropertyName] if [property_name] is not a property name.
+    [CannotSellHouse s] if a house cannot be sold on property [p] *)
+val can_sell_house : t -> Player.t -> ownable_name -> bool
+
+(** [can_sell_hotel g p property_name] returns true iff player [p] can
+    sell a hotel on the property with name [property_name] in game [g].
+    Requires: Player [p] owns property with name [property_name].
+    Raises: [NotPropertyName] if [property_name] is not a property name.
+    [CannotSellHotel s] if a hotel cannot be sold on property [p] *)
+val can_sell_hotel : t -> Player.t -> ownable_name -> bool
+
+(** [all_can_sell_house p] returns an array of the ownables that [p] can
+    sell a house on. *)
+val all_can_sell_house : t -> Player.t -> ownable_name array
+
+(** [all_can_sell_hotel p] returns an array of the ownables that [p] can
+    sell a hotel on. *)
+val all_can_sell_hotel : t -> Player.t -> ownable_name array
 
 (** [is_available g o] returns true iff the ownable with name [o] is
     available in game [g]. Raises: [NotOwnableName] if [o] does not
