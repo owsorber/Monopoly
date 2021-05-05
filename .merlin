@@ -1,4 +1,5 @@
 B _build
 PKG ounit2
 PKG yojson
+PKG graphics
 PKG ANSITerminal

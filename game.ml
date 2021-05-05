@@ -550,9 +550,9 @@ let delete_player g p =
   let new_players_lst = List.filter (fun x -> x <> p) players_lst in
   let new_players_array = Array.of_list new_players_lst in
   make_player_ownables_available g p (Player.get_ownable_name_list p);
-  Printers.red_print "Player ";
-  Printers.cyan_print (Player.get_player_id p);
-  Printers.red_print " went bankrupt. They have lost the game.\n";
+  (* Printers.red_print "Player "; Printers.cyan_print
+     (Player.get_player_id p); Printers.red_print " went bankrupt. They
+     have lost the game.\n"; *)
   g.players <- new_players_array
 
 let do_tax g p s =

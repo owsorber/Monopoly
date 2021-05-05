@@ -16,7 +16,7 @@ let take_action result p g phase =
         true)
       else true
   | Input.Illegal ->
-      red_print "Illegal move. Please enter a valid move.\n";
+      red_print "Illegal move. Please enter a valid move.";
       false
 
 let rec phase_2 b g p =
@@ -27,7 +27,7 @@ let rec phase_2 b g p =
       Input.get_action r p;
       Input.get_end r
   | Input.Illegal ->
-      red_print "Illegal move. Please enter a valid move. \n";
+      red_print "Illegal move. Please enter a valid move.";
       phase_2 b g p
 
 (**[double_turn b g p i] handles taking another roll phase for player
@@ -48,17 +48,17 @@ let rec double_turn b g p i =
       | Out ->
           let double = Input.get_double r in
           if double then (
-            green_print "WOW! Doubles again?!\n\n";
+            green_print "WOW! Doubles again?!";
             if i < 2 then double_turn b g p (i + 1)
             else (
               red_print
                 "you pushed your luck and rolled doubles three \
                  times... given this luck we're worried you might have \
-                 covid. You have to go to quarantine\n";
+                 covid. You have to go to quarantine";
               Player.go_to_quarantine_status p))
           else ())
   | Input.Illegal ->
-      red_print "Illegal move. Please enter a valid move. \n";
+      red_print "Illegal move. Please enter a valid move.";
       double_turn b g p i
 
 let rec phase_1 b g p =
@@ -69,11 +69,11 @@ let rec phase_1 b g p =
       Input.get_action r p;
       let double = Input.get_double r in
       if double then (
-        green_print "Yay! You rolled doubles. You may roll again! \n";
+        green_print "Yay! You rolled doubles. You may roll again!";
         double_turn b g p 1)
       else ()
   | Input.Illegal ->
-      red_print "Illegal move. Please enter a valid move. \n";
+      red_print "Illegal move. Please enter a valid move.";
       phase_1 b g p
 
 (**[turn_handler b g] repeatedly executes turns for each player,
@@ -81,7 +81,6 @@ let rec phase_1 b g p =
    board [b] and game [g]. *)
 let rec turn_handler b g =
   let p = Game.current_player g in
-  print_horizontal_line ();
   (*phase 1*)
   phase_1 b g p;
   (*phase 2*)
@@ -94,7 +93,7 @@ let rec turn_handler b g =
 (** [get_player_count ()] prompts the user to enter in the number of
     players until a valid (positive integer) input is read. *)
 let rec get_player_count () =
-  red_print "Enter the number of players: \n> ";
+  terminal_red_print "Enter the number of players: \n> ";
   try
     let n = int_of_string (read_line ()) in
     if n < 1 then (
@@ -103,11 +102,11 @@ let rec get_player_count () =
     else
       match n with
       | 1 ->
-          cyan_print "It's lonely in here... have fun!\n";
+          terminal_cyan_print "It's lonely in here... have fun!\n";
           1
       | i ->
           if i >= 10 then
-            cyan_print
+            terminal_cyan_print
               "Wow you have a lot of friends! I wish I had that many \
                friends...\n";
           i
@@ -123,7 +122,8 @@ let default_game () =
   for i = 1 to n do
     players.(i - 1) <-
       Player.make_player
-        (yellow_print ("Enter Player " ^ string_of_int i ^ "'s name: ");
+        (terminal_yellow_print
+           ("Enter Player " ^ string_of_int i ^ "'s name: ");
          read_line ())
   done;
   Game.init_game board players
@@ -175,12 +175,12 @@ let game2 () =
 let games = [| default_game; game1; game2 |]
 
 let game_choices () =
-  yellow_print "1: ";
-  white_print "New Game.";
-  yellow_print "2: ";
-  white_print "Test game. Capable of buying house.";
-  yellow_print "3: ";
-  white_print
+  terminal_yellow_print "1: ";
+  terminal_white_print "New Game.";
+  terminal_yellow_print "2: ";
+  terminal_white_print "Test game. Capable of buying house.";
+  terminal_yellow_print "3: ";
+  terminal_white_print
     "Test game. Player1 has zero balance and Player2 owns all ownables."
 
 (** [play_game b] starts the game given board file f. *)
@@ -194,9 +194,11 @@ let rec play_game () =
     let board =
       Board.init_board (Yojson.Basic.from_file "board.json")
     in
-    turn_handler board (game ())
+    let g = game () in
+    Gui.create_window g;
+    turn_handler board g
   with Invalid_argument _ | Failure _ ->
-    red_print "Please enter a valid index.\n";
+    terminal_red_print "Please enter a valid index.\n";
     play_game ()
 
 (* match read_line () with | exception End_of_file -> () | f -> ( try
@@ -211,7 +213,7 @@ let rec play_game () =
 
 (** [main ()] prompts for the board to use, then starts it. *)
 let main () =
-  red_print "\n\nWelcome to Monopoly!\n";
+  terminal_red_print "\n\nWelcome to Monopoly!\n";
   print_endline "";
   play_game ()
 
