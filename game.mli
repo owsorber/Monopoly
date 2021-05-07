@@ -162,7 +162,7 @@ val add_house : t -> ownable_name -> bool -> unit
 val can_add_hotel : t -> Player.t -> ownable_name -> bool
 
 (** [get_net_worth g p] returns player [p]'s balance + (value of owned
-    assets) *)
+    assets if they were all sold) *)
 val get_net_worth : t -> Player.t -> int
 
 (** [sell_house g o selling_house] sells a house on the property with
