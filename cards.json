@@ -1,6 +1,11 @@
 {
   "chance": [
     {
+      "title": "Advance to Go (Collect $200)",
+      "action": "move",
+      "extra": "Go"
+    },
+    {
       "title": "Advance token to nearest Utility. If unowned, you may buy it from the Bank. If owned, throw dice and pay owner a total ten times the amount thrown.",
       "action": "movenearest",
       "extra": "utility 10"
@@ -9,6 +14,61 @@
       "title": "Advance token to the nearest Railroad and pay owner twice the rental to which he/she is otherwise entitled. If Railroad is unowned, you may buy it from the Bank.",
       "action": "movenearest",
       "extra": "rr 2"
+    },
+    {
+      "title": "Advance to Illinois Avenue - If you pass Go, collect $200",
+      "action": "move",
+      "extra": "Illinois Avenue"
+    },
+    {
+      "title": "Advance to St. Charles Place - If you pass Go, collect $200",
+      "action": "move",
+      "extra": "St. Charles Place"
+    },
+    {
+      "title": "Bank pays you dividend of $50",
+      "action": "addfunds",
+      "extra": "50"
+    },
+    {
+      "title": "Go Back 3 Spaces",
+      "action": "movenum",
+      "extra": "-3"
+    },
+    {
+      "title": "Go to Quarantine - Go directly to Quarantine - Do not pass Go, do not collect $200",
+      "action": "quarantine",
+      "extra": "go to"
+    },
+    {
+      "title": "Make general repairs on all your property - For each house pay $25 - For each hotel $100",
+      "action": "propertycharges",
+      "extra": "25 100"
+    },
+    {
+      "title": "Pay poor tax of $15",
+      "action": "removefunds",
+      "extra": "-15"
+    },
+    {
+      "title": "Take a trip to Reading Railroad - If you pass Go, collect $200",
+      "action": "move",
+      "extra": "Reading Railroad"
+    },
+    {
+      "title": "Take a walk on the Boardwalk - Advance token to Boardwalk",
+      "action": "move",
+      "extra": "Boardwalk"
+    },
+    {
+      "title": "You have been elected Chairman of the Board - Pay each player $50",
+      "action": "removefundstoplayers",
+      "extra": "50"
+    },
+    {
+      "title": "Your building loan matures - Collect $150",
+      "action": "addfunds",
+      "extra": "150"
     }
   ],
   "communitychest": [
