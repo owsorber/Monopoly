@@ -503,10 +503,13 @@ let unmortgage p b g =
       red_print "Something went wrong.\n";
       Illegal)
 
-let house_details ownable p g =
-  let details =
-    " (Cost: " ^ string_of_int (Game.house_price g p ownable) ^ ")"
+let house_details ownable p g buy =
+  let descriptor = if buy then "Cost" else "Value" in
+  let num =
+    if buy then Game.house_price g p ownable
+    else Game.house_price g p ownable / 2
   in
+  let details = " (" ^ descriptor ^ ": " ^ string_of_int num ^ ")" in
   ownable ^ details
 
 let buy_sell_house p g buy =
@@ -532,7 +535,7 @@ let buy_sell_house p g buy =
       white_print
         "Please enter the number of the property you would like to buy \
          a house on: ";
-    print_array (fun x -> house_details x p g) prop_array;
+    print_array (fun x -> house_details x p g buy) prop_array;
     print_string "\n> ";
     let property_index = read_line () in
     try
@@ -576,11 +579,7 @@ let buy_sell_house p g buy =
       red_print "invalid input\n";
       Illegal)
 
-let hotel_details ownable p g =
-  let details =
-    " (Cost: " ^ string_of_int (Game.house_price g p ownable) ^ ")"
-  in
-  ownable ^ details
+let hotel_details ownable p g buy = house_details ownable p g buy
 
 let buy_sell_hotel p g buy =
   (*need Game.property_list_of_ownable_list*)
@@ -608,7 +607,7 @@ let buy_sell_hotel p g buy =
          sell a hotel on: ";
     (*use Game.all_can_buy_house to print only those that can add a
       house*)
-    print_array (fun x -> hotel_details x p g) prop_array;
+    print_array (fun x -> hotel_details x p g buy) prop_array;
     print_string "\n> ";
     let property_index = read_line () in
     try
