@@ -57,10 +57,6 @@ val current_player : t -> Player.t
 (** [get_all_players g] returns an array of all players in [game] g *)
 val get_all_players : t -> Player.t array
 
-(** [get_all_player_ids g] returns an array of all player IDs in [game]
-    g*)
-val get_all_player_ids : t -> Player.player_id array
-
 (** [init_game b p] returns a [game] with [board] b and with [players]
     given by the [player] array p *)
 val init_game : Board.t -> Player.t array -> t
@@ -132,6 +128,15 @@ val make_ownable_mortgaged : t -> Player.t -> ownable_name -> unit
     zero houses on the color group). *)
 val all_mortgagable : t -> Player.t -> ownable_name array
 
+(** [can_trade g p ownable_name] returns true iff player [p] can put up
+    the ownable with name [ownable_name] for trade in game [g].
+    Requires: player [p] owns [ownable_name] *)
+val can_trade : t -> Player.t -> ownable_name -> bool
+
+(** [all_can_trade g p] returns an array of the ownables that [p] can
+    trade.*)
+val all_can_trade : t -> Player.t -> ownable_name array
+
 (** [can_add_house g p property_name] returns true iff player [p] can
     add a house on the property with name [property_name] in game [g].
     Requires: Player [p] owns property with name [property_name].
@@ -140,12 +145,12 @@ val all_mortgagable : t -> Player.t -> ownable_name array
     the appropriate exception message [s].*)
 val can_add_house : t -> Player.t -> ownable_name -> bool
 
-(** [all_can_buy_house p] returns an array of the ownables that [p] can
-    put a house on. *)
+(** [all_can_buy_house g p] returns an array of the ownables that [p]
+    can put a house on. *)
 val all_can_buy_house : t -> Player.t -> ownable_name array
 
-(** [all_can_buy_hotel p] returns an array of the ownables that [p] can
-    put a hotel on. *)
+(** [all_can_buy_hotel g p] returns an array of the ownables that [p]
+    can put a hotel on. *)
 val all_can_buy_hotel : t -> Player.t -> ownable_name array
 
 (** [house_price g p property_name] returns the price of a house that

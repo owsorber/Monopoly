@@ -54,9 +54,6 @@ let current_player t = t.players.(t.cur_player)
 
 let get_all_players t = t.players
 
-let get_all_player_ids t =
-  Array.map (fun x -> Player.get_player_id x) t.players
-
 let init_ownable (space : Board.space) =
   match space with
   | Board.Property p -> Property P_Available
@@ -505,6 +502,14 @@ let can_mortgage g p o =
   | Railroad status -> (
       match status with RR_Owned player -> player = p | _ -> false )
 
+let can_trade g p name =
+  match get_own_status g name with
+  | Property status -> (
+      match status with
+      | P_Owned (player, houses) -> houses = 0
+      | _ -> false )
+  | _ -> false
+
 (* Helper to compile together all ownables satisfying a certain
    condition, such as: can be mortgaged, can have a house bought on it,
    can have a hotel bought on it. *)
@@ -541,6 +546,11 @@ let all_can_sell_house g p =
 let all_can_sell_hotel g p =
   let ownables = Player.get_ownable_name_list p in
   all_ownables_helper g p can_sell_hotel [] ownables
+  |> List.rev |> Array.of_list
+
+let all_can_trade g p =
+  let ownables = Player.get_ownable_name_list p in
+  all_ownables_helper g p can_trade [] ownables
   |> List.rev |> Array.of_list
 
 let make_ownable_mortgaged g p o =
