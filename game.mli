@@ -54,8 +54,12 @@ val get_board : t -> Board.t
     player in [game] g *)
 val current_player : t -> Player.t
 
-(** [get_all_players g] returns a list of all players in [game] g *)
+(** [get_all_players g] returns an array of all players in [game] g *)
 val get_all_players : t -> Player.t array
+
+(** [get_all_player_ids g] returns an array of all player IDs in [game]
+    g*)
+val get_all_player_ids : t -> Player.player_id array
 
 (** [init_game b p] returns a [game] with [board] b and with [players]
     given by the [player] array p *)
