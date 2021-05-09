@@ -193,25 +193,35 @@ let rec landing p g space_name r cards (modRent, mult) =
           red_print (string_of_int t.cost);
           print_endline ""
       | Chance ->
-          failwith "Problems"
-          (*let location = Player.get_location p in magenta_print "You
-            landed on Chance!\nDrawing a card...\n"; let card =
-            Cards.draw_chance_card cards in magenta_print "Your card
-            says:\n"; cyan_print card.message; print_endline "\n"; let
-            modRent, mult = Cards.do_card card p b g in if
-            Player.get_location p <> location then landing p g
-            (Board.space_name b (Player.get_location p)) r cards
-            (modRent, mult) else ()*)
+          let location = Player.get_location p in
+          magenta_print
+            "You\n            landed on Chance!\nDrawing a card...\n";
+          let card = Cards.draw_chance_card cards in
+          magenta_print "Your card\n            says:\n";
+          cyan_print card.message;
+          print_endline "\n";
+          let modRent, mult = Cards.do_card card p b g in
+          if Player.get_location p <> location then
+            landing p g
+              (Board.space_name b (Player.get_location p))
+              r cards (modRent, mult)
+          else ()
       | CommunityChest ->
-          failwith "Problems"
-          (*let location = Player.get_location p in magenta_print "You
-            landed on Community Chest!\nDrawing a card...\n"; let card =
-            Cards.draw_community_chest_card cards in magenta_print "Your
-            card says:\n"; cyan_print card.message; print_endline "\n";
-            let modRent, mult = Cards.do_card card p b g in if
-            Player.get_location p <> location then landing p g
-            (Board.space_name b (Player.get_location p)) r cards
-            (modRent, mult) else ()*)
+          let location = Player.get_location p in
+          magenta_print
+            "You\n\
+            \            landed on Community Chest!\n\
+             Drawing a card...\n";
+          let card = Cards.draw_community_chest_card cards in
+          magenta_print "Your\n            card says:\n";
+          cyan_print card.message;
+          print_endline "\n";
+          let modRent, mult = Cards.do_card card p b g in
+          if Player.get_location p <> location then
+            landing p g
+              (Board.space_name b (Player.get_location p))
+              r cards (modRent, mult)
+          else ()
       | Quarantine -> (
           match Player.quarantine p with
           | In _ ->
