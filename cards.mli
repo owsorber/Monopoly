@@ -37,6 +37,7 @@ val draw_chance_card : t -> card
     reshuffled and community_chest_int is set to 0 *)
 val draw_community_chest_card : t -> card
 
-(**[do_card card player board game] preforms the action dicated by
-   [card] on [player] in [game] with [board]*)
-val do_card : card -> Player.t -> Board.t -> Game.t -> unit
+(**[do_card card player board game] performs the action dicated by
+   [card] on [player] in [game] with [board], and returns the next
+   space's rent and multiplier, if applicable. *)
+val do_card : card -> Player.t -> Board.t -> Game.t -> int * int

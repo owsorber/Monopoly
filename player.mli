@@ -48,6 +48,9 @@ val get_ownable_name_list : t -> ownable_name_list
     player_id [id] *)
 val make_player : player_id -> t
 
+(** [sums d] returns the sum of the rolled [d] values *)
+val sums : rolled_dice -> int
+
 (** [roll] returns a tuple containing 2 random ints between 1 and 6
     inclusive *)
 val roll : unit -> rolled_dice

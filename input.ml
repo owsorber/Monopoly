@@ -138,14 +138,18 @@ let get_double t = t.is_double
 
 let get_end t = t.is_end
 
-let rec landing p g space_name r cards =
+let rec landing p g space_name r cards (modRent, mult) =
   let b = Game.get_board g in
   match Board.space_from_space_name b space_name with
   | Some space -> (
       match space with
       | Property _ | Railroad _ | Utility _ ->
           let current_location = Player.get_location p in
-          let rent = Game.get_rent g current_location r in
+          let rent =
+            if modRent <> 0 then modRent * mult
+            else Game.get_rent g current_location r * mult
+          in
+
           if rent > 0 then
             match Game.owner g space_name with
             | Some player ->
@@ -181,11 +185,11 @@ let rec landing p g space_name r cards =
           magenta_print "Your card says:\n";
           cyan_print card.message;
           print_endline "\n";
-          Cards.do_card card p b g;
+          let modRent, mult = Cards.do_card card p b g in
           if Player.get_location p <> location then
             landing p g
               (Board.space_name b (Player.get_location p))
-              r cards
+              r cards (modRent, mult)
           else ()
       | CommunityChest ->
           let location = Player.get_location p in
@@ -195,11 +199,11 @@ let rec landing p g space_name r cards =
           magenta_print "Your card says:\n";
           cyan_print card.message;
           print_endline "\n";
-          Cards.do_card card p b g;
+          let modRent, mult = Cards.do_card card p b g in
           if Player.get_location p <> location then
             landing p g
               (Board.space_name b (Player.get_location p))
-              r cards
+              r cards (modRent, mult)
           else ()
       | Quarantine -> (
           match Player.quarantine p with
@@ -248,7 +252,9 @@ let roll p b g cards =
             action =
               (fun player ->
                 Player.move_player r player;
-                landing player g (Player.projected_space r p b) r cards);
+                landing player g
+                  (Player.projected_space r p b)
+                  r cards (0, 1));
             is_double = double_of_roll r;
             is_end = false;
           } )
@@ -274,7 +280,7 @@ let roll p b g cards =
           action =
             (fun player ->
               Player.move_player r player;
-              landing player g new_space r cards);
+              landing player g new_space r cards (0, 1));
           is_double = double_of_roll r;
           is_end = false;
         }

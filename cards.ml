@@ -78,17 +78,35 @@ let draw_community_chest_card t =
     t.community_chest_int <- 0;
     c
 
-let move_card loc p can_pass = Player.move_player_to p loc can_pass
+let move_card loc p can_pass (loc_type, rent_mult) =
+  Player.move_player_to p loc can_pass;
+  let dummyRent =
+    if loc_type = "utility" then (
+      let roll = Player.roll () in
+      Printers.magenta_print
+        ( "First dice: "
+        ^ string_of_int (fst roll)
+        ^ ". Second dice: "
+        ^ string_of_int (snd roll)
+        ^ "\n" );
+      Player.sums roll )
+    else 0
+  in
+  (dummyRent, rent_mult)
 
 let change_funds p g funds =
-  try Player.update_balance p (int_of_string funds)
-  with Player.BalanceBelowZero -> Game.delete_player g p
+  ( try Player.update_balance p (int_of_string funds)
+    with Player.BalanceBelowZero -> Game.delete_player g p );
+  (0, 1)
 
 let quarantine_card p extra =
-  match extra with
-  | "go to" -> Player.go_to_quarantine_status p
-  | "get out" -> Player.got_gooq_card p
-  | _ -> raise NotValidCard
+  let _ =
+    match extra with
+    | "go to" -> Player.go_to_quarantine_status p
+    | "get out" -> Player.got_gooq_card p
+    | _ -> raise NotValidCard
+  in
+  (0, 1)
 
 let rec find_nearest board loc typ =
   match Board.space_from_location board loc with
@@ -97,6 +115,14 @@ let rec find_nearest board loc typ =
   | Utility u ->
       if typ = "utility" then loc else find_nearest board (loc + 1) typ
   | _ -> find_nearest board (loc + 1) typ
+
+let move_nearest player board extra game =
+  let cmd_list = String.split_on_char ' ' extra in
+  let loc_type = List.hd cmd_list in
+  let rent_mult = int_of_string (List.nth cmd_list 1) in
+  move_card
+    (find_nearest board (Player.get_location player) loc_type)
+    player true (loc_type, rent_mult)
 
 let rec num_houses game list house hotel =
   match list with
@@ -114,36 +140,42 @@ let rec string_to_int_list str =
 let property_charges game player extra =
   let num = num_houses game (Game.get_properties game player) 0 0 in
   let list = string_to_int_list (String.split_on_char ' ' extra) in
-  try
-    Player.update_balance player
-      (-((fst num * List.hd list) + (snd num * List.nth list 1)))
-  with Player.BalanceBelowZero -> Game.delete_player game player
+  ( try
+      Player.update_balance player
+        (-((fst num * List.hd list) + (snd num * List.nth list 1)))
+    with Player.BalanceBelowZero -> Game.delete_player game player );
+  (0, 1)
 
 let add_others_funds player game amount =
   Array.iter
     (fun p ->
       try Player.pay p player amount
       with Player.BalanceBelowZero -> Game.delete_player game p)
-    (Game.get_all_players game)
+    (Game.get_all_players game);
+  (0, 1)
 
 let receive_others_funds player game amount =
   Array.iter
     (fun p ->
       try Player.pay player p amount
       with Player.BalanceBelowZero -> Game.delete_player game player)
-    (Game.get_all_players game)
+    (Game.get_all_players game);
+  (0, 1)
 
 let do_card card p board game =
   match card.action with
   | "move" ->
-      move_card (Board.location_from_space_name board card.extra) p true
+      move_card
+        (Board.location_from_space_name board card.extra)
+        p true ("", 1)
   | "addfunds" -> change_funds p game card.extra
   | "quarantine" -> quarantine_card p card.extra
   | "removefunds" -> change_funds p game card.extra
   | "movenum" ->
       move_card
         (Player.get_location p + int_of_string card.extra)
-        p false
+        p false ("", 1)
+  | "movenearest" -> move_nearest p board card.extra game
   | "propertycharges" -> property_charges game p card.extra
   | "removefundstoplayers" ->
       receive_others_funds p game (int_of_string card.extra)
