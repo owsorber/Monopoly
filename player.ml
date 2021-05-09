@@ -92,6 +92,37 @@ let buy_ownable p prop i =
   update_balance p (-i);
   p.ownable_name_list <- prop :: p.ownable_name_list
 
+(* returns true if [elt] is contained in [lst] *)
+let rec contains elt = function
+  | [] -> false
+  | h :: t -> if elt = h then true else contains elt t
+
+(* [remove_properties p lst] removes all properties in [own_lst] from
+   player [p]'s property list*)
+let remove_properties p own_lst =
+  let rec remove_helper acc player_lst =
+    match player_lst with
+    | [] -> acc
+    | h :: t ->
+        if contains h own_lst then remove_helper acc t
+        else remove_helper (h :: acc) t
+  in
+  let new_lst = remove_helper [] p.ownable_name_list in
+  p.ownable_name_list <- new_lst
+
+(* [add_properties p lst] adds all properties in [own_lst] to player
+   [p]'s property list *)
+let rec add_properties p own_lst =
+  match own_lst with
+  | [] -> ()
+  | h :: t ->
+      p.ownable_name_list <- h :: p.ownable_name_list;
+      add_properties p t
+
+let swap_properties p1 p2 own_lst =
+  remove_properties p1 own_lst;
+  add_properties p2 own_lst
+
 let pay p1 p2 i =
   update_balance p2 i;
   update_balance p1 (-i)

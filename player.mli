@@ -97,6 +97,12 @@ val quarantine : t -> quarantine_status
    greater than or equal to the cost of the property. *)
 val buy_ownable : t -> ownable_name -> int -> unit
 
+(** [swap_properties p1 p2 own_lst] removes all properties in [own_lst]
+    from player [p1]'s ownable list and adds the properties to player
+    [p2]'s ownable list. Requires: all properties in [own_lst] are owned
+    by p1. *)
+val swap_properties : t -> t -> ownable_name list -> unit
+
 (**[play p1 p2 amount] deducts [amount] from [p1].balance and adds
    [amount] to [p2].balance. P1 pays P2 [amount]. *)
 val pay : t -> t -> int -> unit
