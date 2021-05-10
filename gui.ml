@@ -157,8 +157,5 @@ let create_window g =
   create_console ();
   make_board g;
   sound 262 10000
-(* let input = Char.escaped (read_key ()) in update_console input *)
 
 let update_frame g = ()
-
-(* let main () = failwith "Unimplemented" let () = main () *)
