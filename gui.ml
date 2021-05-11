@@ -27,12 +27,7 @@ let space_dim i l w =
   else if i = 30 then (((i - 18) * w) + 3, size_y () - w)
   else if i < 40 then (size_y () - l - (3 * w / 2), ((43 - i) * w) + 15)
   else (0, 0)
-
-
-
-let find_friends a i= (a = i)
   
-
 let rec make_piece l w p c1 c2 c3 pos= 
   match p with
   |[]-> ()
@@ -149,7 +144,7 @@ let make_board g =
     draw_rect (11 * space_width)
       (board_y + (i * space_width))
       space_height space_width;
-    if i = 7 || i = 8 || i = 10 then
+    if i = 7 || i = 9 || i = 10 then
       draw_color (rgb 32 177 90) (11 * space_width)
         (board_y + (i * space_width))
         color_h space_width
