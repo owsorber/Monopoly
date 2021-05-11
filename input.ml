@@ -329,9 +329,10 @@ let buy p b g =
           "INFO: The space you are currently on cannot be bought"
   else red_print "INFO: The space you are currently on cannot be bought";
 
-  if !legality then
+  if !legality then (
     let ownable_space_name = Board.space_name b current_location in
     let price = Game.get_ownable_price b ownable_space_name in
+    Gui.play_sound "buy.wav";
     Legal
       {
         player_id = Player.get_player_id p;
@@ -343,7 +344,7 @@ let buy p b g =
               ("You successfully purchased " ^ ownable_space_name ^ "!"));
         is_double = false;
         is_end = false;
-      }
+      })
   else Illegal
 
 let mortgagable_details ownable b =
