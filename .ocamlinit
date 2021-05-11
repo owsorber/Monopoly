@@ -3,6 +3,7 @@
 #require "yojson";;
 #require "ANSITerminal";;
 #require "graphics";;
+#require "sfml.audio";;
 #load "printers.cmo";;
 #load "board.cmo";;
 #load "player.cmo";;

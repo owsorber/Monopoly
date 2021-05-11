@@ -225,8 +225,10 @@ let double_of_roll (a, b) = if a = b then true else false
 (**[roll p b] returns a Legal result of the action representing a roll
    by player [p], given board [b]. *)
 let roll p b g cards =
+  Gui.play_sound "dice.wav";
   let r = Player.roll () in
   magenta_print (string_of_roll r);
+
   if Player.passes_go r p then
     green_print "You passed go! You gained $200!";
   match Player.quarantine p with
@@ -637,6 +639,7 @@ let print_endgame b g =
 let graceful_shutdown b g =
   red_print "Thanks for playing!";
   print_endgame b g;
+  Gui.play_sound "gameover.wav";
   Unix.sleep 5;
   exit 0
 

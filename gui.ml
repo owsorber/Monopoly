@@ -1,5 +1,18 @@
 open Graphics
 
+let play_sound filename =
+  let buffer = SFSoundBuffer.loadFromFile ("./sounds/" ^ filename) in
+
+  let sound = SFSound.create () in
+  SFSound.setBuffer sound buffer;
+  SFSound.play sound;
+
+  while SFSound.getStatus sound = SFSound.Playing do
+    SFTime.sleep (SFTime.of_seconds 0.1)
+  done;
+
+  SFSound.stop sound
+
 let draw_color color x y w h =
   set_color color;
   fill_rect x y w h;
@@ -27,31 +40,32 @@ let space_dim i l w =
   else if i = 30 then (((i - 18) * w) + 3, size_y () - w)
   else if i < 40 then (size_y () - l - (3 * w / 2), ((43 - i) * w) + 15)
   else (0, 0)
-  
-let rec make_piece l w p c1 c2 c3 pos= 
+
+let rec make_piece l w p c1 c2 c3 pos =
   match p with
-  |[]-> ()
-  |h ::t -> let loc = Player.get_location h in 
-    let x = space_dim loc l w in 
-    let friends = List.length (List.filter (fun x -> x = loc) pos) in
-    set_color (rgb c1 c2 c3);
-    (* if (snd x - (20*friends)) > l then let x_pos = (fst x + 45) in 
-      let y_pos = snd x in
-      fill_rect x_pos (y_pos)  30 15; 
+  | [] -> ()
+  | h :: t ->
+      let loc = Player.get_location h in
+      let x = space_dim loc l w in
+      let friends = List.length (List.filter (fun x -> x = loc) pos) in
+      set_color (rgb c1 c2 c3);
+
+      (* if (snd x - (20*friends)) > l then let x_pos = (fst x + 45) in
+         let y_pos = snd x in fill_rect x_pos (y_pos) 30 15; set_color
+         white; moveto x_pos y_pos; draw_string (String.sub
+         (Player.get_player_id h) 0 4); make_piece l w t ((c1+20) mod
+         250) c2((c3 +7) mod 250) (loc::pos) else *)
+      fill_rect (fst x + 15) (snd x - (20 * friends)) 30 15;
       set_color white;
-      moveto x_pos y_pos;
-      draw_string (String.sub (Player.get_player_id h) 0 4);
-      make_piece l w t ((c1+20) mod 250) c2((c3 +7) mod 250) (loc::pos)
-    else  *)
-
-    fill_rect (fst x + 15) (snd x - (20*friends))  30 15; 
-    set_color white;
-    moveto (fst x + 15) (snd x - (20*friends));
-    if String.length (Player.get_player_id h) > 4 then 
-    draw_string (String.sub (Player.get_player_id h) 0 4)
-  else draw_string (Player.get_player_id h);
-  make_piece l w t ((c3+50) mod 250) ((c1+50) mod 250) ((c2 +20) mod 250) (loc::pos)
-
+      moveto (fst x + 15) (snd x - (20 * friends));
+      if String.length (Player.get_player_id h) > 4 then
+        draw_string (String.sub (Player.get_player_id h) 0 4)
+      else draw_string (Player.get_player_id h);
+      make_piece l w t
+        ((c3 + 50) mod 250)
+        ((c1 + 50) mod 250)
+        ((c2 + 20) mod 250)
+        (loc :: pos)
 
 let create_console () =
   set_color black;
@@ -162,19 +176,20 @@ let make_board g =
 
   (* draw m *)
   set_color (rgb 225 245 227);
-  fill_circle (size_x()/4) (size_x()/4 + board_y) (size_x()/6);
+  fill_circle (size_x () / 4) ((size_x () / 4) + board_y) (size_x () / 6);
   set_color (rgb 164 186 166);
   set_line_width 20;
-  moveto (size_x()/4) (size_x()/4 + board_y);
-  lineto ((size_x()/4) * 7 /10) ((size_x()/4 + board_y) * 10/7); 
-  lineto (current_x ()) (current_y()-  3*size_x()/12) ;
-  moveto (size_x()/4) (size_x()/4 + board_y);
-  lineto ((size_x()/4) * 13 / 10) ((size_x()/4 + board_y) * 10/7); 
-  lineto (current_x ()) (current_y()-  3*size_x()/12) ;
+  moveto (size_x () / 4) ((size_x () / 4) + board_y);
+  lineto (size_x () / 4 * 7 / 10) (((size_x () / 4) + board_y) * 10 / 7);
+  lineto (current_x ()) (current_y () - (3 * size_x () / 12));
+  moveto (size_x () / 4) ((size_x () / 4) + board_y);
+  lineto (size_x () / 4 * 13 / 10) (((size_x () / 4) + board_y) * 10 / 7);
+  lineto (current_x ()) (current_y () - (3 * size_x () / 12));
   set_line_width 1;
 
-  make_piece board_y space_width (Array.to_list (Game.get_all_players g))
-  63 212 194 [];
+  make_piece board_y space_width
+    (Array.to_list (Game.get_all_players g))
+    63 212 194 [];
   moveto x y
 
 let wipe_console () =
@@ -194,6 +209,6 @@ let create_window g =
   set_window_title "Monopoly";
   create_console ();
   make_board g;
-  sound 262 10000
+  play_sound "intro.wav"
 
 let update_frame g = ()
