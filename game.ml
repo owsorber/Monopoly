@@ -340,6 +340,24 @@ let check_no_mortgaged g p col =
   in
   mortgaged_col prop_list
 
+let house_price g p property_name =
+  let space =
+    match Board.space_from_space_name g.board property_name with
+    | Some s -> s
+    | None -> raise NotOwnableSpace
+  in
+  match get_own_status g property_name with
+  | Property status -> (
+      match status with
+      | P_Owned (player, houses) -> (
+          match space with
+          | Board.Property p -> p.house_price
+          | _ -> failwith "Ownable Status has Incorrect Ownable Type" )
+      | _ -> raise (CannotAddHouse "Property Not Owned") )
+  | _ -> raise NotPropertyName
+
+let can_afford g p name = Player.get_balance p > house_price g p name
+
 let can_add_house t player property_name =
   let space = get_property_from_space_name t.board property_name in
   let cur_space_color = Board.color t.board space in
@@ -364,23 +382,11 @@ let can_add_house t player property_name =
     if check_no_mortgaged t player cur_space_color then true
     else raise (CannotAddHouse "Mortgaged Property on Color")
   in
-  check1 && check2 && check3 && check4 && check5
-
-let house_price g p property_name =
-  let space =
-    match Board.space_from_space_name g.board property_name with
-    | Some s -> s
-    | None -> raise NotOwnableSpace
+  let check6 =
+    if can_afford t player property_name then true
+    else raise (CannotAddHouse "Cannot afford House")
   in
-  match get_own_status g property_name with
-  | Property status -> (
-      match status with
-      | P_Owned (player, houses) -> (
-          match space with
-          | Board.Property p -> p.house_price
-          | _ -> failwith "Ownable Status has Incorrect Ownable Type" )
-      | _ -> raise (CannotAddHouse "Property Not Owned") )
-  | _ -> raise NotPropertyName
+  check1 && check2 && check3 && check4 && check5 && check6
 
 (** Returns an updated property_status with an updated house amount *)
 let new_property_house t property_name adding =
@@ -464,7 +470,11 @@ let can_add_hotel t p name =
     if t.hotels_available > 0 then true
     else raise (CannotAddHotel "No Hotels Available")
   in
-  check1 && check2 && check3 && check4
+  let check5 =
+    if can_afford t p name then true
+    else raise (CannotAddHotel "Cannot afford Hotel")
+  in
+  check1 && check2 && check3 && check4 && check5
 
 (* checks that there is less than 4 and greater than 0 houses on that
    property, as well as even build *)
