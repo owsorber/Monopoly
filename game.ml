@@ -160,6 +160,13 @@ let make_ownable_owned g p o =
   | Utility _ -> Hashtbl.replace g.ownables o (Utility (U_Owned p))
   | Railroad _ -> Hashtbl.replace g.ownables o (Railroad (RR_Owned p))
 
+let rec make_own_lst_owned g p o_lst =
+  match o_lst with
+  | [] -> ()
+  | h :: t ->
+      make_ownable_owned g p h;
+      make_own_lst_owned g p t
+
 (* makes an ownable available, and happens when a player gets bankrupt *)
 let make_ownable_available g p o =
   let space =

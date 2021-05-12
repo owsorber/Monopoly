@@ -117,6 +117,11 @@ val get_houses : t -> ownable_name -> int
     checks. *)
 val make_ownable_owned : t -> Player.t -> ownable_name -> unit
 
+(** [make_own_lst_owned g p o] makes player [p] own the ownables in [o]
+    in game [g] i.e. changes the ownable's status to Owned and performs
+    no checks. *)
+val make_own_lst_owned : t -> Player.t -> ownable_name list -> unit
+
 (** [make_ownable_mortgaged g p o] makes player [p] mortgage the ownable
     [o] in the game [g]. Raises: [MortgageFailure] if the ownable cannot
     be mortgaged either because it is a utility or because the player
