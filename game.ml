@@ -507,7 +507,7 @@ let can_mortgage g p o =
     | None -> raise NotOwnableName
     | Some s -> s
   in
-  match get_own_status g o with
+  ( match get_own_status g o with
   | Property status -> (
       match status with
       | P_Owned (player, houses) ->
@@ -517,7 +517,8 @@ let can_mortgage g p o =
   | Utility status -> (
       match status with U_Owned player -> player = p | _ -> false )
   | Railroad status -> (
-      match status with RR_Owned player -> player = p | _ -> false )
+      match status with RR_Owned player -> player = p | _ -> false ) )
+  && get_ownable_price board o / 2 < Player.get_balance p
 
 let can_trade g p name =
   match get_own_status g name with

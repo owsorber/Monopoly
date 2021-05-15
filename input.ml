@@ -703,18 +703,24 @@ let rec select_trade_props p acc prop_array cur_list trading finished =
     with _ -> acc )
   else acc
 
-(* TODO: ensure entered cash amount doesn't bankrupt either player *)
-let rec enter_cash () =
+(* p1 is offering, p2 is receiving *)
+let rec enter_cash p1 p2 =
   white_print
     "Please enter the amount of cash you would like to trade (negative \
      if you want to receive): \n";
   print_string "> ";
   try
     let amt = int_of_string (read_line ()) in
-    amt
+    if amt > Player.get_balance p1 then (
+      red_print "You cannot offer this amount of money. \n";
+      enter_cash p1 p2 )
+    else if -amt > Player.get_balance p2 then (
+      red_print (Player.get_player_id p2 ^ " cannot pay this amount. \n");
+      enter_cash p1 p2 )
+    else amt
   with _ ->
     red_print "Please enter an integer. \n";
-    enter_cash ()
+    enter_cash p1 p2
 
 let print_trade_details p1 p2 receive_arr trade_arr cash is_counter =
   if is_counter then
@@ -769,7 +775,7 @@ let rec trade p g =
       Array.of_list
         (select_trade_props partner [] can_offer_array [] true false)
     in
-    let cash = enter_cash () in
+    let cash = enter_cash p partner in
     let p2, p1, p1_swap, p2_swap, cash_swap =
       trade_counteroffer partner p g trade_array receive_array cash
         false
@@ -813,7 +819,7 @@ and trade_counteroffer p1 p2 g trade_arr receive_arr cash counter =
              (Game.all_can_trade g p2)
              [] false false)
       in
-      let cash_amt = enter_cash () in
+      let cash_amt = enter_cash p2 p1 in
       trade_counteroffer p2 p1 g trade_offer rec_offer cash_amt true
     else (p1, p2, [||], [||], 0) )
   else (
