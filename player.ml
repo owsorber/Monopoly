@@ -48,11 +48,10 @@ let make_player id =
 (* [sums roll] is the sum of the two value die in [roll] *)
 let sums roll = fst roll + snd roll
 
-let roll () =
-  ( ( Random.self_init ();
-      Random.int 6 + 1 ),
-    ( Random.self_init ();
-      Random.int 6 + 1 ) )
+let roll () = (3, 0)
+
+(* ( ( Random.self_init (); Random.int 6 + 1 ), ( Random.self_init ();
+   Random.int 6 + 1 ) ) *)
 
 let update_balance player i =
   if player.balance + i < 0 then raise BalanceBelowZero
@@ -132,7 +131,7 @@ let move_player_to p l can_pass =
   if o = l then ()
   else if o > l && can_pass then (
     update_balance p 200;
-    p.location <- l )
+    p.location <- l)
   else p.location <- l
 
 let have_gooq player = player.get_out_of_quarantine_card

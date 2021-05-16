@@ -47,6 +47,11 @@ exception CannotSellHouse of string
 (** Raised when a hotel cannot be sold on a property *)
 exception CannotSellHotel of string
 
+(** Raised when an action requires a check on whether bankruptcy occurs,
+    and requires print statements to the player dependint on the result
+    of the check. *)
+exception MustCheckBankrupt
+
 (** [get_board g] returns the board field in [game] g *)
 val get_board : t -> Board.t
 
@@ -88,7 +93,9 @@ val get_hotels_available : t -> int
 val do_free_parking : t -> Player.t -> int
 
 (** [do_tax game player space] decreases the player's balance by the tax
-    amount of [space] and increases the free parking by the same amount. *)
+    amount of [space] and increases the free parking by the same amount.
+    Raises: [MustCheckBankrupt] if the tax would cause the player's
+    balance to go below zero. *)
 val do_tax : t -> Player.t -> Board.space -> unit
 
 (** [get_rent g i r] returns the rent associated with landing on the
@@ -237,3 +244,7 @@ val has_houses_on_color : t -> Player.t -> string -> bool
 
 (** [delete_player g p] removes player [p] from game [g]. *)
 val delete_player : t -> Player.t -> unit
+
+(** [goes_bankrupt g p c] is true iff player [p] is unable to pay a cost
+    [c] in game [g] even after selling/mortgating all of its assets. *)
+val goes_bankrupt : t -> Player.t -> int -> bool

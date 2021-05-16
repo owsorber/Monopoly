@@ -38,6 +38,8 @@ exception CannotSellHouse of string
 
 exception CannotSellHotel of string
 
+exception MustCheckBankrupt
+
 type t = {
   board : Board.t;
   mutable players : Player.t array;
@@ -111,7 +113,7 @@ let rec get_properties_helper g acc ownables =
   | h :: t -> (
       match get_own_status g h with
       | Property status -> get_properties_helper g (h :: acc) t
-      | _ -> get_properties_helper g acc t )
+      | _ -> get_properties_helper g acc t)
 
 (* Gets all the properties of player [p] in game [g]. *)
 let get_properties g p =
@@ -126,7 +128,7 @@ let rec has_both_utilities_helper game acc ownables =
       let new_acc =
         match get_own_status game h with
         | Utility u -> (
-            match u with U_Owned _ -> acc + 1 | _ -> acc + 1 )
+            match u with U_Owned _ -> acc + 1 | _ -> acc + 1)
         | _ -> acc
       in
       has_both_utilities_helper game new_acc t
@@ -144,7 +146,7 @@ let rec num_rrs_owned_helper game acc ownables =
       let new_acc =
         match get_own_status game h with
         | Railroad r -> (
-            match r with RR_Owned _ -> acc + 1 | _ -> acc )
+            match r with RR_Owned _ -> acc + 1 | _ -> acc)
         | _ -> acc
       in
       num_rrs_owned_helper game new_acc t
@@ -192,21 +194,21 @@ let get_ownable_price board own =
       | Board.Property p -> p.price
       | Utility u -> u.price
       | Railroad r -> r.price
-      | _ -> raise NotOwnableSpace )
+      | _ -> raise NotOwnableSpace)
 
 let is_available t o =
   let own_status = get_own_status t o in
   match own_status with
-  | Property p -> ( match p with P_Available -> true | _ -> false )
-  | Railroad r -> ( match r with RR_Available -> true | _ -> false )
-  | Utility u -> ( match u with U_Available -> true | _ -> false )
+  | Property p -> ( match p with P_Available -> true | _ -> false)
+  | Railroad r -> ( match r with RR_Available -> true | _ -> false)
+  | Utility u -> ( match u with U_Available -> true | _ -> false)
 
 let is_mortgaged t o =
   let own_status = get_own_status t o in
   match own_status with
-  | Property p -> ( match p with P_Mortgaged _ -> true | _ -> false )
-  | Railroad r -> ( match r with RR_Mortgaged _ -> true | _ -> false )
-  | Utility u -> ( match u with U_Mortgaged _ -> true | _ -> false )
+  | Property p -> ( match p with P_Mortgaged _ -> true | _ -> false)
+  | Railroad r -> ( match r with RR_Mortgaged _ -> true | _ -> false)
+  | Utility u -> ( match u with U_Mortgaged _ -> true | _ -> false)
 
 let owner t o =
   let available = is_available t o in
@@ -218,14 +220,14 @@ let owner t o =
           match p with
           | P_Owned (player, houses) -> Some player
           | P_Mortgaged player -> Some player
-          | P_Available -> None )
+          | P_Available -> None)
       | Railroad r -> (
           match r with
           | RR_Owned player -> Some player
           | RR_Mortgaged player -> Some player
-          | RR_Available -> None )
+          | RR_Available -> None)
       | Utility u -> (
-          match u with U_Owned player -> Some player | _ -> None ) )
+          match u with U_Owned player -> Some player | _ -> None))
   | true -> None
 
 (** Gets the property (space) from a ownable name*)
@@ -256,7 +258,7 @@ let get_houses g name =
   let status = get_own_status g name in
   match status with
   | Property p -> (
-      match p with P_Owned (player, houses) -> houses | _ -> 0 )
+      match p with P_Owned (player, houses) -> houses | _ -> 0)
   | Railroad r -> 0
   | Utility u -> 0
 
@@ -280,7 +282,7 @@ let get_ownable_info g board ownable_name =
             string_of_bool (is_mortgaged g ownable_name)
           in
           ". Mortgaged: " ^ is_mortgaged
-      | _ -> "" )
+      | _ -> "")
   | None -> ""
 
 (** Checks if the property with name [h] in game [g] has color [col] *)
@@ -352,8 +354,8 @@ let house_price g p property_name =
       | P_Owned (player, houses) -> (
           match space with
           | Board.Property p -> p.house_price
-          | _ -> failwith "Ownable Status has Incorrect Ownable Type" )
-      | _ -> raise (CannotAddHouse "Property Not Owned") )
+          | _ -> failwith "Ownable Status has Incorrect Ownable Type")
+      | _ -> raise (CannotAddHouse "Property Not Owned"))
   | _ -> raise NotPropertyName
 
 let can_afford g p name = Player.get_balance p > house_price g p name
@@ -417,7 +419,7 @@ let sell_hotel_step t = t.hotels_available <- t.hotels_available + 1
 let verify_property_space t name =
   match Board.space_from_space_name t.board name with
   | Some s -> (
-      match s with Property p -> () | _ -> raise NotPropertyName )
+      match s with Property p -> () | _ -> raise NotPropertyName)
   | None -> raise NotPropertyName
 
 let add_house t property_name adding_house =
@@ -507,17 +509,17 @@ let can_mortgage g p o =
     | None -> raise NotOwnableName
     | Some s -> s
   in
-  ( match get_own_status g o with
+  (match get_own_status g o with
   | Property status -> (
       match status with
       | P_Owned (player, houses) ->
           let col = Board.color board space in
           player = p && houses = 0 && not (has_houses_on_color g p col)
-      | _ -> false )
+      | _ -> false)
   | Utility status -> (
-      match status with U_Owned player -> player = p | _ -> false )
+      match status with U_Owned player -> player = p | _ -> false)
   | Railroad status -> (
-      match status with RR_Owned player -> player = p | _ -> false ) )
+      match status with RR_Owned player -> player = p | _ -> false))
   && get_ownable_price board o / 2 < Player.get_balance p
 
 let can_trade g p name =
@@ -525,7 +527,7 @@ let can_trade g p name =
   | Property status -> (
       match status with
       | P_Owned (player, houses) -> houses = 0
-      | _ -> false )
+      | _ -> false)
   | _ -> false
 
 (* Helper to compile together all ownables satisfying a certain
@@ -603,19 +605,19 @@ let get_rent g board_location roll =
                 (* double rent for monopoly with zero houses *)
                 2 * p.rent.(0)
               else p.rent.(houses)
-          | _ -> failwith "Ownable Status has Incorrect Ownable Type" )
-      | _ -> 0 )
+          | _ -> failwith "Ownable Status has Incorrect Ownable Type")
+      | _ -> 0)
   | Utility status -> (
       match status with
       | U_Owned player ->
           let dice_sum = fst roll + snd roll in
           let both_utilities = has_both_utilities g player in
           if both_utilities then 10 * dice_sum else 4 * dice_sum
-      | _ -> 0 )
+      | _ -> 0)
   | Railroad status -> (
       match status with
       | RR_Owned player -> 25 * num_rrs_owned g player
-      | _ -> 0 )
+      | _ -> 0)
 
 (* makes all of a player's ownables available *)
 let rec make_player_ownables_available g p = function
@@ -639,20 +641,21 @@ let rec net_worth_helper acc g ownables =
                   let house_price = house_price g player h in
                   (houses * house_price / 2)
                   + (get_ownable_price board h / 2)
-              | _ -> failwith "Property Not Owned" )
+              | _ -> failwith "Property Not Owned")
           | Utility u -> (
               match u with
               | U_Owned player -> get_ownable_price board h / 2
-              | _ -> failwith "Utility Not Owned" )
+              | _ -> failwith "Utility Not Owned")
           | Railroad r -> (
               match r with
               | RR_Owned player -> get_ownable_price board h / 2
-              | _ -> failwith "Railroad Not Owned" )
+              | _ -> failwith "Railroad Not Owned")
         in
         net_worth_helper (acc + worth) g t
 
 let get_net_worth g p =
-  Player.get_ownable_name_list p |> net_worth_helper 0 g
+  Player.get_ownable_name_list p
+  |> net_worth_helper (Player.get_balance p) g
 
 (* sells all houses on a property, and updates available fields.
    Requires: [name] is a property owned by p *)
@@ -684,21 +687,20 @@ let sell_all g p =
   in
   mortgage_all ownables
 
+let goes_bankrupt g p cost = get_net_worth g p < cost
+
 let delete_player g p =
   let players_lst = Array.to_list g.players in
   let new_players_lst = List.filter (fun x -> x <> p) players_lst in
   let new_players_array = Array.of_list new_players_lst in
   make_player_ownables_available g p (Player.get_ownable_name_list p);
-  Printers.red_print "Player ";
-  Printers.cyan_print (Player.get_player_id p);
-  Printers.red_print " went bankrupt. They have lost the game.\n";
   g.players <- new_players_array
 
 let do_tax g p s =
   match s with
   | Board.Tax t ->
       let tax_cost = t.cost in
-      ( try Player.update_balance p (-tax_cost)
-        with Player.BalanceBelowZero -> delete_player g p );
+      (try Player.update_balance p (-tax_cost)
+       with Player.BalanceBelowZero -> raise MustCheckBankrupt);
       g.free_parking <- g.free_parking + tax_cost
   | _ -> failwith "Tried to complete a tax on a non-tax space."

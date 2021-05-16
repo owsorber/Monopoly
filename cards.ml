@@ -8,6 +8,8 @@ type card = {
 
 exception NotValidCard
 
+exception MustCheckBankrupt of Player.t * int
+
 (* make deck an array and stack is a shuffled list of deck's values *)
 type t = {
   mutable chance_deck : card array;
@@ -50,8 +52,8 @@ let init_cards filename =
     chance_int = 0;
     community_chest_deck =
       init_shuffle
-        ( to_list (json |> member "communitychest")
-        |> init_deck_builder [] );
+        (to_list (json |> member "communitychest")
+        |> init_deck_builder []);
     community_chest_int = 0;
   }
 
@@ -59,7 +61,7 @@ let draw_chance_card t =
   if t.chance_int < Array.length t.chance_deck - 1 then (
     let c = t.chance_deck.(t.chance_int) in
     t.chance_int <- t.chance_int + 1;
-    c )
+    c)
   else
     let c = t.chance_deck.(t.chance_int) in
     t.chance_deck <- shuffle t.chance_deck;
@@ -71,7 +73,7 @@ let draw_community_chest_card t =
   then (
     let c = t.community_chest_deck.(t.community_chest_int) in
     t.community_chest_int <- t.community_chest_int + 1;
-    c )
+    c)
   else
     let c = t.community_chest_deck.(t.community_chest_int) in
     t.community_chest_deck <- shuffle t.community_chest_deck;
@@ -84,19 +86,21 @@ let move_card loc p can_pass (loc_type, rent_mult) =
     if loc_type = "utility" then (
       let roll = Player.roll () in
       Printers.magenta_print
-        ( "First dice: "
+        ("First dice: "
         ^ string_of_int (fst roll)
         ^ ". Second dice: "
         ^ string_of_int (snd roll)
-        ^ "\n" );
-      Player.sums roll )
+        ^ "\n");
+      Player.sums roll)
     else 0
   in
   (dummyRent, rent_mult)
 
 let change_funds p g funds =
-  ( try Player.update_balance p (int_of_string funds)
-    with Player.BalanceBelowZero -> Game.delete_player g p );
+  let fund_int = int_of_string funds in
+  (try Player.update_balance p fund_int
+   with Player.BalanceBelowZero ->
+     raise (MustCheckBankrupt (p, fund_int)));
   (0, 1)
 
 let quarantine_card p extra =
@@ -140,17 +144,20 @@ let rec string_to_int_list str =
 let property_charges game player extra =
   let num = num_houses game (Game.get_properties game player) 0 0 in
   let list = string_to_int_list (String.split_on_char ' ' extra) in
-  ( try
-      Player.update_balance player
-        (-((fst num * List.hd list) + (snd num * List.nth list 1)))
-    with Player.BalanceBelowZero -> Game.delete_player game player );
+  let cost =
+    -((fst num * List.hd list) + (snd num * List.nth list 1))
+  in
+  (try Player.update_balance player cost
+   with Player.BalanceBelowZero ->
+     raise (MustCheckBankrupt (player, cost)));
   (0, 1)
 
 let add_others_funds player game amount =
   Array.iter
     (fun p ->
       try Player.pay p player amount
-      with Player.BalanceBelowZero -> Game.delete_player game p)
+      with Player.BalanceBelowZero ->
+        raise (MustCheckBankrupt (p, amount)))
     (Game.get_all_players game);
   (0, 1)
 
@@ -158,7 +165,8 @@ let receive_others_funds player game amount =
   Array.iter
     (fun p ->
       try Player.pay player p amount
-      with Player.BalanceBelowZero -> Game.delete_player game player)
+      with Player.BalanceBelowZero ->
+        raise (MustCheckBankrupt (p, amount)))
     (Game.get_all_players game);
   (0, 1)
 
