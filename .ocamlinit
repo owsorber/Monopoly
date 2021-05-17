@@ -6,6 +6,7 @@
 #require "sfml.audio";;
 #load "printers.cmo";;
 #load "board.cmo";;
+#load "stockmarket.cmo";;
 #load "player.cmo";;
 #load "game.cmo";;
 #load "cards.cmo";;

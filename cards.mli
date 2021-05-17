@@ -6,6 +6,10 @@ type card = {
 
 exception NotValidCard
 
+(* Raised when a balance update attempt with int cost is made such that
+   we must potentially bankrupt the player. *)
+exception MustCheckBankrupt of Player.t * int
+
 type t = {
   mutable chance_deck : card array;
   mutable chance_int : int;
@@ -37,6 +41,9 @@ val draw_chance_card : t -> card
     reshuffled and community_chest_int is set to 0 *)
 val draw_community_chest_card : t -> card
 
-(**[do_card card player board game] preforms the action dicated by
-   [card] on [player] in [game] with [board]*)
-val do_card : card -> Player.t -> Board.t -> Game.t -> unit
+(**[do_card card player board game] performs the action dicated by
+   [card] on [player] in [game] with [board], and returns the next
+   space's rent and multiplier, if applicable. Raises:
+   [MustCheckBankrupt] if doing the card tries to make the [player]'s
+   balance go below zero. *)
+val do_card : card -> Player.t -> Board.t -> Game.t -> int * int

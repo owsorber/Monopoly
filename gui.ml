@@ -1,17 +1,15 @@
 open Graphics
 
-let play_sound filename =
-  let buffer = SFSoundBuffer.loadFromFile ("./sounds/" ^ filename) in
+(* let play_sound filename = let buffer = SFSoundBuffer.loadFromFile
+   ("./sounds/" ^ filename) in
 
-  let sound = SFSound.create () in
-  SFSound.setBuffer sound buffer;
-  SFSound.play sound;
+   let sound = SFSound.create () in SFSound.setBuffer sound buffer;
+   SFSound.play sound;
 
-  while SFSound.getStatus sound = SFSound.Playing do
-    SFTime.sleep (SFTime.of_seconds 0.1)
-  done;
+   while SFSound.getStatus sound = SFSound.Playing do SFTime.sleep
+   (SFTime.of_seconds 0.1) done;
 
-  SFSound.stop sound
+   SFSound.stop sound *)
 
 let draw_color color x y w h =
   set_color color;
@@ -208,7 +206,7 @@ let create_window g =
   resize_window 1440 810;
   set_window_title "Monopoly";
   create_console ();
-  make_board g;
-  play_sound "intro.wav"
+  make_board g
+(* play_sound "intro.wav" *)
 
 let update_frame g = ()

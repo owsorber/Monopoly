@@ -34,6 +34,12 @@ exception CannotAddHouse of string
 
 exception CannotAddHotel of string
 
+exception CannotSellHouse of string
+
+exception CannotSellHotel of string
+
+exception MustCheckBankrupt
+
 type t = {
   board : Board.t;
   mutable players : Player.t array;
@@ -155,6 +161,13 @@ let make_ownable_owned g p o =
       Hashtbl.replace g.ownables o (Property (P_Owned (p, 0)))
   | Utility _ -> Hashtbl.replace g.ownables o (Utility (U_Owned p))
   | Railroad _ -> Hashtbl.replace g.ownables o (Railroad (RR_Owned p))
+
+let rec make_own_lst_owned g p o_lst =
+  match o_lst with
+  | [] -> ()
+  | h :: t ->
+      make_ownable_owned g p h;
+      make_own_lst_owned g p t
 
 (* makes an ownable available, and happens when a player gets bankrupt *)
 let make_ownable_available g p o =
@@ -290,18 +303,21 @@ let has_houses_on_color g p col =
   in
   find_house_with_col prop_list
 
-(** Checks for even build rule. Requires: player p has monopoly on col *)
-let check_even_build g p prop_name col =
+(** Checks for even build rule. [buying] is true iff even build is being
+    checked for buying a property. Requires: player p has monopoly on
+    col *)
+let check_even_build g p prop_name col buying =
   let prop_list = get_properties g p in
+  let house_acc = if buying then 1 else -1 in
   let rec get_house_list lst acc =
     match lst with
     | [] -> acc
     | h :: t ->
-        let added_house = if h = prop_name then 1 else 0 in
+        let house_change = if h = prop_name then house_acc else 0 in
         if
           Board.color g.board (get_property_from_space_name g.board h)
           = col
-        then get_house_list t ((get_houses g h + added_house) :: acc)
+        then get_house_list t ((get_houses g h + house_change) :: acc)
         else get_house_list t acc
   in
   let house_list = get_house_list prop_list [] in
@@ -326,31 +342,6 @@ let check_no_mortgaged g p col =
   in
   mortgaged_col prop_list
 
-let can_add_house t player property_name =
-  let space = get_property_from_space_name t.board property_name in
-  let cur_space_color = Board.color t.board space in
-  let check1 =
-    if has_monopoly t player cur_space_color then true
-    else raise (CannotAddHouse "No Monopoly")
-  in
-  let check2 =
-    if t.houses_available > 0 then true
-    else raise (CannotAddHouse "No Houses Available")
-  in
-  let check3 =
-    if check_less_houses t property_name 4 then true
-    else raise (CannotAddHouse "4 Houses on Property")
-  in
-  let check4 =
-    if check_even_build t player property_name cur_space_color then true
-    else raise (CannotAddHouse "Even Build")
-  in
-  let check5 =
-    if check_no_mortgaged t player cur_space_color then true
-    else raise (CannotAddHouse "Mortgaged Property on Color")
-  in
-  check1 && check2 && check3 && check4 && check5
-
 let house_price g p property_name =
   let space =
     match Board.space_from_space_name g.board property_name with
@@ -367,8 +358,41 @@ let house_price g p property_name =
       | _ -> raise (CannotAddHouse "Property Not Owned"))
   | _ -> raise NotPropertyName
 
-(** Returns an updated property_status with an additional house*)
-let new_property_house t property_name : property_status =
+let can_afford g p name = Player.get_balance p > house_price g p name
+
+let can_add_house t player property_name =
+  let space = get_property_from_space_name t.board property_name in
+  let cur_space_color = Board.color t.board space in
+  let check1 =
+    if has_monopoly t player cur_space_color then true
+    else raise (CannotAddHouse "No Monopoly")
+  in
+  let check2 =
+    if t.houses_available > 0 then true
+    else raise (CannotAddHouse "No Houses Available")
+  in
+  let check3 =
+    if check_less_houses t property_name 4 then true
+    else raise (CannotAddHouse "4 Houses on Property")
+  in
+  let check4 =
+    if check_even_build t player property_name cur_space_color true then
+      true
+    else raise (CannotAddHouse "Even Build")
+  in
+  let check5 =
+    if check_no_mortgaged t player cur_space_color then true
+    else raise (CannotAddHouse "Mortgaged Property on Color")
+  in
+  let check6 =
+    if can_afford t player property_name then true
+    else raise (CannotAddHouse "Cannot afford House")
+  in
+  check1 && check2 && check3 && check4 && check5 && check6
+
+(** Returns an updated property_status with an updated house amount *)
+let new_property_house t property_name adding =
+  let house_change = if adding then 1 else -1 in
   let cur_own_status = get_own_status t property_name in
   let cur_prop_status =
     match cur_own_status with
@@ -377,31 +401,38 @@ let new_property_house t property_name : property_status =
   in
   let upd_prop_status =
     match cur_prop_status with
-    | P_Owned (a, b) -> (a, b + 1)
+    | P_Owned (a, b) -> (a, b + house_change)
     | _ -> failwith "Impossible: Precondition Violation"
   in
   P_Owned upd_prop_status
 
-let house_step t = t.houses_available <- t.houses_available - 1
+let add_house_step t = t.houses_available <- t.houses_available - 1
 
-let hotel_step t =
+let add_hotel_step t =
   t.houses_available <- t.houses_available + 4;
   t.hotels_available <- t.hotels_available - 1
 
+let sell_house_step t = t.houses_available <- t.houses_available + 1
+
+let sell_hotel_step t = t.hotels_available <- t.hotels_available + 1
+
+let verify_property_space t name =
+  match Board.space_from_space_name t.board name with
+  | Some s -> (
+      match s with Property p -> () | _ -> raise NotPropertyName)
+  | None -> raise NotPropertyName
+
 let add_house t property_name adding_house =
-  let property_space =
-    Board.space_from_space_name t.board property_name
-  in
-  let property_check (space : Board.space option) =
-    match space with
-    | Some s -> (
-        match s with Property p -> true | _ -> raise NotPropertyName)
-    | _ -> raise NotPropertyName
-  in
-  if adding_house then house_step t else hotel_step t;
-  if property_check property_space then
-    Hashtbl.replace t.ownables property_name
-      (Property (new_property_house t property_name))
+  verify_property_space t property_name;
+  if adding_house then add_house_step t else add_hotel_step t;
+  Hashtbl.replace t.ownables property_name
+    (Property (new_property_house t property_name true))
+
+let sell_house t property_name selling_house =
+  verify_property_space t property_name;
+  if selling_house then sell_house_step t else sell_hotel_step t;
+  Hashtbl.replace t.ownables property_name
+    (Property (new_property_house t property_name false))
 
 (** requires player p has a monopoly on col *)
 let has_full_monopoly g p col =
@@ -441,9 +472,35 @@ let can_add_hotel t p name =
     if t.hotels_available > 0 then true
     else raise (CannotAddHotel "No Hotels Available")
   in
-  check1 && check2 && check3 && check4
+  let check5 =
+    if can_afford t p name then true
+    else raise (CannotAddHotel "Cannot afford Hotel")
+  in
+  check1 && check2 && check3 && check4 && check5
 
-(* let add_hotel t name = failwith "Unimplemented" *)
+(* checks that there is less than 4 and greater than 0 houses on that
+   property, as well as even build *)
+let can_sell_house t p name =
+  let space = get_property_from_space_name t.board name in
+  let cur_space_color = Board.color t.board space in
+  let check1 =
+    if check_even_build t p name cur_space_color false then true
+    else raise (CannotSellHouse "Even Build")
+  in
+  let check2 =
+    if check_less_houses t name 5 then true
+    else raise (CannotSellHouse "Hotel on Property")
+  in
+  let check3 =
+    if get_houses t name > 0 then true
+    else raise (CannotSellHouse "No houses on Property")
+  in
+  check1 && check2 && check3
+
+(* checks that a hotel is on property name, assumes player owns name *)
+let can_sell_hotel t p name =
+  if get_houses t name = 5 then true
+  else raise (CannotSellHotel "No hotel on Property")
 
 let can_mortgage g p o =
   let board = get_board g in
@@ -452,7 +509,7 @@ let can_mortgage g p o =
     | None -> raise NotOwnableName
     | Some s -> s
   in
-  match get_own_status g o with
+  (match get_own_status g o with
   | Property status -> (
       match status with
       | P_Owned (player, houses) ->
@@ -462,7 +519,16 @@ let can_mortgage g p o =
   | Utility status -> (
       match status with U_Owned player -> player = p | _ -> false)
   | Railroad status -> (
-      match status with RR_Owned player -> player = p | _ -> false)
+      match status with RR_Owned player -> player = p | _ -> false))
+  && get_ownable_price board o / 2 < Player.get_balance p
+
+let can_trade g p name =
+  match get_own_status g name with
+  | Property status -> (
+      match status with
+      | P_Owned (player, houses) -> houses = 0
+      | _ -> false)
+  | _ -> false
 
 (* Helper to compile together all ownables satisfying a certain
    condition, such as: can be mortgaged, can have a house bought on it,
@@ -490,6 +556,21 @@ let all_can_buy_house g p =
 let all_can_buy_hotel g p =
   let ownables = Player.get_ownable_name_list p in
   all_ownables_helper g p can_add_hotel [] ownables
+  |> List.rev |> Array.of_list
+
+let all_can_sell_house g p =
+  let ownables = Player.get_ownable_name_list p in
+  all_ownables_helper g p can_sell_house [] ownables
+  |> List.rev |> Array.of_list
+
+let all_can_sell_hotel g p =
+  let ownables = Player.get_ownable_name_list p in
+  all_ownables_helper g p can_sell_hotel [] ownables
+  |> List.rev |> Array.of_list
+
+let all_can_trade g p =
+  let ownables = Player.get_ownable_name_list p in
+  all_ownables_helper g p can_trade [] ownables
   |> List.rev |> Array.of_list
 
 let make_ownable_mortgaged g p o =
@@ -545,14 +626,74 @@ let rec make_player_ownables_available g p = function
       make_ownable_available g p h;
       make_player_ownables_available g p t
 
+let rec net_worth_helper acc g ownables =
+  let board = get_board g in
+  match ownables with
+  | [] -> acc
+  | h :: t ->
+      if is_mortgaged g h then net_worth_helper acc g t
+      else
+        let worth =
+          match get_own_status g h with
+          | Property p -> (
+              match p with
+              | P_Owned (player, houses) ->
+                  let house_price = house_price g player h in
+                  (houses * house_price / 2)
+                  + (get_ownable_price board h / 2)
+              | _ -> failwith "Property Not Owned")
+          | Utility u -> (
+              match u with
+              | U_Owned player -> get_ownable_price board h / 2
+              | _ -> failwith "Utility Not Owned")
+          | Railroad r -> (
+              match r with
+              | RR_Owned player -> get_ownable_price board h / 2
+              | _ -> failwith "Railroad Not Owned")
+        in
+        net_worth_helper (acc + worth) g t
+
+let get_net_worth g p =
+  Player.get_ownable_name_list p
+  |> net_worth_helper (Player.get_balance p) g
+
+(* sells all houses on a property, and updates available fields.
+   Requires: [name] is a property owned by p *)
+let sell_houses_on_prop g p name =
+  let houses = get_houses g name in
+  if houses < 5 then g.houses_available <- g.houses_available + houses
+  else g.hotels_available <- g.hotels_available + 1;
+  Hashtbl.replace g.ownables name (Property (P_Owned (p, 0)))
+
+(* sells all houses/hotels owned by player [p], doesn't update balance *)
+let rec sell_all_houses g p properties =
+  match properties with
+  | [] -> ()
+  | h :: t ->
+      sell_houses_on_prop g p h;
+      sell_all_houses g p t
+
+let sell_all g p =
+  Player.update_balance p (get_net_worth g p);
+  let ownables = Player.get_ownable_name_list p in
+  let properties = get_properties g p in
+  sell_all_houses g p properties;
+  let rec mortgage_all lst =
+    match lst with
+    | [] -> ()
+    | h :: t ->
+        make_ownable_mortgaged g p h;
+        mortgage_all t
+  in
+  mortgage_all ownables
+
+let goes_bankrupt g p cost = get_net_worth g p < cost
+
 let delete_player g p =
   let players_lst = Array.to_list g.players in
   let new_players_lst = List.filter (fun x -> x <> p) players_lst in
   let new_players_array = Array.of_list new_players_lst in
   make_player_ownables_available g p (Player.get_ownable_name_list p);
-  (* Printers.red_print "Player "; Printers.cyan_print
-     (Player.get_player_id p); Printers.red_print " went bankrupt. They
-     have lost the game.\n"; *)
   g.players <- new_players_array
 
 let do_tax g p s =
@@ -560,6 +701,6 @@ let do_tax g p s =
   | Board.Tax t ->
       let tax_cost = t.cost in
       (try Player.update_balance p (-tax_cost)
-       with Player.BalanceBelowZero -> delete_player g p);
+       with Player.BalanceBelowZero -> raise MustCheckBankrupt);
       g.free_parking <- g.free_parking + tax_cost
   | _ -> failwith "Tried to complete a tax on a non-tax space."

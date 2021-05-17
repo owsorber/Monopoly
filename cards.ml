@@ -8,6 +8,8 @@ type card = {
 
 exception NotValidCard
 
+exception MustCheckBankrupt of Player.t * int
+
 (* make deck an array and stack is a shuffled list of deck's values *)
 type t = {
   mutable chance_deck : card array;
@@ -50,8 +52,8 @@ let init_cards filename =
     chance_int = 0;
     community_chest_deck =
       init_shuffle
-        ( to_list (json |> member "communitychest")
-        |> init_deck_builder [] );
+        (to_list (json |> member "communitychest")
+        |> init_deck_builder []);
     community_chest_int = 0;
   }
 
@@ -59,7 +61,7 @@ let draw_chance_card t =
   if t.chance_int < Array.length t.chance_deck - 1 then (
     let c = t.chance_deck.(t.chance_int) in
     t.chance_int <- t.chance_int + 1;
-    c )
+    c)
   else
     let c = t.chance_deck.(t.chance_int) in
     t.chance_deck <- shuffle t.chance_deck;
@@ -71,24 +73,44 @@ let draw_community_chest_card t =
   then (
     let c = t.community_chest_deck.(t.community_chest_int) in
     t.community_chest_int <- t.community_chest_int + 1;
-    c )
+    c)
   else
     let c = t.community_chest_deck.(t.community_chest_int) in
     t.community_chest_deck <- shuffle t.community_chest_deck;
     t.community_chest_int <- 0;
     c
 
-let move_card loc p can_pass = Player.move_player_to p loc can_pass
+let move_card loc p can_pass (loc_type, rent_mult) =
+  Player.move_player_to p loc can_pass;
+  let dummyRent =
+    if loc_type = "utility" then (
+      let roll = Player.roll () in
+      Printers.magenta_print
+        ("First dice: "
+        ^ string_of_int (fst roll)
+        ^ ". Second dice: "
+        ^ string_of_int (snd roll)
+        ^ "\n");
+      Player.sums roll)
+    else 0
+  in
+  (dummyRent, rent_mult)
 
 let change_funds p g funds =
-  try Player.update_balance p (int_of_string funds)
-  with Player.BalanceBelowZero -> Game.delete_player g p
+  let fund_int = int_of_string funds in
+  (try Player.update_balance p fund_int
+   with Player.BalanceBelowZero ->
+     raise (MustCheckBankrupt (p, fund_int)));
+  (0, 1)
 
 let quarantine_card p extra =
-  match extra with
-  | "go to" -> Player.go_to_quarantine_status p
-  | "get out" -> Player.got_gooq_card p
-  | _ -> raise NotValidCard
+  let _ =
+    match extra with
+    | "go to" -> Player.go_to_quarantine_status p
+    | "get out" -> Player.got_gooq_card p
+    | _ -> raise NotValidCard
+  in
+  (0, 1)
 
 let rec find_nearest board loc typ =
   match Board.space_from_location board loc with
@@ -97,6 +119,14 @@ let rec find_nearest board loc typ =
   | Utility u ->
       if typ = "utility" then loc else find_nearest board (loc + 1) typ
   | _ -> find_nearest board (loc + 1) typ
+
+let move_nearest player board extra game =
+  let cmd_list = String.split_on_char ' ' extra in
+  let loc_type = List.hd cmd_list in
+  let rent_mult = int_of_string (List.nth cmd_list 1) in
+  move_card
+    (find_nearest board (Player.get_location player) loc_type)
+    player true (loc_type, rent_mult)
 
 let rec num_houses game list house hotel =
   match list with
@@ -114,36 +144,46 @@ let rec string_to_int_list str =
 let property_charges game player extra =
   let num = num_houses game (Game.get_properties game player) 0 0 in
   let list = string_to_int_list (String.split_on_char ' ' extra) in
-  try
-    Player.update_balance player
-      (-((fst num * List.hd list) + (snd num * List.nth list 1)))
-  with Player.BalanceBelowZero -> Game.delete_player game player
+  let cost =
+    -((fst num * List.hd list) + (snd num * List.nth list 1))
+  in
+  (try Player.update_balance player cost
+   with Player.BalanceBelowZero ->
+     raise (MustCheckBankrupt (player, cost)));
+  (0, 1)
 
 let add_others_funds player game amount =
   Array.iter
     (fun p ->
       try Player.pay p player amount
-      with Player.BalanceBelowZero -> Game.delete_player game p)
-    (Game.get_all_players game)
+      with Player.BalanceBelowZero ->
+        raise (MustCheckBankrupt (p, amount)))
+    (Game.get_all_players game);
+  (0, 1)
 
 let receive_others_funds player game amount =
   Array.iter
     (fun p ->
       try Player.pay player p amount
-      with Player.BalanceBelowZero -> Game.delete_player game player)
-    (Game.get_all_players game)
+      with Player.BalanceBelowZero ->
+        raise (MustCheckBankrupt (p, amount)))
+    (Game.get_all_players game);
+  (0, 1)
 
 let do_card card p board game =
   match card.action with
   | "move" ->
-      move_card (Board.location_from_space_name board card.extra) p true
+      move_card
+        (Board.location_from_space_name board card.extra)
+        p true ("", 1)
   | "addfunds" -> change_funds p game card.extra
   | "quarantine" -> quarantine_card p card.extra
   | "removefunds" -> change_funds p game card.extra
   | "movenum" ->
       move_card
         (Player.get_location p + int_of_string card.extra)
-        p false
+        p false ("", 1)
+  | "movenearest" -> move_nearest p board card.extra game
   | "propertycharges" -> property_charges game p card.extra
   | "removefundstoplayers" ->
       receive_others_funds p game (int_of_string card.extra)
