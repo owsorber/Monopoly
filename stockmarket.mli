@@ -14,10 +14,10 @@ val init_market : Yojson.Basic.t -> t
     in market [m]. *)
 val value_of : t -> stock_name -> stock_value
 
-(** [value_of_num_shares s n] returns the value of [n] shares of stock
+(** [value_of_num_shares m s n] returns the value of [n] shares of stock
     with name [s] in market [m]. *)
 val value_of_num_shares : t -> stock_name -> int -> stock_value
 
-(** [update_market m] returns a new stock market with stock values
-    updated after a single turn, which corresponds to a time-step. *)
+(** [update_market m] updates a stock market [m] after a single turn,
+    which corresponds to a time-step. *)
 val update_market : t -> unit
