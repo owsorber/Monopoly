@@ -29,12 +29,12 @@ let init_stock json =
   (name, info)
 
 (* Helper to initialize a stock market. *)
-let init_market_helper table = function
+let rec init_market_helper table = function
   | [] -> table
   | h :: t ->
       let name, info = init_stock h in
       Hashtbl.add table name info;
-      table
+      init_market_helper table t
 
 let init_market json =
   let tbl = Hashtbl.create 5 in
