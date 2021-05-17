@@ -66,7 +66,7 @@ let st_dev_return m s =
    normally distributed. The input [n] is used to specify the number of
    uniformly distributed random variables to use. *)
 let gen_approx_zero_mean_gaussian sigma n =
-  let a = sqrt (3. *. sigma /. float_of_int n) in
+  let a = sqrt (3. /. float_of_int n) *. sigma in
   Random.self_init ();
   let rec sum_uniform acc num =
     if num = 0 then acc
