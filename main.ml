@@ -21,10 +21,10 @@ let take_action result p g phase =
 
 let rec phase_2 b g p =
   let result = Input.turn p b g false cards in
-  (* let _ = take_action result p g false in *)
   match result with
   | Input.Legal r ->
       Input.get_action r p;
+      Gui.update_frame g;
       Input.get_end r
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move.";
@@ -41,6 +41,7 @@ let rec double_turn b g p i =
 
   let result = Input.turn p b g true cards in
   let _ = take_action result p g true in
+  Gui.update_frame g;
   match result with
   | Input.Legal r -> (
       match Player.quarantine p with
@@ -63,10 +64,10 @@ let rec double_turn b g p i =
 
 let rec phase_1 b g p =
   let result = Input.turn p b g true cards in
-  (* let _ = take_action result p g true in *)
   match result with
   | Input.Legal r ->
       Input.get_action r p;
+      Gui.update_frame g;
       let double = Input.get_double r in
       if double then (
         green_print "Yay! You rolled doubles. You may roll again!";

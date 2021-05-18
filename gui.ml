@@ -221,4 +221,10 @@ let create_window g =
   make_board g
 (* play_sound "intro.wav" *)
 
-let update_frame g = ()
+let wipe_game () =
+  set_color white;
+  fill_rect 0 0 (size_x () / 2) (size_y ())
+
+let update_frame g =
+  wipe_game ();
+  make_board g
