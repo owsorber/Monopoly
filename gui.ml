@@ -191,12 +191,8 @@ let make_board g =
   moveto x y
 
 let wipe_console () =
-  (* let lower_quarter = get_image (size_x () / 2) 0 (size_x ()) (size_y
-     () / 4) in *)
   set_color black;
   fill_rect (size_x () / 2) 0 (size_x () / 2) (size_y ())
-(* draw_image lower_quarter (size_x () / 2) (3 * size_y () / 4); moveto
-   ((size_x () / 2) + 10) ((3 * size_y () / 4) - 20) *)
 
 let scroll () =
   let above = get_image (size_x () / 2) 0 (size_x () / 2) (size_y ()) in
