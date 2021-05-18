@@ -936,11 +936,9 @@ let turn p b g phase cards =
       try
         let input_index = int_of_string (read_line ()) in
         let move = phase1_options.(input_index - 1) in
-        Gui.wipe_console ();
         function_of_move move p b g cards
       with _ ->
         red_print "Please enter a valid index.";
-        Gui.wipe_console ();
         Illegal)
   | false -> (
       let _ = turn_info b p g phase in
@@ -948,9 +946,7 @@ let turn p b g phase cards =
       try
         let input_index = int_of_string (read_line ()) in
         let move = phase2_options.(input_index - 1) in
-        Gui.wipe_console ();
         function_of_move move p b g cards
       with _ ->
         red_print "Please enter a valid index.";
-        Gui.wipe_console ();
         Illegal)

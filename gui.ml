@@ -191,19 +191,24 @@ let make_board g =
   moveto x y
 
 let wipe_console () =
-  let lower_quarter =
-    get_image (size_x () / 2) 0 (size_x ()) (size_y () / 4)
-  in
+  (* let lower_quarter = get_image (size_x () / 2) 0 (size_x ()) (size_y
+     () / 4) in *)
   set_color black;
-  fill_rect (size_x () / 2) 0 (size_x () / 2) (size_y ());
-  draw_image lower_quarter (size_x () / 2) (3 * size_y () / 4);
-  moveto ((size_x () / 2) + 10) ((3 * size_y () / 4) - 20)
+  fill_rect (size_x () / 2) 0 (size_x () / 2) (size_y ())
+(* draw_image lower_quarter (size_x () / 2) (3 * size_y () / 4); moveto
+   ((size_x () / 2) + 10) ((3 * size_y () / 4) - 20) *)
+
+let scroll () =
+  let above = get_image (size_x () / 2) 0 (size_x () / 2) (size_y ()) in
+  wipe_console ();
+  draw_image above (size_x () / 2) 20;
+  moveto ((size_x () / 2) + 10) 0
 
 let update_console s c =
   set_color c;
-  if current_y () < 0 then wipe_console () else ();
   draw_string s;
   moveto ((size_x () / 2) + 10) (current_y () - 20);
+  if current_y () < 0 then scroll () else ();
   Unix.sleepf 0.05
 
 let input_print s c =
