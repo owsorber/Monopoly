@@ -191,15 +191,26 @@ let make_board g =
   moveto x y
 
 let wipe_console () =
+  let lower_quarter =
+    get_image (size_x () / 2) 0 (size_x ()) (size_y () / 4)
+  in
   set_color black;
-  fill_rect (size_x () / 2) (size_y ()) (size_x ()) 0;
-  create_console ()
+  fill_rect (size_x () / 2) 0 (size_x () / 2) (size_y ());
+  draw_image lower_quarter (size_x () / 2) (3 * size_y () / 4);
+  moveto ((size_x () / 2) + 10) ((3 * size_y () / 4) - 20)
 
 let update_console s c =
   set_color c;
   if current_y () < 0 then wipe_console () else ();
   draw_string s;
-  moveto ((size_x () / 2) + 10) (current_y () - 20)
+  moveto ((size_x () / 2) + 10) (current_y () - 20);
+  Unix.sleepf 0.05
+
+let input_print s c =
+  set_color black;
+  fill_rect (current_x ()) (current_y ()) ((size_x () / 2) + 10) 20;
+  moveto ((size_x () / 2) + 10) (current_y () + 20);
+  update_console s c
 
 let create_window g =
   open_graph "";

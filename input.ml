@@ -28,6 +28,16 @@ type moves =
   | Quit
   | Faulty
 
+let read_line () =
+  let return = ref "" in
+  let c = ref 0 in
+  while !c <> -35 do
+    c := int_of_char (read_key ()) - 48;
+    if !c <> -35 then return := !return ^ string_of_int !c else ();
+    Gui.input_print !return cyan
+  done;
+  !return
+
 (**[string_of_move m] is the string representation of move [m]. *)
 let string_of_move m =
   match m with
@@ -166,14 +176,14 @@ let get_end t = t.is_end
 let do_potential_bankruptcy g p c p2 =
   let player_name = Player.get_player_id p in
   magenta_print
-    ("\nThe cost that " ^ player_name
-   ^ " must pay is higher than their current balance.\n");
+    ("The cost that " ^ player_name
+   ^ " must pay is higher than their current balance.");
   if Game.goes_bankrupt g p c then (
     Game.delete_player g p;
     red_print
       (player_name
      ^ " doesn't have enough assets to pay off the debt! They went \
-        bankrupt!\n"))
+        bankrupt!"))
   else (
     Game.sell_all g p;
     if p == p2 then Player.update_balance p (-c) else Player.pay p p2 c;
@@ -199,7 +209,7 @@ let rec landing p g space_name r cards (modRent, mult) =
                 if player <> p then (
                   magenta_print "You must pay ";
                   red_print (string_of_int rent);
-                  magenta_print " to ";
+                  magenta_print "to ";
                   cyan_print (Player.get_player_id player);
                   print_endline "";
                   if rent > Player.get_balance p then
@@ -211,7 +221,7 @@ let rec landing p g space_name r cards (modRent, mult) =
       | Tax t -> (
           magenta_print "Oh no! You landed on ";
           yellow_print t.name;
-          magenta_print ". You must pay ";
+          magenta_print "You must pay ";
           red_print (string_of_int t.cost);
           print_endline "";
           try Game.do_tax g p space
@@ -419,10 +429,11 @@ let mortgage p b g =
       })
   else (
     (*if len is zero then end function*)
-    print_string "> ";
-    let property_index = int_of_char (read_key ()) - 48 in
+    white_print "> ";
+    white_print "";
     (* check out of bounds *)
     try
+      let property_index = int_of_string (read_line ()) in
       let property_name = mortgagables.(property_index - 1) in
       let legality = ref false in
 
@@ -500,10 +511,11 @@ let unmortgage p b g =
         is_end = false;
       })
   else (
-    print_string "> ";
-    let property_index = int_of_char (read_key ()) - 48 in
+    white_print "> ";
+    white_print "";
     (* check out of bounds *)
     try
+      let property_index = int_of_string (read_line ()) in
       let property_name = mortgaged.(property_index - 1) in
       Legal
         {
@@ -556,7 +568,8 @@ let buy_sell_house p g buy =
         "Please enter the number of the property you would like to buy \
          a house on: ";
     print_array (fun x -> house_details x p g buy) prop_array;
-    print_string "> ";
+    white_print "> ";
+    white_print "";
     let property_index = read_line () in
     try
       let property_name =
@@ -628,9 +641,10 @@ let buy_sell_hotel p g buy =
     (*use Game.all_can_buy_house to print only those that can add a
       house*)
     print_array (fun x -> hotel_details x p g buy) prop_array;
-    print_string "> ";
-    let property_index = int_of_char (read_key ()) - 48 in
+    white_print "> ";
+    white_print "";
     try
+      let property_index = int_of_string (read_line ()) in
       let property_name = prop_array.(property_index - 1) in
       try
         if buy && Game.can_add_hotel g p property_name then
@@ -684,12 +698,13 @@ let rec select_trade_props p acc prop_array cur_list trading finished =
     print_array (fun x -> x) (Array.of_list cur_list);
     if List.length cur_list = 0 then cyan_print "None" else ();
     white_print
-      ("\nPlease enter the number of a property you would like to "
-     ^ phrase ^ Player.get_player_id p
-     ^ ". Press enter with no input when you are finished.");
+      ("Please enter the number of a property you would like to "
+     ^ phrase ^ Player.get_player_id p);
+    white_print "Press enter with no input when you are finished.";
     print_array (fun x -> x) prop_array;
     if Array.length prop_array = 0 then cyan_print "None" else ();
-    print_string "> ";
+    white_print "> ";
+    white_print "";
     let property_index = read_line () in
     try
       if property_index = "" then
@@ -717,7 +732,8 @@ let rec enter_cash p1 p2 =
   white_print
     "Please enter the amount of cash you would like to trade (negative \
      if you want to receive):";
-  print_string "> ";
+  white_print "> ";
+  white_print "";
   try
     let amt = int_of_string (read_line ()) in
     if amt > Player.get_balance p1 then (
@@ -752,6 +768,7 @@ let print_trade_details p1 p2 receive_arr trade_arr cash is_counter =
 
 let rec ask_yes_no () =
   print_array (fun x -> x) [| "Yes"; "No" |];
+  white_print "";
   let accept = int_of_string (read_line ()) in
   if accept = 1 || accept = 2 then if accept = 1 then true else false
   else (
@@ -762,9 +779,11 @@ let rec trade p g =
   white_print
     "Please enter the number of the player you would like to trade \
      with:";
+
   let trade_partners = Game.get_all_players g in
   print_array (fun x -> x) (player_id_arr trade_partners);
-  print_string "> ";
+  white_print "> ";
+  white_print "";
 
   let partner_index = read_line () in
   try
@@ -888,7 +907,8 @@ let turn_info b p g phase =
   print_player_info b p g;
   cyan_print "possible moves: ";
   options_printer phase p b g;
-  cyan_print ">"
+  cyan_print ">";
+  cyan_print ""
 
 let function_of_move m p b g cards =
   match m with
@@ -914,7 +934,7 @@ let turn p b g phase cards =
       let _ = turn_info b p g phase in
       ();
       try
-        let input_index = int_of_char (read_key ()) - 48 in
+        let input_index = int_of_string (read_line ()) in
         let move = phase1_options.(input_index - 1) in
         Gui.wipe_console ();
         function_of_move move p b g cards
@@ -926,7 +946,7 @@ let turn p b g phase cards =
       let _ = turn_info b p g phase in
       ();
       try
-        let input_index = int_of_char (read_key ()) - 48 in
+        let input_index = int_of_string (read_line ()) in
         let move = phase2_options.(input_index - 1) in
         Gui.wipe_console ();
         function_of_move move p b g cards
