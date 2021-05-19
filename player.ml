@@ -14,9 +14,14 @@ type quarantine_status =
   | In of int
   | Out
 
+type stock_portfolio =
+  (Stockmarket.stock_name, Stockmarket.stock_value) Hashtbl.t
+
 exception BalanceBelowZero
 
 exception InQuarantine of int
+
+exception NotEnoughShares
 
 type t = {
   player_id : player_id;
@@ -24,6 +29,7 @@ type t = {
   mutable location : location;
   mutable ownable_name_list : ownable_name_list;
   mutable quarantine_status : quarantine_status;
+  mutable owned_stocks : stock_portfolio;
 }
 
 let get_player_id player = player.player_id
@@ -41,6 +47,7 @@ let make_player id =
     location = 0;
     ownable_name_list = [];
     quarantine_status = Out;
+    owned_stocks = Hashtbl.create 5;
   }
 
 (* [sums roll] is the sum of the two value die in [roll] *)
@@ -132,3 +139,18 @@ let move_player_to p l can_pass =
     update_balance p 200;
     p.location <- l)
   else p.location <- l
+
+let get_stocks p = failwith "Unimplemented"
+
+let num_shares_owned p s =
+  try Hashtbl.find p.owned_stocks s with Not_found -> 0
+
+let buy_stocks p s n c =
+  update_balance p (-c);
+  let num_shares = num_shares_owned p s in
+  Hashtbl.replace p.owned_stocks s (num_shares + n)
+
+let sell_stocks p s n c =
+  let num_shares = num_shares_owned p s in
+  if num_shares < n then raise NotEnoughShares else update_balance p c;
+  Hashtbl.replace p.owned_stocks s (num_shares - n)

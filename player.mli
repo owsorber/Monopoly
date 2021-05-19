@@ -32,6 +32,10 @@ exception BalanceBelowZero
     days remaining in quarantine*)
 exception InQuarantine of int
 
+(** Raised when a player attempts to sell shares of stock that they do
+    not have. *)
+exception NotEnoughShares
+
 (** [get_player_id t] returns the name of player [t]*)
 val get_player_id : t -> player_id
 
@@ -114,3 +118,23 @@ val move_player_to : t -> location -> bool -> unit
 (** [leave_quarantine player] updates [player]'s quarentine status to
     Out *)
 val leave_quarantine : t -> unit
+
+(** [get_stocks p] returns a list of the stocks owned by player [p] in
+    the form of an association list with the stock name as the first
+    item in each pair and the number of shares owned as the second item
+    in each pair. *)
+val get_stocks : t -> (Stockmarket.stock_name * int) list
+
+(** [buy_stocks p s n c] completes all parts of a transaction (adding
+    the stock to the player's portfolio, decreasing the player's
+    balance) where player [p] buys [n] shares of stock with name [s] at
+    a total cost [c]. Raises: [BalanceBelowZero] if the purchase is
+    invalid because cost [c] exceeds the player's current balance. *)
+val buy_stocks : t -> Stockmarket.stock_name -> int -> int -> unit
+
+(** [buy_stocks p s n c] completes all parts of a transaction (removing
+    the shares from the player's portfolio, increasing the player's
+    balance) where player [p] sells [n] shares of stock with name [s] at
+    a total cost [c]. Raises: [NotEnoughShares] if the player owns less
+    than [n] shares of stock with name [s]. *)
+val sell_stocks : t -> Stockmarket.stock_name -> int -> int -> unit
