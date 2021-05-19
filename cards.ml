@@ -107,7 +107,6 @@ let quarantine_card p extra =
   let _ =
     match extra with
     | "go to" -> Player.go_to_quarantine_status p
-    | "get out" -> Player.got_gooq_card p
     | _ -> raise NotValidCard
   in
   (0, 1)

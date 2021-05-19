@@ -24,7 +24,6 @@ type t = {
   mutable location : location;
   mutable ownable_name_list : ownable_name_list;
   mutable quarantine_status : quarantine_status;
-  mutable get_out_of_quarantine_card : bool;
 }
 
 let get_player_id player = player.player_id
@@ -42,7 +41,6 @@ let make_player id =
     location = 0;
     ownable_name_list = [];
     quarantine_status = Out;
-    get_out_of_quarantine_card = false;
   }
 
 (* [sums roll] is the sum of the two value die in [roll] *)
@@ -134,9 +132,3 @@ let move_player_to p l can_pass =
     update_balance p 200;
     p.location <- l)
   else p.location <- l
-
-let have_gooq player = player.get_out_of_quarantine_card
-
-let got_gooq_card player = player.get_out_of_quarantine_card <- true
-
-let used_gooq_card player = player.get_out_of_quarantine_card <- false
