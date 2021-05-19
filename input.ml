@@ -33,7 +33,13 @@ let read_line () =
   let c = ref 0 in
   while !c <> -35 do
     c := int_of_char (read_key ()) - 48;
-    if !c <> -35 then return := !return ^ string_of_int !c else ();
+    if !c <> -35 then
+      if !c = -40 then
+        if String.length !return > 0 then
+          return := String.sub !return 0 (String.length !return - 1)
+        else ()
+      else return := !return ^ string_of_int !c
+    else ();
     Gui.input_print !return cyan
   done;
   !return

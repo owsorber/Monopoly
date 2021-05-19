@@ -209,7 +209,7 @@ let update_console s c =
 
 let input_print s c =
   set_color black;
-  fill_rect (current_x ()) (current_y ()) ((size_x () / 2) + 10) 20;
+  fill_rect (size_x () / 2) (current_y ()) (size_x () / 2) 40;
   moveto ((size_x () / 2) + 10) (current_y () + 20);
   update_console s c
 
