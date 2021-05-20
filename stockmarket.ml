@@ -9,6 +9,7 @@ type stock_value = int
    representing a proportion of the value of the stock. *)
 type stock_info = {
   curr_value : stock_value;
+  percent_change : float;
   mu : float;
   sigma : float;
 }
@@ -24,6 +25,7 @@ let init_stock json =
       curr_value = json |> member "start" |> to_int;
       mu = json |> member "mu" |> to_float;
       sigma = json |> member "sigma" |> to_float;
+      percent_change = 0.0;
     }
   in
   (name, info)
@@ -47,6 +49,10 @@ let value_of m s =
   info.curr_value
 
 let value_of_num_shares m s n = n * value_of m s
+
+let percent_change_of m s =
+  let info = info_of m s in
+  info.percent_change
 
 let expected_return m s =
   let info = info_of m s in
@@ -74,20 +80,25 @@ let gen_approx_zero_mean_gaussian sigma n =
   in
   sum_uniform 0. n
 
-(* Calculates the new stock value for a stock with name [s] in market
-   [m] after one time-step using the formula documented here:
+(* Calculates the new stock value and percent change for a stock with
+   name [s] in market [m] after one time-step using the formula
+   documented here:
    https://www.investopedia.com/articles/07/montecarlo.asp *)
-let new_stock_value m s =
+let new_stock_value_and_change m s =
   let curr_value = float_of_int (value_of m s) in
   let epsilon = gen_approx_zero_mean_gaussian 1. 50 in
   let mu = expected_return m s in
   let sigma = st_dev_return m s in
-  max 0. (curr_value +. (curr_value *. (mu +. (epsilon *. sigma))))
-  |> Float.round |> int_of_float
+  let percent_change = mu +. (epsilon *. sigma) in
+  ( max 0. (curr_value +. (curr_value *. percent_change))
+    |> Float.round |> int_of_float,
+    percent_change )
 
 (* Updates stock with name [s] in market [m]. *)
 let update_stock m s info =
-  Hashtbl.replace m s { info with curr_value = new_stock_value m s }
+  let value, change = new_stock_value_and_change m s in
+  Hashtbl.replace m s
+    { info with curr_value = value; percent_change = 100. *. change }
 
 let update_market m = Hashtbl.iter (update_stock m) m
 
