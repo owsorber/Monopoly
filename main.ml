@@ -19,8 +19,8 @@ let take_action result p g phase =
       red_print "Illegal move. Please enter a valid move.";
       false
 
-let rec phase_2 b g p =
-  let result = Input.turn p b g false cards in
+let rec phase_2 b g p m =
+  let result = Input.turn p b g false cards m in
   match result with
   | Input.Legal r ->
       Input.get_action r p;
@@ -28,18 +28,18 @@ let rec phase_2 b g p =
       Input.get_end r
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move.";
-      phase_2 b g p
+      phase_2 b g p m
 
-(**[double_turn b g p i] handles taking another roll phase for player
-   [p] given board [b] and game [g] and having rolled doubles [i] + 1
-   times. *)
-let rec double_turn b g p i =
+(**[double_turn b g p i m] handles taking another roll phase for player
+   [p] given board [b], game [g], and market [m] and having rolled
+   doubles [i] + 1 times. *)
+let rec double_turn b g p i m =
   (*phase 2*)
-  while phase_2 b g p = false do
+  while phase_2 b g p m = false do
     ()
   done;
 
-  let result = Input.turn p b g true cards in
+  let result = Input.turn p b g true cards m in
   let _ = take_action result p g true in
   Gui.update_frame g;
   match result with
@@ -50,7 +50,7 @@ let rec double_turn b g p i =
           let double = Input.get_double r in
           if double then (
             green_print "WOW! Doubles again?!";
-            if i < 2 then double_turn b g p (i + 1)
+            if i < 2 then double_turn b g p (i + 1) m
             else (
               red_print
                 "you pushed your luck and rolled doubles three \
@@ -60,10 +60,10 @@ let rec double_turn b g p i =
           else ())
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move.";
-      double_turn b g p i
+      double_turn b g p i m
 
-let rec phase_1 b g p =
-  let result = Input.turn p b g true cards in
+let rec phase_1 b g p m =
+  let result = Input.turn p b g true cards m in
   match result with
   | Input.Legal r ->
       Input.get_action r p;
@@ -71,25 +71,26 @@ let rec phase_1 b g p =
       let double = Input.get_double r in
       if double then (
         green_print "Yay! You rolled doubles. You may roll again!";
-        double_turn b g p 1)
+        double_turn b g p 1 m)
       else ()
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move.";
-      phase_1 b g p
+      phase_1 b g p m
 
-(**[turn_handler b g] repeatedly executes turns for each player,
-   advanceing to the next player after each turn. Turns are executed on
-   board [b] and game [g]. *)
-let rec turn_handler b g =
+(**[turn_handler b g m] repeatedly executes turns for each player,
+   advancing to the next player and updating the market after each turn.
+   Turns are executed on board [b] and game [g], with market [m]. *)
+let rec turn_handler b g m =
   let p = Game.current_player g in
   (*phase 1*)
-  phase_1 b g p;
+  phase_1 b g p m;
   (*phase 2*)
-  while phase_2 b g p = false do
+  while phase_2 b g p m = false do
     ()
   done;
   Game.next_player g;
-  turn_handler b g
+  Stockmarket.update_market m;
+  turn_handler b g m
 
 (** [get_player_count ()] prompts the user to enter in the number of
     players until a valid (positive integer) input is read. *)
@@ -197,7 +198,10 @@ let rec play_game () =
     in
     let g = game () in
     Gui.create_window g;
-    turn_handler board g
+    let m =
+      Stockmarket.init_market (Yojson.Basic.from_file "stocks.json")
+    in
+    turn_handler board g m
   with Invalid_argument _ | Failure _ ->
     terminal_red_print "Please enter a valid index.\n";
     play_game ()

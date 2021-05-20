@@ -90,3 +90,6 @@ let update_stock m s info =
   Hashtbl.replace m s { info with curr_value = new_stock_value m s }
 
 let update_market m = Hashtbl.iter (update_stock m) m
+
+let stock_array m =
+  Hashtbl.fold (fun k _ acc -> Array.append acc [| k |]) m [||]

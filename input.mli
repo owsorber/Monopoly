@@ -18,9 +18,16 @@ val get_double : t -> bool
    turn. *)
 val get_end : t -> bool
 
-(** [turn player board game phase cards] is the result of a queried
-    input from a player during one turn, on phase 1 if [phase] is true
-    and phase 2 if [phase] is false. It returns [Legal] of the desired
-    move if the input is valid given game state [game] and board [board]
-    or [Illegal] if the input is invalid. *)
-val turn : Player.t -> Board.t -> Game.t -> bool -> Cards.t -> result
+(** [turn player board game phase cards market] is the result of a
+    queried input from a player during one turn, on phase 1 if [phase]
+    is true and phase 2 if [phase] is false. It returns [Legal] of the
+    desired move if the input is valid given game state [game], board
+    [board], and market [market] or [Illegal] if the input is invalid. *)
+val turn :
+  Player.t ->
+  Board.t ->
+  Game.t ->
+  bool ->
+  Cards.t ->
+  Stockmarket.t ->
+  result

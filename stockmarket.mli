@@ -21,3 +21,5 @@ val value_of_num_shares : t -> stock_name -> int -> stock_value
 (** [update_market m] updates a stock market [m] after a single turn,
     which corresponds to a time-step. *)
 val update_market : t -> unit
+
+val stock_array : t -> stock_name array

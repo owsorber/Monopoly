@@ -24,6 +24,8 @@ type moves =
   | Mortgage
   | UnMortgage
   | Trade
+  | BuyStock
+  | SellStock
   | End
   | Quit
   | Faulty
@@ -49,12 +51,14 @@ let string_of_move m =
   match m with
   | Roll -> "Roll"
   | Buy -> "Buy Current Space"
+  | Mortgage -> "Mortgage"
+  | UnMortgage -> "Unmortgage"
   | BuyHouse -> "Buy House"
   | BuyHotel -> "Buy Hotel"
   | SellHouse -> "Sell House"
   | SellHotel -> "Sell Hotel"
-  | Mortgage -> "Mortgage"
-  | UnMortgage -> "Unmortgage"
+  | BuyStock -> "Buy Stocks"
+  | SellStock -> "Sell Stocks"
   | Trade -> "Trade"
   | End -> "End Turn"
   | Quit -> "Quit"
@@ -69,6 +73,8 @@ let phase2_options =
     BuyHotel;
     SellHouse;
     SellHotel;
+    BuyStock;
+    SellStock;
     Mortgage;
     UnMortgage;
     Trade;
@@ -858,6 +864,96 @@ and trade_counteroffer p1 p2 g trade_arr receive_arr cash counter =
     green_print "Congratulations! You've made a trade.";
     (p1, p2, trade_arr, receive_arr, cash))
 
+let stock_details stock p g market buy =
+  let descriptor = if buy then "Cost" else "Value" in
+  let num = Stockmarket.value_of market stock in
+  let details = " (" ^ descriptor ^ ": " ^ string_of_int num ^ ")" in
+  stock ^ details
+
+(**[buy_sell_stock p g market buy] returns the result type for a player
+   attempting to buy or sell stocks on the stock market [market]. The
+   player is attempting to buy if [buy] is true. [buy_sell_stock] acts
+   for player [p] in game [g].*)
+let buy_sell_stock p g market buy =
+  let stock_array =
+    if buy then Stockmarket.stock_array market
+    else Array.map (fun (stock, _) -> stock) (Player.get_stocks p)
+  in
+  if Array.length stock_array = 0 then (
+    green_print "None.";
+    Legal
+      {
+        player_id = Player.get_player_id p;
+        action = (fun _ -> ());
+        is_double = false;
+        is_end = false;
+      })
+  else (
+    if buy then
+      white_print
+        "Please enter the number of the stock you would like to buy: "
+    else
+      white_print
+        "Please enter the number of the stock you would like to sell: ";
+    print_array (fun x -> stock_details x p g market buy) stock_array;
+    white_print "> ";
+    white_print "";
+    try
+      let stock_index = int_of_string (read_line ()) in
+      let stock_name = stock_array.(stock_index - 1) in
+
+      if buy then (
+        white_print
+          ("Please enter the number of " ^ stock_name
+         ^ " you would like to buy:");
+        white_print "")
+      else (
+        white_print
+          ("Please enter the number of " ^ stock_name
+         ^ " you would like to sell:");
+        white_print "");
+      let num_stocks = int_of_string (read_line ()) in
+      let total_value =
+        Stockmarket.value_of_num_shares market stock_name num_stocks
+      in
+      if buy && Player.get_balance p > total_value then
+        Legal
+          {
+            player_id = Player.get_player_id p;
+            action =
+              (fun _ ->
+                Player.buy_stocks p stock_name num_stocks total_value);
+            is_double = false;
+            is_end = false;
+          }
+      else if not buy then
+        Legal
+          {
+            player_id = Player.get_player_id p;
+            action =
+              (fun _ ->
+                try
+                  Player.sell_stocks p stock_name num_stocks total_value
+                with Player.NotEnoughShares ->
+                  red_print "you do not have enough shares");
+            is_double = false;
+            is_end = false;
+          }
+      else (
+        red_print "you do not have enough money";
+        Illegal)
+    with _ ->
+      red_print "invalid input";
+      Illegal)
+
+let stock_printer p =
+  let stocks = Player.get_stocks p in
+  Array.iter
+    (fun (stock, number) ->
+      if number > 0 then
+        green_print (stock ^ ". Shares: " ^ string_of_int number))
+    stocks
+
 (**[print_player_info b p] prints appropriate info about player [p]
    given board state [b]. *)
 let print_player_info b p g =
@@ -867,6 +963,8 @@ let print_player_info b p g =
   green_print (player_bal ^ "");
   cyan_print "Current properties: ";
   pp_propert_list g b (Player.get_ownable_name_list p);
+  cyan_print "Stock portfolio:";
+  stock_printer p;
   cyan_print "Current location: ";
   green_print player_loc
 
@@ -887,6 +985,12 @@ let print_endgame b g =
   let max_properties =
     max players (fun p -> List.length (Player.get_ownable_name_list p))
   in
+  let max_stocks =
+    max players (fun p ->
+        Array.fold_left
+          (fun acc (_, n) -> acc + n)
+          0 (Player.get_stocks p))
+  in
   magenta_print "Player with the most money (ties excluded): ";
   green_print (Player.get_player_id max_money);
   magenta_print "with ";
@@ -897,14 +1001,29 @@ let print_endgame b g =
   green_print
     (max_properties |> Player.get_ownable_name_list |> List.length
    |> string_of_int);
-  magenta_print "properties."
+  magenta_print "properties.";
+  magenta_print "Player with the most properties (ties excluded): ";
+  green_print (Player.get_player_id max_properties);
+  magenta_print "with ";
+  green_print
+    (max_properties |> Player.get_ownable_name_list |> List.length
+   |> string_of_int);
+  magenta_print "properties.";
+  magenta_print "Player with diamond hands (ties excluded): ";
+  green_print (Player.get_player_id max_stocks);
+  magenta_print "with ";
+  green_print
+    (max_stocks |> Player.get_stocks
+    |> Array.fold_left (fun acc (_, n) -> acc + n) 0
+    |> string_of_int);
+  magenta_print "total shares."
 
 (**[graceful_shutdown b g] ends the game [g] given board [b]. *)
 let graceful_shutdown b g =
   red_print "Thanks for playing!";
   print_endgame b g;
   (* Gui.play_sound "gameover.wav"; *)
-  Unix.sleep 5;
+  Unix.sleep 10;
   exit 0
 
 (**[turn_info b p phase] prints the information for player [p] on board
@@ -916,7 +1035,7 @@ let turn_info b p g phase =
   cyan_print ">";
   cyan_print ""
 
-let function_of_move m p b g cards =
+let function_of_move m p b g cards market =
   match m with
   | Roll -> roll p b g cards
   | Buy -> buy p b g
@@ -924,6 +1043,8 @@ let function_of_move m p b g cards =
   | BuyHotel -> buy_sell_hotel p g true
   | SellHouse -> buy_sell_house p g false
   | SellHotel -> buy_sell_hotel p g false
+  | BuyStock -> buy_sell_stock p g market true
+  | SellStock -> buy_sell_stock p g market false
   | Mortgage -> mortgage p b g
   | UnMortgage -> unmortgage p b g
   | Trade -> trade p g
@@ -931,9 +1052,7 @@ let function_of_move m p b g cards =
   | Quit -> graceful_shutdown b g
   | Faulty -> Illegal
 
-(**[turn p b g phase cards] is the representation of a single response
-   by the user for player [p], given board [b] and game [g]. *)
-let turn p b g phase cards =
+let turn p b g phase cards market =
   match phase with
   | true -> (
       cyan_print ("" ^ Player.get_player_id p ^ "'s turn.");
@@ -942,7 +1061,7 @@ let turn p b g phase cards =
       try
         let input_index = int_of_string (read_line ()) in
         let move = phase1_options.(input_index - 1) in
-        function_of_move move p b g cards
+        function_of_move move p b g cards market
       with _ ->
         red_print "Please enter a valid index.";
         Illegal)
@@ -952,7 +1071,7 @@ let turn p b g phase cards =
       try
         let input_index = int_of_string (read_line ()) in
         let move = phase2_options.(input_index - 1) in
-        function_of_move move p b g cards
+        function_of_move move p b g cards market
       with _ ->
         red_print "Please enter a valid index.";
         Illegal)

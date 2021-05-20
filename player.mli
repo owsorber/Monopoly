@@ -123,7 +123,7 @@ val leave_quarantine : t -> unit
     the form of an association list with the stock name as the first
     item in each pair and the number of shares owned as the second item
     in each pair. *)
-val get_stocks : t -> (Stockmarket.stock_name * int) list
+val get_stocks : t -> (Stockmarket.stock_name * int) array
 
 (** [buy_stocks p s n c] completes all parts of a transaction (adding
     the stock to the player's portfolio, decreasing the player's

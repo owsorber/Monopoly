@@ -140,7 +140,10 @@ let move_player_to p l can_pass =
     p.location <- l)
   else p.location <- l
 
-let get_stocks p = failwith "Unimplemented"
+let get_stocks p =
+  Hashtbl.fold
+    (fun k v acc -> Array.append acc [| (k, v) |])
+    p.owned_stocks [||]
 
 let num_shares_owned p s =
   try Hashtbl.find p.owned_stocks s with Not_found -> 0
