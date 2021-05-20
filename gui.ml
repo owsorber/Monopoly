@@ -157,11 +157,11 @@ let make_board g =
     (size_y () - (size_x () / 2))
     (size_x () / 2)
     (size_x () / 2);
-  let space_width = size_x () / 26 in
-  let space_height = space_width * 2 in
-  let board_y = size_y () - (size_x () / 2) in
-  let color_h = space_height / 4 in
-  set_line_width 2;
+    let space_width = size_x () / 26 in
+    let space_height = space_width * 2 in
+    let board_y = size_y () - (size_x () / 2) in
+    let color_h = space_height / 4 in
+    set_line_width 2;
   set_color black;
   draw_rect 0 board_y space_height space_height;
   draw_rect 0 (board_y + (11 * space_width)) space_height space_height;
@@ -258,6 +258,45 @@ let make_board g =
     63 212 194 [] g space_height;
   moveto x y
 
+
+  let draw_stock g x y w h= 
+  set_color (rgb 216 221 227);
+  fill_rect x y w h;
+  set_color black;
+  draw_rect x y w h;
+  moveto (x + w/10) (y+ 2*h/3);
+  draw_string "Stock:";
+  moveto (x + w/10) (y+ h/3);
+  draw_string "Value:"
+
+
+
+  let make_stockmarket g = 
+  let starting_x = current_x () in
+  let starting_y = current_y () in
+  let height = size_y () - (size_x () / 2) in
+  let width = size_x () / 2 in
+  set_color (rgb 204 227 255);
+  fill_rect 0 0 width height;
+  set_line_width 2;
+  set_color black;
+  draw_rect 0 0 width height;
+  set_line_width 1;
+  let boxh = (height-2*height/5) in
+  let boxy = (height - boxh)/4 in 
+  (* let boxy = (height/5) in *)
+  let boxgap = width/50 in
+  let boxw = (width -boxgap*6)/5 in
+    moveto (width/2 - width/15) (height - height/5);
+    draw_string "Stock Tracker";
+    lineto (width/2 - width/15) (height - height/5);
+    draw_stock g boxgap boxy boxw boxh;
+    draw_stock g (2*boxgap + boxw) boxy boxw boxh;
+    draw_stock g (3*boxgap + 2*boxw ) boxy boxw boxh;
+    draw_stock g (4*boxgap + 3*boxw ) boxy boxw boxh;
+    draw_stock g (5*boxgap + 4*boxw ) boxy boxw boxh;
+
+    moveto starting_x starting_y
 let wipe_console () =
   set_color black;
   fill_rect (size_x () / 2) 0 (size_x () / 2) (size_y ())
@@ -286,7 +325,8 @@ let create_window g =
   resize_window 1440 810;
   set_window_title "Monopoly";
   create_console ();
-  make_board g
+  make_board g;
+  make_stockmarket g
 (* play_sound "intro.wav" *)
 
 let wipe_game () =
@@ -295,4 +335,5 @@ let wipe_game () =
 
 let update_frame g =
   wipe_game ();
-  make_board g
+  make_board g;
+  make_stockmarket g
