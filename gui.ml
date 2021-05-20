@@ -25,10 +25,6 @@ let rec write_name lst x y ed side=
       if String.length h <= 8 || ed then (
         draw_string h;
         write_name t x (y - 15) true false)
-      (* else if String.length h >= 12 && side then 
-      (draw_string (String.sub h 0 12);
-        let t = ("-" ^ String.sub h 12 (String.length h - 12)) :: t in
-        write_name t x (y - 15) false true) *)
       else if side then (draw_string h; write_name t x (y - 15) false false)
       else (
         draw_string (String.sub h 0 8);
@@ -60,8 +56,8 @@ let house_place i space_width board_y space_height=
         (board_y + ((i-30) * space_width))))) *)
 
 
-let draw_house num x y h= 
-set_color black; 
+let draw_house num x y h color= 
+set_color color; 
 let l = 7 in
 if h then 
 match num with 
@@ -72,7 +68,7 @@ match num with
 |4 -> fill_rect (x) (y+10) l l; fill_rect (x+3*l/2) (y+10) l l; 
   fill_rect (x+6*l/2) (y+10) l l;  fill_rect (x+ 9*l/2) (y+10) l l;
 | 5 -> fill_rect (x) (y+10) (l*5) l
-| _ -> ()
+| _ -> fill_circle (x) (y+10) l 
 else 
   match num with
 |1 -> fill_rect (x) (y) l l
@@ -82,21 +78,34 @@ else
 |4 -> fill_rect (x) (y) l l; fill_rect (x) (y-3*l/2) l l; 
   fill_rect (x) (y- 3*l) l l;  fill_rect (x) (y-9*l/2) l l;
 | 5 -> fill_rect (x) (y-9*l/2) l (l*5)
-| _ -> ()
+| _ -> fill_circle (x) (y+10) l
 
 (* Draws houses and hotels *)
-let rec make_house board_y ownables_lst g space_width space_height=
+let rec make_house board_y ownables_lst g space_width space_height color=
   match ownables_lst with
   | [] -> ()
   | n :: t -> 
     (let board = Game.get_board g in
     let sp = Board.location_from_space_name board n in
     if sp < 10 || (sp >20 && sp<30) then (let x,y = house_place sp space_width board_y space_height in 
-    draw_house (Game.get_houses g n) x y true; make_house board_y t g 
-    space_width space_height;) else 
+    draw_house (Game.get_houses g n) x y true color; make_house board_y t g 
+    space_width space_height color;
+    set_color color;)
+    (* fill_circle x (y-space_height/3) 5;) *)
+  else 
     let x,y = house_place sp space_width board_y space_height in 
-    draw_house (Game.get_houses g n) x y false); make_house board_y t g 
-    space_width space_height
+    set_color color;
+    (* fill_circle x y 5; *)
+    draw_house (Game.get_houses g n) x y false color); make_house board_y t g 
+    space_width space_height color
+(* 
+let show_ownership lst c1 c2 c3 b l w=
+match lst with
+  | [] -> ()
+  | n :: t -> 
+    let sp = Board.location_from_space_name b n in
+    let x,y = space_dim sp l w;
+    draw_circle (x+3) *)
 
 
 let rec make_piece l w p c1 c2 c3 pos g height=
@@ -119,7 +128,8 @@ let rec make_piece l w p c1 c2 c3 pos g height=
       if String.length (Player.get_player_id h) > 4 then
         draw_string (String.sub (Player.get_player_id h) 0 4)
       else draw_string (Player.get_player_id h);
-      make_house l (Player.get_ownable_name_list h) g w height;
+      let color = (rgb c1 c2 c3) in
+      make_house l (Player.get_ownable_name_list h) g w height color;
 
       make_piece l w t
         ((c3 + 50) mod 250)
