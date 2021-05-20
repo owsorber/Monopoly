@@ -17,29 +17,89 @@ let draw_color color x y w h =
   set_color black;
   draw_rect x y w h
 
-let rec write_name lst x y =
+let rec write_name lst x y ed side=
   moveto x y;
   match lst with
   | [] -> ()
   | h :: t ->
-      if String.length h <= 8 then (
+      if String.length h <= 8 || ed then (
         draw_string h;
-        write_name t x (y - 15))
+        write_name t x (y - 15) true false)
+      (* else if String.length h >= 12 && side then 
+      (draw_string (String.sub h 0 12);
+        let t = ("-" ^ String.sub h 12 (String.length h - 12)) :: t in
+        write_name t x (y - 15) false true) *)
+      else if side then (draw_string h; write_name t x (y - 15) false false)
       else (
         draw_string (String.sub h 0 8);
         let t = ("-" ^ String.sub h 8 (String.length h - 8)) :: t in
-        write_name t x (y - 15))
+        write_name t x (y - 15) false false)
 
 (* returns a tuple of the bottom left cooridinates for space i, orianted *)
 let space_dim i l w =
   if i < 10 then (((11 - i) * w) + 3, l + (5 * w / 4))
+  else if i = 10 then (3, l + (5 * w / 4)) 
   else if i < 20 then (3, ((i - 7) * w) + 15)
-  else if i < 30 then (((i - 19) * w) + 3, size_y () - (w / 2))
-  else if i = 30 then (((i - 18) * w) + 3, size_y () - w)
+  else if i = 20 then (3, size_y () - (w / 2))
+  else if i <= 30 then (((i - 19) * w) + 3, size_y () - (w / 2))
   else if i < 40 then (size_y () - l - (3 * w / 2), ((43 - i) * w) + 15)
   else (0, 0)
 
-let rec make_piece l w p c1 c2 c3 pos =
+let house_place i space_width board_y space_height= 
+  let x, y = space_dim i board_y space_width in
+  if i < 10 then x + 3, y + (space_height/10)
+  else if i < 20 then x + 3* space_height/4, y+3
+  else if i < 30 then x + 3, y - 3* space_height/4
+  else if i < 40 then x - space_height/4, y+3
+  else (0, 0)
+
+
+  (* if i < 11 then ((i * space_width),(board_y + (3 * space_height / 4))) else 
+      (if i < 21 then (((i-10) * space_width), (board_y + (11 * space_width))) else
+        (if i <31 then ((3 * space_height / 4), (board_y + ((i-20) * space_width))) else ((11 * space_width),
+        (board_y + ((i-30) * space_width))))) *)
+
+
+let draw_house num x y h= 
+set_color black; 
+let l = 7 in
+if h then 
+match num with 
+|1 -> fill_rect (x) (y+10) l l
+|2 -> fill_rect (x) (y+10) l l; fill_rect (x + 3*l/2) (y+10) l l 
+|3 -> fill_rect (x) (y+10) l l; fill_rect (x+3*l/2) (y+10) l l; 
+  fill_rect (x+ 6*l/2) (y+10) l l;
+|4 -> fill_rect (x) (y+10) l l; fill_rect (x+3*l/2) (y+10) l l; 
+  fill_rect (x+6*l/2) (y+10) l l;  fill_rect (x+ 9*l/2) (y+10) l l;
+| 5 -> fill_rect (x) (y+10) (l*5) l
+| _ -> ()
+else 
+  match num with
+|1 -> fill_rect (x) (y) l l
+|2 -> fill_rect (x) (y) l l; fill_rect (x) (y-3*l/2) l l 
+|3 -> fill_rect (x) (y) l l; fill_rect (x) (y-3*l/2) l l; 
+  fill_rect (x) (y- 3*l) l l;
+|4 -> fill_rect (x) (y) l l; fill_rect (x) (y-3*l/2) l l; 
+  fill_rect (x) (y- 3*l) l l;  fill_rect (x) (y-9*l/2) l l;
+| 5 -> fill_rect (x) (y-9*l/2) l (l*5)
+| _ -> ()
+
+(* Draws houses and hotels *)
+let rec make_house board_y ownables_lst g space_width space_height=
+  match ownables_lst with
+  | [] -> ()
+  | n :: t -> 
+    (let board = Game.get_board g in
+    let sp = Board.location_from_space_name board n in
+    if sp < 10 || (sp >20 && sp<30) then (let x,y = house_place sp space_width board_y space_height in 
+    draw_house (Game.get_houses g n) x y true; make_house board_y t g 
+    space_width space_height;) else 
+    let x,y = house_place sp space_width board_y space_height in 
+    draw_house (Game.get_houses g n) x y false); make_house board_y t g 
+    space_width space_height
+
+
+let rec make_piece l w p c1 c2 c3 pos g height=
   match p with
   | [] -> ()
   | h :: t ->
@@ -59,11 +119,16 @@ let rec make_piece l w p c1 c2 c3 pos =
       if String.length (Player.get_player_id h) > 4 then
         draw_string (String.sub (Player.get_player_id h) 0 4)
       else draw_string (Player.get_player_id h);
+      make_house l (Player.get_ownable_name_list h) g w height;
+
       make_piece l w t
         ((c3 + 50) mod 250)
         ((c1 + 50) mod 250)
         ((c2 + 20) mod 250)
-        (loc :: pos)
+        (loc :: pos) g height
+
+
+
 
 let create_console () =
   set_color black;
@@ -77,10 +142,13 @@ let create_console () =
 
 let make_label board l w =
   for i = 0 to 39 do
-    let x = space_dim i l w in
-    write_name
-      (String.split_on_char ' ' (Board.space_name board i))
-      (fst x) (snd x)
+    let x,y = space_dim i l w in
+    if i == 10 ||i == 20 || i == 30 || i == 0 then 
+      write_name (String.split_on_char ' ' (Board.space_name board i)) x y true false
+  else if i > 10 && i < 20 || i > 30 then write_name (String.split_on_char ' ' 
+    (Board.space_name board i)) x y false true
+    else
+    write_name (String.split_on_char ' ' (Board.space_name board i)) x y false false
   done
 
 let make_board g =
@@ -184,10 +252,10 @@ let make_board g =
   lineto (size_x () / 4 * 13 / 10) (((size_x () / 4) + board_y) * 10 / 7);
   lineto (current_x ()) (current_y () - (3 * size_x () / 12));
   set_line_width 1;
-
+  (* make_house board_y ownables_lst pos g space_width space_height; *)
   make_piece board_y space_width
     (Array.to_list (Game.get_all_players g))
-    63 212 194 [];
+    63 212 194 [] g space_height;
   moveto x y
 
 let wipe_console () =

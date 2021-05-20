@@ -151,6 +151,24 @@ let rec buy_ownable_lst game board player name_lst =
       Game.make_ownable_owned game player h;
       buy_ownable_lst game board player t
 
+
+let rec buy_houses name_lst board game=
+  match name_lst with
+  | [] -> ()
+  | h :: t -> 
+    let space = Board.space_from_space_name board h in
+    match space with
+  | Some Board.Property _ -> Game.add_house game h false; buy_houses t board game
+  | _ -> buy_houses t board game
+
+let rec buy_houses' game name_lst =
+  match name_lst with
+  | [] -> ()
+  | h :: t ->
+      Game.add_house game h false;
+      buy_houses' game t
+
+
 let ownable_lst_of_default_board board =
   let lst = ref [] in
   for i = 0 to 39 do
@@ -172,6 +190,21 @@ let game2 () =
   let ownable_lst = ownable_lst_of_default_board board in
   let g = Game.init_game board [| p1; p2 |] in
   buy_ownable_lst g board p2 ownable_lst;
+  g
+
+
+let game3 () =
+  let board = Board.init_board (Yojson.Basic.from_file "board.json") in
+  let p1 = Player.make_player "player1" in
+  Player.update_balance p1 10000000;
+  let ownable_lst = ownable_lst_of_default_board board in
+  let g = Game.init_game board [| p1; |] in
+  buy_ownable_lst g board p1 ownable_lst;
+  buy_houses ownable_lst (Game.get_board g) g ;
+  buy_houses ownable_lst (Game.get_board g) g ;
+  buy_houses ownable_lst (Game.get_board g) g ;
+  buy_houses ownable_lst (Game.get_board g) g ;
+  buy_houses ownable_lst (Game.get_board g) g ;
   g
 
 let games = [| default_game; game1; game2 |]
