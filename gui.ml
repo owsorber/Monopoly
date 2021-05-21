@@ -91,22 +91,11 @@ let rec make_house board_y ownables_lst g space_width space_height color=
     draw_house (Game.get_houses g n) x y true color; make_house board_y t g 
     space_width space_height color;
     set_color color;)
-    (* fill_circle x (y-space_height/3) 5;) *)
   else 
     let x,y = house_place sp space_width board_y space_height in 
     set_color color;
-    (* fill_circle x y 5; *)
     draw_house (Game.get_houses g n) x y false color); make_house board_y t g 
     space_width space_height color
-(* 
-let show_ownership lst c1 c2 c3 b l w=
-match lst with
-  | [] -> ()
-  | n :: t -> 
-    let sp = Board.location_from_space_name b n in
-    let x,y = space_dim sp l w;
-    draw_circle (x+3) *)
-
 
 let rec make_piece l w p c1 c2 c3 pos g height=
   match p with
@@ -116,12 +105,6 @@ let rec make_piece l w p c1 c2 c3 pos g height=
       let x = space_dim loc l w in
       let friends = List.length (List.filter (fun x -> x = loc) pos) in
       set_color (rgb c1 c2 c3);
-
-      (* if (snd x - (20*friends)) > l then let x_pos = (fst x + 45) in
-         let y_pos = snd x in fill_rect x_pos (y_pos) 30 15; set_color
-         white; moveto x_pos y_pos; draw_string (String.sub
-         (Player.get_player_id h) 0 4); make_piece l w t ((c1+20) mod
-         250) c2((c3 +7) mod 250) (loc::pos) else *)
       fill_rect (fst x + 15) (snd x - (20 * friends)) 30 15;
       set_color white;
       moveto (fst x + 15) (snd x - (20 * friends));
@@ -136,9 +119,6 @@ let rec make_piece l w p c1 c2 c3 pos g height=
         ((c1 + 50) mod 250)
         ((c2 + 20) mod 250)
         (loc :: pos) g height
-
-
-
 
 let create_console () =
   set_color black;
