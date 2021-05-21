@@ -1046,25 +1046,24 @@ let function_of_move m p b g cards market =
   | Faulty -> Illegal
 
 let turn p b g phase cards market =
-  match phase with
-  | true -> (
-      cyan_print ("" ^ Player.get_player_id p ^ "'s turn.");
-      let _ = turn_info b p g phase in
-      ();
-      try
-        let input_index = int_of_string (read_line ()) in
-        let move = phase1_options.(input_index - 1) in
-        function_of_move move p b g cards market
-      with _ ->
-        red_print "Please enter a valid index.";
-        Illegal)
-  | false -> (
-      let _ = turn_info b p g phase in
-      ();
-      try
-        let input_index = int_of_string (read_line ()) in
-        let move = phase2_options.(input_index - 1) in
-        function_of_move move p b g cards market
-      with _ ->
-        red_print "Please enter a valid index.";
-        Illegal)
+  if phase then (
+    cyan_print ("" ^ Player.get_player_id p ^ "'s turn.");
+    let _ = turn_info b p g phase in
+    ();
+    try
+      let input_index = int_of_string (read_line ()) in
+      let move = phase1_options.(input_index - 1) in
+      function_of_move move p b g cards market
+    with _ ->
+      red_print "Please enter a valid index.";
+      Illegal)
+  else
+    let _ = turn_info b p g phase in
+    ();
+    try
+      let input_index = int_of_string (read_line ()) in
+      let move = phase2_options.(input_index - 1) in
+      function_of_move move p b g cards market
+    with _ ->
+      red_print "Please enter a valid index.";
+      Illegal
