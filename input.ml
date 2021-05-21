@@ -1002,13 +1002,6 @@ let print_endgame b g =
     (max_properties |> Player.get_ownable_name_list |> List.length
    |> string_of_int);
   magenta_print "properties.";
-  magenta_print "Player with the most properties (ties excluded): ";
-  green_print (Player.get_player_id max_properties);
-  magenta_print "with ";
-  green_print
-    (max_properties |> Player.get_ownable_name_list |> List.length
-   |> string_of_int);
-  magenta_print "properties.";
   magenta_print "Player with diamond hands (ties excluded): ";
   green_print (Player.get_player_id max_stocks);
   magenta_print "with ";
