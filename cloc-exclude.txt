@@ -1,3 +1,2 @@
-./test.ml
 ./authors.ml
 ./authors.mli
