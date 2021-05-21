@@ -7,7 +7,7 @@
     "name": "Mediterranean Avenue",
     "type": "property",
     "cost": 60,
-    "color": "#955438",
+    "color": "Brown",
     "rent": [
       2,
       10,
@@ -26,7 +26,7 @@
     "name": "Baltic Avenue",
     "type": "property",
     "cost": 60,
-    "color": "#955438",
+    "color": "Brown",
     "rent": [
       4,
       20,
@@ -51,7 +51,7 @@
     "name": "Oriental Avenue",
     "type": "property",
     "cost": 100,
-    "color": "#aae0fa",
+    "color": "Light Blue",
     "rent": [
       6,
       30,
@@ -70,7 +70,7 @@
     "name": "Vermont Avenue",
     "type": "property",
     "cost": 100,
-    "color": "#aae0fa",
+    "color": "Light Blue",
     "rent": [
       6,
       30,
@@ -85,7 +85,7 @@
     "name": "Connecticut Avenue",
     "type": "property",
     "cost": 120,
-    "color": "#aae0fa",
+    "color": "Light Blue",
     "rent": [
       8,
       40,
@@ -104,7 +104,7 @@
     "name": "St. Charles Place",
     "type": "property",
     "cost": 140,
-    "color": "#d93a96",
+    "color": "Pink",
     "rent": [
       10,
       50,
@@ -124,7 +124,7 @@
     "name": "States Avenue",
     "type": "property",
     "cost": 140,
-    "color": "#d93a96",
+    "color": "Pink",
     "rent": [
       10,
       50,
@@ -139,7 +139,7 @@
     "name": "Virginia Avenue",
     "type": "property",
     "cost": 160,
-    "color": "#d93a96",
+    "color": "Pink",
     "rent": [
       12,
       60,
@@ -159,7 +159,7 @@
     "name": "St. James Place",
     "type": "property",
     "cost": 180,
-    "color": "#f7941d",
+    "color": "Orange",
     "rent": [
       14,
       70,
@@ -178,7 +178,7 @@
     "name": "Tennessee Avenue",
     "type": "property",
     "cost": 180,
-    "color": "#f7941d",
+    "color": "Orange",
     "rent": [
       14,
       70,
@@ -193,7 +193,7 @@
     "name": "New York Avenue",
     "type": "property",
     "cost": 200,
-    "color": "#f7941d",
+    "color": "Orange",
     "rent": [
       16,
       80,
@@ -212,7 +212,7 @@
     "name": "Kentucky Avenue",
     "type": "property",
     "cost": 220,
-    "color": "#ed1b24",
+    "color": "Red",
     "rent": [
       18,
       90,
@@ -231,7 +231,7 @@
     "name": "Indiana Avenue",
     "type": "property",
     "cost": 220,
-    "color": "#ed1b24",
+    "color": "Red",
     "rent": [
       18,
       90,
@@ -246,7 +246,7 @@
     "name": "Illinois Avenue",
     "type": "property",
     "cost": 240,
-    "color": "#ed1b24",
+    "color": "Red",
     "rent": [
       20,
       100,
@@ -266,7 +266,7 @@
     "name": "Atlantic Avenue",
     "type": "property",
     "cost": 260,
-    "color": "#fef200",
+    "color": "Yellow",
     "rent": [
       22,
       110,
@@ -281,7 +281,7 @@
     "name": "Ventnor Avenue",
     "type": "property",
     "cost": 260,
-    "color": "#fef200",
+    "color": "Yellow",
     "rent": [
       22,
       110,
@@ -301,7 +301,7 @@
     "name": "Marvin Gardens",
     "type": "property",
     "cost": 280,
-    "color": "#fef200",
+    "color": "Yellow",
     "rent": [
       24,
       120,
@@ -320,7 +320,7 @@
     "name": "Pacific Avenue",
     "type": "property",
     "cost": 300,
-    "color": "#1fb25a",
+    "color": "Green",
     "rent": [
       26,
       130,
@@ -335,7 +335,7 @@
     "name": "North Carolina Avenue",
     "type": "property",
     "cost": 300,
-    "color": "#1fb25a",
+    "color": "Green",
     "rent": [
       26,
       130,
@@ -354,7 +354,7 @@
     "name": "Pennsylvania Avenue",
     "type": "property",
     "cost": 320,
-    "color": "#1fb25a",
+    "color": "Green",
     "rent": [
       28,
       150,
@@ -378,7 +378,7 @@
     "name": "Park Place",
     "type": "property",
     "cost": 350,
-    "color": "#0072bb",
+    "color": "Dark Blue",
     "rent": [
       35,
       175,
@@ -398,7 +398,7 @@
     "name": "Boardwalk",
     "type": "property",
     "cost": 400,
-    "color": "#0072bb",
+    "color": "Dark Blue",
     "rent": [
       50,
       200,
