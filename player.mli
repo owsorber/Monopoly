@@ -66,7 +66,7 @@ val roll : unit -> rolled_dice
 val move_player : rolled_dice -> t -> unit
 
 (**[go_to_quarantine_status p] sends player [p] to quarantine by making
-   their location quarentine and changes their quarantine_status to In
+   their location quarantine and changes their quarantine_status to In
    of 3*)
 val go_to_quarantine_status : t -> unit
 
@@ -107,7 +107,7 @@ val buy_ownable : t -> ownable_name -> int -> unit
     by p1. *)
 val swap_properties : t -> t -> ownable_name list -> unit
 
-(**[play p1 p2 amount] deducts [amount] from [p1].balance and adds
+(**[pay p1 p2 amount] deducts [amount] from [p1].balance and adds
    [amount] to [p2].balance. P1 pays P2 [amount]. *)
 val pay : t -> t -> int -> unit
 

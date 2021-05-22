@@ -9,6 +9,16 @@ open Input
 let pp_string s = "\"" ^ s ^ "\""
 
 (* Any Player Module Testing Helper Functions/Variables *)
+
+let test_board = Yojson.Basic.from_file "board.json" |> init_board
+
+let get_player_id_test name player expected_output =
+  name >:: fun _ -> assert_equal expected_output (get_player_id player)
+
+let get_ownable_name_list_test name player expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (get_ownable_name_list player)
+
 let get_balance_test name player expected_output =
   name >:: fun _ ->
   assert_equal expected_output (get_balance player)
@@ -24,6 +34,27 @@ let passes_go_test name roll player expected_output =
   assert_equal expected_output (passes_go roll player)
     ~printer:string_of_bool
 
+let quarantine_test name player expected_output =
+  name >:: fun _ -> assert_equal expected_output (quarantine player)
+
+let update_below_zero_exn name player change expected_output =
+  name >:: fun _ ->
+  assert_raises BalanceBelowZero (fun () ->
+      update_balance player change)
+
+let projected_space_test name roll player board expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (projected_space roll player board)
+
+let pay_test name p1 p2 amt =
+  name >:: fun _ ->
+  let p1_balance = get_balance p1 in
+  let p2_balance = get_balance p2 in
+  pay p1 p2 amt;
+  assert (
+    p1_balance - amt = get_balance p1
+    && p2_balance + amt = get_balance p2 )
+
 let player1 = make_player "Kira"
 
 let player2 = make_player "player2"
@@ -32,7 +63,7 @@ let () = update_balance player2 100
 
 let random_roll = roll ()
 
-let random_roll_sum = fst random_roll + snd random_roll
+let random_roll_sum = sums random_roll
 
 let () = move_player random_roll player2
 
@@ -54,13 +85,22 @@ let roll4 = (6, 3)
 
 let player5 = make_player "player5"
 
+let () = go_to_quarantine_status player5
+
+let () = decrement_day_quarantine player5
+
+let player6 = make_player "quarantine"
+
+let () = go_to_quarantine_status player6
+
+let () = leave_quarantine player6
+
 (* Player Module Tests *)
 let player_tests =
   [
-    ( "get_player_id for player 1" >:: fun _ ->
-      assert_equal (get_player_id player1) "Kira" );
-    ( "get_property_name_list for player 1 start of game" >:: fun _ ->
-      assert_equal (get_ownable_name_list player1) [] );
+    get_player_id_test "Player 1's id is Kira" player1 "Kira";
+    get_ownable_name_list_test
+      "Player 1 owns nothing at the start of a game" player1 [];
     get_balance_test "Player 1 starting balance" player1 1500;
     get_location_test "Player 1 starting location" player1 0;
     get_balance_test "Player 2 balance after positive transaction"
@@ -74,9 +114,18 @@ let player_tests =
     get_balance_test "Player 4 balance after negative transaction"
       player4 1000;
     passes_go_test "Player 4 will pass go with roll4" roll4 player4 true;
-    ( "Prevent negative balance" >:: fun _ ->
-      assert_raises BalanceBelowZero (fun () ->
-          update_balance player5 (-1501)) );
+    update_below_zero_exn "Negative Balance is not allowed" player5
+      (-99999) "";
+    quarantine_test "Player 6 entered quarantine and immediately left"
+      player6 Out;
+    quarantine_test "Player 2 is not in quarantine" player2 Out;
+    quarantine_test "Player 5 has been in quarantine for one day"
+      player5 (In 2);
+    pay_test "Player 1 pays Player 2 $200" player1 player2 200;
+    projected_space_test
+      "After rolling a 5, player1 is projected to be on Reading \
+       Railroad"
+      (2, 3) player1 test_board "Reading Railroad";
   ]
 
 (* Any Board Module Testing Helper Functions/Variables *)
@@ -88,6 +137,31 @@ let space_name_test name board loc expected_output =
   name >:: fun _ ->
   assert_equal expected_output (space_name board loc) ~printer:pp_string
 
+let space_from_space_name_test name board loc_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (space_from_space_name board loc_name)
+
+let length_test name board expected_output =
+  name >:: fun _ -> assert_equal expected_output (length board)
+
+let is_ownable_test name board loc expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (is_ownable board (space_from_location board loc))
+
+let num_of_color_test name board col expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (num_of_color board col)
+
+let num_of_color_exn name board col expected_output =
+  name >:: fun _ ->
+  assert_raises (BoardDoesNotHaveColor col) (fun () ->
+      num_of_color board col)
+
+let location_from_space_name_test name board loc_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (location_from_space_name board loc_name)
+
 let start_space_test name board expected_output =
   name >:: fun _ ->
   assert_equal expected_output (start_space board) ~printer:pp_string
@@ -96,8 +170,6 @@ let space_color_test name board loc expected_output =
   name >:: fun _ ->
   assert_equal expected_output
     (color board (space_from_location board loc))
-
-let test_board = Yojson.Basic.from_file "board.json" |> init_board
 
 let mediterranean_avenue_space : Board.space =
   Property
@@ -116,6 +188,7 @@ let board_tests =
   [
     space_from_location_test "Mediterranean Avenue Property" test_board
       1 mediterranean_avenue_space;
+    length_test "Monopoly board has 40 spaces" test_board 40;
     space_from_location_test "Income Tax" test_board 4 income_tax_space;
     space_from_location_test "Chance" test_board 7 Chance;
     space_name_test "0 is Go" test_board 0 "Go";
@@ -126,6 +199,18 @@ let board_tests =
       "Brown";
     space_color_test "Color of Pennsylvania Avenue" test_board 34
       "Green";
+    space_from_space_name_test "Income Tax space has name Income Tax"
+      test_board "Income Tax" (Some income_tax_space);
+    is_ownable_test "Mediterranean Avenue (location 1) is ownable"
+      test_board 1 true;
+    is_ownable_test "Community Chest (location 2) is not ownable"
+      test_board 2 false;
+    num_of_color_test "There are 2 brown properties on the test board"
+      test_board "Brown" 2;
+    num_of_color_exn "There are no sky blue properties on the board"
+      test_board "Sky Blue" 0;
+    location_from_space_name_test "Reading Railroad is on location 5"
+      test_board "Reading Railroad" 5;
   ]
 
 (* Any Game Module Testing Helper Functions/Variables *)
@@ -629,10 +714,21 @@ let game_tests =
 (* Input Module Tests *)
 let input_tests = []
 
+(* Any Stockmarket Module Testing Helper Functions/Variables *)
+
+(* Stockmarket Module Tests *)
+let stockmarket_tests = []
+
 (* Test Suite *)
 let suite =
   "test suite for Monopoly"
   >::: List.flatten
-         [ player_tests; board_tests; game_tests; input_tests ]
+         [
+           player_tests;
+           board_tests;
+           game_tests;
+           input_tests;
+           stockmarket_tests;
+         ]
 
 let _ = run_test_tt_main suite
