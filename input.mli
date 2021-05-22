@@ -18,6 +18,10 @@ val get_double : t -> bool
    turn. *)
 val get_end : t -> bool
 
+(**[graceful_shutdown b g] ends the game [g] given board [b] and prints
+   endgame statistics*)
+val graceful_shutdown : Board.t -> Game.t -> unit
+
 (** [turn player board game phase cards market] is the result of a
     queried input from a player during one turn, on phase 1 if [phase]
     is true and phase 2 if [phase] is false. It returns [Legal] of the

@@ -22,7 +22,7 @@ type t = {
     chest cards with name [filename]. *)
 val init_cards : string -> t
 
-(** [shuffle deck] returns a sheffled array of the cards in [deck] using
+(** [shuffle deck] returns a shuffled array of the cards in [deck] using
     knuth's algorithum*)
 val shuffle : card array -> card array
 

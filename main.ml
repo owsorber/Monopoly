@@ -13,7 +13,7 @@ let take_action result p g phase =
         Game.next_player g;
         red_print "Press enter to begin next player's turn. ";
         let _ = read_line () in
-        true)
+        true )
       else true
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move.";
@@ -56,8 +56,8 @@ let rec double_turn b g p i m =
                 "you pushed your luck and rolled doubles three \
                  times... given this luck we're worried you might have \
                  covid. You have to go to quarantine";
-              Player.go_to_quarantine_status p))
-          else ())
+              Player.go_to_quarantine_status p ) )
+          else () )
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move.";
       double_turn b g p i m
@@ -69,10 +69,12 @@ let rec phase_1 b g p m =
       Input.get_action r p;
       Gui.update_frame g;
       let double = Input.get_double r in
-      if double then (
+      let bankrupt = not (Game.player_exists g p) in
+      if double && not bankrupt then (
         green_print "Yay! You rolled doubles. You may roll again!";
-        double_turn b g p 1 m)
-      else ()
+        double_turn b g p 1 m;
+        bankrupt )
+      else bankrupt
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move.";
       phase_1 b g p m
@@ -82,15 +84,22 @@ let rec phase_1 b g p m =
    Turns are executed on board [b] and game [g], with market [m]. *)
 let rec turn_handler b g m =
   let p = Game.current_player g in
-  (*phase 1*)
-  phase_1 b g p m;
-  (*phase 2*)
-  while phase_2 b g p m = false do
-    ()
-  done;
-  Game.next_player g;
-  Stockmarket.update_market m;
-  turn_handler b g m
+  if Array.length (Game.get_all_players g) <> 1 then (
+    (*phase 1*)
+    let early_end = phase_1 b g p m in
+    (*phase 2*)
+    if not early_end then
+      while phase_2 b g p m = false do
+        ()
+      done;
+    Game.next_player g;
+    Stockmarket.update_market m;
+    turn_handler b g m )
+  else (
+    green_print "There is only one player remaining.";
+    magenta_print
+      ("Congratulations! " ^ Player.get_player_id p ^ " won!");
+    Input.graceful_shutdown b g )
 
 (** [get_player_count ()] prompts the user to enter in the number of
     players until a valid (positive integer) input is read. *)
@@ -100,7 +109,7 @@ let rec get_player_count () =
     let n = int_of_string (read_line ()) in
     if n < 1 then (
       print_string "Invalid input. Please enter a positive integer. \n";
-      get_player_count ())
+      get_player_count () )
     else
       match n with
       | 1 ->
@@ -124,9 +133,9 @@ let default_game () =
   for i = 1 to n do
     players.(i - 1) <-
       Player.make_player
-        (terminal_yellow_print
-           ("Enter Player " ^ string_of_int i ^ "'s name: ");
-         read_line ())
+        ( terminal_yellow_print
+            ("Enter Player " ^ string_of_int i ^ "'s name: ");
+          read_line () )
   done;
   Game.init_game board players
 
@@ -151,15 +160,16 @@ let rec buy_ownable_lst game board player name_lst =
       Game.make_ownable_owned game player h;
       buy_ownable_lst game board player t
 
-
-let rec buy_houses name_lst board game=
+let rec buy_houses name_lst board game =
   match name_lst with
   | [] -> ()
-  | h :: t -> 
-    let space = Board.space_from_space_name board h in
-    match space with
-  | Some Board.Property _ -> Game.add_house game h false; buy_houses t board game
-  | _ -> buy_houses t board game
+  | h :: t -> (
+      let space = Board.space_from_space_name board h in
+      match space with
+      | Some (Board.Property _) ->
+          Game.add_house game h false;
+          buy_houses t board game
+      | _ -> buy_houses t board game )
 
 let rec buy_houses' game name_lst =
   match name_lst with
@@ -167,7 +177,6 @@ let rec buy_houses' game name_lst =
   | h :: t ->
       Game.add_house game h false;
       buy_houses' game t
-
 
 let ownable_lst_of_default_board board =
   let lst = ref [] in
@@ -192,19 +201,18 @@ let game2 () =
   buy_ownable_lst g board p2 ownable_lst;
   g
 
-
 let game3 () =
   let board = Board.init_board (Yojson.Basic.from_file "board.json") in
   let p1 = Player.make_player "player1" in
   Player.update_balance p1 10000000;
   let ownable_lst = ownable_lst_of_default_board board in
-  let g = Game.init_game board [| p1; |] in
+  let g = Game.init_game board [| p1 |] in
   buy_ownable_lst g board p1 ownable_lst;
-  buy_houses ownable_lst (Game.get_board g) g ;
-  buy_houses ownable_lst (Game.get_board g) g ;
-  buy_houses ownable_lst (Game.get_board g) g ;
-  buy_houses ownable_lst (Game.get_board g) g ;
-  buy_houses ownable_lst (Game.get_board g) g ;
+  buy_houses ownable_lst (Game.get_board g) g;
+  buy_houses ownable_lst (Game.get_board g) g;
+  buy_houses ownable_lst (Game.get_board g) g;
+  buy_houses ownable_lst (Game.get_board g) g;
+  buy_houses ownable_lst (Game.get_board g) g;
   g
 
 let games = [| default_game; game1; game2 |]

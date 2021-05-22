@@ -105,7 +105,7 @@ let mediterranean_avenue_space : Board.space =
       name = "Mediterranean Avenue";
       price = 60;
       house_price = 50;
-      color = "#955438";
+      color = "Brown";
       rent = [| 2; 10; 30; 90; 160; 250 |];
     }
 
@@ -123,9 +123,9 @@ let board_tests =
     space_name_test "Last space is Boardwalk" test_board 39 "Boardwalk";
     start_space_test "Start on Go" test_board "Go";
     space_color_test "Color of Mediterranean Avenue" test_board 1
-      "#955438";
+      "Brown";
     space_color_test "Color of Pennsylvania Avenue" test_board 34
-      "#1fb25a";
+      "Green";
   ]
 
 (* Any Game Module Testing Helper Functions/Variables *)
@@ -513,9 +513,6 @@ let () =
 (* Game Module Tests *)
 let game_tests =
   [
-    space_from_location_test "Income Tax" board 4 income_tax_space;
-    space_name_test "10 is Quarantine" board 10 "Quarantine";
-    start_space_test "Start on Go" board "Go";
     get_all_players_test "get all four players in test game" test_game
       [| player1; player2; player3; player4 |];
     current_player_test "Player 1 starts the game" test_game player1;
@@ -553,7 +550,7 @@ let game_tests =
            name = "Connecticut Avenue";
            price = 120;
            house_price = 50;
-           color = "#aae0fa";
+           color = "Light Blue";
            rent = [| 8; 40; 100; 300; 450; 600 |];
          })
       (Some (Property (P_Owned (p1, 4))));
@@ -564,7 +561,7 @@ let game_tests =
            name = "St. Charles Place";
            price = 140;
            house_price = 100;
-           color = "#d93a96";
+           color = "Pink";
            rent = [| 10; 50; 150; 450; 625; 750 |];
          })
       (Some (Property P_Available));
@@ -621,10 +618,10 @@ let game_tests =
     is_mortgaged_exn "Chance is not ownable" game_one "Chance" false;
     owner_test "Shortline owned by p3" game_one "Shortline" (Some p3);
     owner_exn "Chance is not ownable" game_one "Chance" None;
-    has_monopoly_test "p1 has a monopoly on #aae0fa" game_one p1
-      "#aae0fa" true;
-    has_houses_on_color_test "p1 has houses on #aae0fa" game_one p1
-      "#aae0fa" true;
+    has_monopoly_test "p1 has a monopoly on Light Blue" game_one p1
+      "Light Blue" true;
+    has_houses_on_color_test "p1 has houses on Light Blue" game_one p1
+      "Light Blue" true;
   ]
 
 (* Any Input Module Testing Helper Functions/Variables *)
