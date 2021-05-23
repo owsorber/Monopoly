@@ -25,26 +25,26 @@ let buy_ownable_lst game board player name_lst =
   make_own_lst_owned game player name_lst
 
 (* adds [num] houses to property [name] *)
-let rec add_num_houses game name adding_house num =
+let rec add_num_houses game name num =
   match num with
   | 0 -> ()
   | n ->
       if n = 5 then add_house game name false
       else add_house game name true;
-      add_num_houses game name adding_house (n - 1)
+      add_num_houses game name (n - 1)
 
 (* adds a list of houses (with num houses) to properties. Ex: name_lst =
    [A;B;C;D] with num_lst [1;2;2;1] adds 1 house to A and D, and 2
    houses to B and C. *)
-let rec add_num_houses_lst game name_lst adding_house num_lst =
+let rec add_num_houses_lst game name_lst num_lst =
   match name_lst with
   | [] -> ()
   | h :: t -> (
       match num_lst with
       | [] -> ()
       | n :: t1 ->
-          add_num_houses game h adding_house n;
-          add_num_houses_lst game t adding_house t1 )
+          add_num_houses game h n;
+          add_num_houses_lst game t t1 )
 
 (* Any Player Module Testing Helper Functions/Variables *)
 
@@ -354,11 +354,19 @@ let next_player_help game =
 let get_free_parking_test name game expected_output =
   name >:: fun _ -> assert_equal expected_output (get_free_parking game)
 
-let do_tax_test name game player spc expected_output =
+let do_free_parking_test name game player =
   name >:: fun _ ->
-  assert_equal expected_output
-    ( Game.do_tax game player spc;
-      Player.get_balance player )
+  let init_bal = get_balance player in
+  let free_parking_amt = do_free_parking game player in
+  assert (
+    get_free_parking game = 0
+    && get_balance player = init_bal + free_parking_amt )
+
+let do_tax_test name game player spc =
+  name >:: fun _ ->
+  let init_bal = get_balance player in
+  Game.do_tax game player spc;
+  assert (get_balance player + 200 = init_bal)
 
 let get_rent_test name game location_index dice expected_output =
   name >:: fun _ ->
@@ -372,33 +380,9 @@ let get_ownable_price_test name board own_name expected_output =
   name >:: fun _ ->
   assert_equal expected_output (get_ownable_price board own_name)
 
-(* not tested*)
-let get_ownable_info_test name game board own_name expected_output =
-  name >:: fun _ ->
-  assert_equal expected_output (get_ownable_info game board own_name)
-
 let get_houses_test name game own_name expected_output =
   name >:: fun _ ->
   assert_equal expected_output (get_houses game own_name)
-
-(* don't need to test; used in constructing board *)
-let make_ownable_owned_test name game player own_name expected_output =
-  name >:: fun _ ->
-  assert_equal expected_output
-    ( make_ownable_owned game player own_name;
-      owner game own_name )
-
-(* don't need to test, used in construct board*)
-let make_ownable_mortgaged_test
-    name
-    game
-    player
-    own_name
-    expected_output =
-  name >:: fun _ ->
-  assert_equal expected_output
-    ( make_ownable_owned game player own_name;
-      is_mortgaged game own_name && owner game own_name = Some player )
 
 let make_ownable_mortgaged_exn name game player own_name expected_output
     =
@@ -662,7 +646,22 @@ let delete_player_test name game player =
   delete_player game player;
   assert (player_before <> player_exists game player)
 
-(* NOTE: Not testing landing_on_space *)
+let sell_house_test name game own_name =
+  name >:: fun _ ->
+  let houses_before = get_houses game own_name in
+  let houses_available_before = get_houses_available game in
+  sell_house game own_name true;
+  assert (
+    get_houses_available game = houses_available_before + 1
+    && houses_before - 1 = get_houses game own_name )
+
+let sell_all_test name game player =
+  name >:: fun _ ->
+  sell_all game player;
+  assert (
+    List.for_all
+      (fun x -> is_mortgaged game x)
+      (get_ownable_name_list player) )
 
 let p1 = make_player "p1"
 
@@ -692,7 +691,7 @@ let () =
 let () =
   add_num_houses_lst game_one
     [ "Connecticut Avenue"; "Vermont Avenue"; "Oriental Avenue" ]
-    true [ 4; 3; 4 ]
+    [ 4; 3; 4 ]
 
 let () = make_ownable_mortgaged game_one p1 "Reading Railroad"
 
@@ -713,7 +712,7 @@ let () =
 let () =
   add_num_houses_lst game_one
     [ "Kentucky Avenue"; "Indiana Avenue"; "Illinois Avenue" ]
-    true [ 4; 4; 4 ]
+    [ 4; 4; 4 ]
 
 let () = add_house game_one "Kentucky Avenue" false
 
@@ -744,7 +743,23 @@ let () =
       "Ventnor Avenue";
       "Atlantic Avenue";
     ]
-    true [ 1; 0; 5; 4; 4 ]
+    [ 1; 0; 5; 4; 4 ]
+
+let p1_sell = make_player "p1_sell"
+
+let p2_sell = make_player "p2_sell"
+
+let test_sell_game = init_game test_board [| p1_sell; p2_sell |]
+
+let () =
+  buy_ownable_lst test_sell_game test_board p1_sell
+    [ "Mediterranean Avenue"; "Baltic Avenue" ]
+
+let () =
+  buy_ownable_lst test_sell_game test_board p2_sell
+    [ "Reading Railroad"; "Water Works"; "Kentucky Avenue" ]
+
+let () = add_house test_sell_game "Kentucky Avenue" true
 
 (* Game Module Tests *)
 let game_tests =
@@ -760,6 +775,14 @@ let game_tests =
     current_player_test "Player 1 moves after Player 2 with 2 players"
       (next_player_help test_game_three)
       player1;
+    sell_house_test "p1_sell sells a house on Mediterranean Ave"
+      test_sell_game "Mediterranean Avenue";
+    do_tax_test "p1_sell lands on Income Tax" test_sell_game p1_sell
+      income_tax_space;
+    do_free_parking_test "p2_sell collects free parking after tax"
+      test_sell_game p2_sell;
+    sell_all_test "p2_sell mortgages all of their ownables"
+      test_sell_game p2_sell;
     player_exists_test "p1 exists in game_one" game_one p1 true;
     player_exists_test "player6 does not exist in game_one" game_one
       player6 false;

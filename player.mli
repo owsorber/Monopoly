@@ -10,10 +10,10 @@ type balance = int
 (** the type of location *)
 type location = int
 
-(** the type of property name*)
+(** the type of ownable name*)
 type ownable_name = string
 
-(** the type of property_name_list *)
+(** the type of ownable_name_list *)
 type ownable_name_list = ownable_name list
 
 (** the type of rolled_dice where each int is between 1 and 6 inclusive*)
