@@ -4,6 +4,8 @@ open Player
 open Board
 open Game
 open Input
+open Cards
+open Stockmarket
 
 (* General Helper Functions *)
 let pp_string s = "\"" ^ s ^ "\""
@@ -633,6 +635,10 @@ let has_houses_on_color_test name game player color expected_output =
   name >:: fun _ ->
   assert_equal expected_output (has_houses_on_color game player color)
 
+let goes_bankrupt_test name game player cost expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (goes_bankrupt game player cost)
+
 (* NOTE: Not testing landing_on_space *)
 
 let p1 = make_player "p1"
@@ -729,6 +735,14 @@ let game_tests =
     current_player_test "Player 1 moves after Player 2 with 2 players"
       (next_player_help test_game_three)
       player1;
+    player_exists_test "p1 exists in game_one" game_one p1 true;
+    player_exists_test "player6 does not exist in game_one" game_one
+      player6 false;
+    goes_bankrupt_test "p4 will go bankrupt if they have to pay $12000"
+      game_one p4 12000 true;
+    goes_bankrupt_test
+      "p1 will not go bankrupt if they have to pay $100" game_one p1 100
+      false;
     can_sell_hotel_test "p4 can sell a hotel on Marvin Gardens" game_one
       p4 "Marvin Gardens" true;
     can_sell_hotel_nohotel_exn
@@ -881,8 +895,48 @@ let input_tests = []
 
 (* Any Stockmarket Module Testing Helper Functions/Variables *)
 
+let market = Yojson.Basic.from_file "stocks.json" |> init_market
+
+let test_market = Yojson.Basic.from_file "stocks.json" |> init_market
+
+let () = update_market test_market
+
+let value_of_test name market stock expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (value_of market stock)
+    ~printer:string_of_int
+
+let value_of_num_shares_test name market stock num expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (value_of_num_shares market stock num)
+
+let percent_change_of_test name market stock expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (percent_change_of market stock)
+
+let stock_array_test name market expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (stock_array market) ~printer:print_arr
+
 (* Stockmarket Module Tests *)
-let stockmarket_tests = []
+let stockmarket_tests =
+  [
+    value_of_test "Initial value of Amazon is $1000" market "Amazon"
+      1000;
+    value_of_num_shares_test
+      "Initial value of 10 shares of CamlCoin is $100" market "CamlCoin"
+      10 100;
+    percent_change_of_test "Initial percent change is 0.00" market
+      "RPCC" 0.00;
+    value_of_test "Updated value of GME after one turn" test_market
+      "GME"
+      (int_of_float
+         (Float.round
+            ( 1000.
+            +. (1000. *. percent_change_of test_market "GME" /. 100.) )));
+    stock_array_test "All available stocks" market
+      [| "CamlCoin"; "Amazon"; "RPCC"; "GME"; "Snarly Hacker Co." |];
+  ]
 
 (* Test Suite *)
 let suite =
