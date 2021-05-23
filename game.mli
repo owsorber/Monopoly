@@ -245,6 +245,9 @@ val has_houses_on_color : t -> Player.t -> string -> bool
 (** [delete_player g p] removes player [p] from game [g]. *)
 val delete_player : t -> Player.t -> unit
 
+(** [player_exists g p] returns true iff player [p] is in game [g] *)
+val player_exists : t -> Player.t -> bool
+
 (** [goes_bankrupt g p c] is true iff player [p] is unable to pay a cost
     [c] in game [g] even after selling/mortgating all of its assets. *)
 val goes_bankrupt : t -> Player.t -> int -> bool
