@@ -17,7 +17,7 @@ let draw_color color x y w h =
   set_color black;
   draw_rect x y w h
 
-let rec write_name lst x y ed side=
+let rec write_name lst x y ed side =
   moveto x y;
   match lst with
   | [] -> ()
@@ -25,7 +25,9 @@ let rec write_name lst x y ed side=
       if String.length h <= 8 || ed then (
         draw_string h;
         write_name t x (y - 15) true false)
-      else if side then (draw_string h; write_name t x (y - 15) false false)
+      else if side then (
+        draw_string h;
+        write_name t x (y - 15) false false)
       else (
         draw_string (String.sub h 0 8);
         let t = ("-" ^ String.sub h 8 (String.length h - 8)) :: t in
@@ -34,70 +36,85 @@ let rec write_name lst x y ed side=
 (* returns a tuple of the bottom left cooridinates for space i, orianted *)
 let space_dim i l w =
   if i < 10 then (((11 - i) * w) + 3, l + (5 * w / 4))
-  else if i = 10 then (3, l + (5 * w / 4)) 
+  else if i = 10 then (3, l + (5 * w / 4))
   else if i < 20 then (3, ((i - 7) * w) + 15)
   else if i = 20 then (3, size_y () - (w / 2))
   else if i <= 30 then (((i - 19) * w) + 3, size_y () - (w / 2))
   else if i < 40 then (size_y () - l - (3 * w / 2), ((43 - i) * w) + 15)
   else (0, 0)
 
-let house_place i space_width board_y space_height= 
+let house_place i space_width board_y space_height =
   let x, y = space_dim i board_y space_width in
-  if i < 10 then x + 3, y + (space_height/10)
-  else if i < 20 then x + 3* space_height/4, y+3
-  else if i < 30 then x + 3, y - 3* space_height/4
-  else if i < 40 then x - space_height/4, y+3
+  if i < 10 then (x + 3, y + (space_height / 10))
+  else if i < 20 then (x + (3 * space_height / 4), y + 3)
+  else if i < 30 then (x + 3, y - (3 * space_height / 4))
+  else if i < 40 then (x - (space_height / 4), y + 3)
   else (0, 0)
 
+(* if i < 11 then ((i * space_width),(board_y + (3 * space_height / 4)))
+   else (if i < 21 then (((i-10) * space_width), (board_y + (11 *
+   space_width))) else (if i <31 then ((3 * space_height / 4), (board_y
+   + ((i-20) * space_width))) else ((11 * space_width), (board_y +
+   ((i-30) * space_width))))) *)
 
-  (* if i < 11 then ((i * space_width),(board_y + (3 * space_height / 4))) else 
-      (if i < 21 then (((i-10) * space_width), (board_y + (11 * space_width))) else
-        (if i <31 then ((3 * space_height / 4), (board_y + ((i-20) * space_width))) else ((11 * space_width),
-        (board_y + ((i-30) * space_width))))) *)
-
-
-let draw_house num x y h color= 
-set_color color; 
-let l = 7 in
-if h then 
-match num with 
-|1 -> fill_rect (x) (y+10) l l
-|2 -> fill_rect (x) (y+10) l l; fill_rect (x + 3*l/2) (y+10) l l 
-|3 -> fill_rect (x) (y+10) l l; fill_rect (x+3*l/2) (y+10) l l; 
-  fill_rect (x+ 6*l/2) (y+10) l l;
-|4 -> fill_rect (x) (y+10) l l; fill_rect (x+3*l/2) (y+10) l l; 
-  fill_rect (x+6*l/2) (y+10) l l;  fill_rect (x+ 9*l/2) (y+10) l l;
-| 5 -> fill_rect (x) (y+10) (l*5) l
-| _ -> fill_circle (x) (y+10) l 
-else 
-  match num with
-|1 -> fill_rect (x) (y) l l
-|2 -> fill_rect (x) (y) l l; fill_rect (x) (y-3*l/2) l l 
-|3 -> fill_rect (x) (y) l l; fill_rect (x) (y-3*l/2) l l; 
-  fill_rect (x) (y- 3*l) l l;
-|4 -> fill_rect (x) (y) l l; fill_rect (x) (y-3*l/2) l l; 
-  fill_rect (x) (y- 3*l) l l;  fill_rect (x) (y-9*l/2) l l;
-| 5 -> fill_rect (x) (y-9*l/2) l (l*5)
-| _ -> fill_circle (x) (y+10) l
+let draw_house num x y h color =
+  set_color color;
+  let l = 7 in
+  if h then
+    match num with
+    | 1 -> fill_rect x (y + 10) l l
+    | 2 ->
+        fill_rect x (y + 10) l l;
+        fill_rect (x + (3 * l / 2)) (y + 10) l l
+    | 3 ->
+        fill_rect x (y + 10) l l;
+        fill_rect (x + (3 * l / 2)) (y + 10) l l;
+        fill_rect (x + (6 * l / 2)) (y + 10) l l
+    | 4 ->
+        fill_rect x (y + 10) l l;
+        fill_rect (x + (3 * l / 2)) (y + 10) l l;
+        fill_rect (x + (6 * l / 2)) (y + 10) l l;
+        fill_rect (x + (9 * l / 2)) (y + 10) l l
+    | 5 -> fill_rect x (y + 10) (l * 5) l
+    | _ -> fill_circle x (y + 10) l
+  else
+    match num with
+    | 1 -> fill_rect x y l l
+    | 2 ->
+        fill_rect x y l l;
+        fill_rect x (y - (3 * l / 2)) l l
+    | 3 ->
+        fill_rect x y l l;
+        fill_rect x (y - (3 * l / 2)) l l;
+        fill_rect x (y - (3 * l)) l l
+    | 4 ->
+        fill_rect x y l l;
+        fill_rect x (y - (3 * l / 2)) l l;
+        fill_rect x (y - (3 * l)) l l;
+        fill_rect x (y - (9 * l / 2)) l l
+    | 5 -> fill_rect x (y - (9 * l / 2)) l (l * 5)
+    | _ -> fill_circle x (y + 10) l
 
 (* Draws houses and hotels *)
-let rec make_house board_y ownables_lst g space_width space_height color=
+let rec make_house board_y ownables_lst g space_width space_height color
+    =
   match ownables_lst with
   | [] -> ()
-  | n :: t -> 
-    (let board = Game.get_board g in
-    let sp = Board.location_from_space_name board n in
-    if sp < 10 || (sp >20 && sp<30) then (let x,y = house_place sp space_width board_y space_height in 
-    draw_house (Game.get_houses g n) x y true color; make_house board_y t g 
-    space_width space_height color;
-    set_color color;)
-  else 
-    let x,y = house_place sp space_width board_y space_height in 
-    set_color color;
-    draw_house (Game.get_houses g n) x y false color); make_house board_y t g 
-    space_width space_height color
+  | n :: t ->
+      (let board = Game.get_board g in
+       let sp = Board.location_from_space_name board n in
+       if sp < 10 || (sp > 20 && sp < 30) then (
+         let x, y = house_place sp space_width board_y space_height in
+         draw_house (Game.get_houses g n) x y true color;
+         make_house board_y t g space_width space_height color;
+         set_color color)
+       else
+         let x, y = house_place sp space_width board_y space_height in
+         set_color color;
+         draw_house (Game.get_houses g n) x y false color);
+      make_house board_y t g space_width space_height color
 
-let rec make_piece l w p c1 c2 c3 pos g height=
+let rec make_piece l w p c1 c2 c3 pos g height =
   match p with
   | [] -> ()
   | h :: t ->
@@ -111,7 +128,7 @@ let rec make_piece l w p c1 c2 c3 pos g height=
       if String.length (Player.get_player_id h) > 4 then
         draw_string (String.sub (Player.get_player_id h) 0 4)
       else draw_string (Player.get_player_id h);
-      let color = (rgb c1 c2 c3) in
+      let color = rgb c1 c2 c3 in
       make_house l (Player.get_ownable_name_list h) g w height color;
 
       make_piece l w t
@@ -132,13 +149,19 @@ let create_console () =
 
 let make_label board l w =
   for i = 0 to 39 do
-    let x,y = space_dim i l w in
-    if i == 10 ||i == 20 || i == 30 || i == 0 then 
-      write_name (String.split_on_char ' ' (Board.space_name board i)) x y true false
-  else if i > 10 && i < 20 || i > 30 then write_name (String.split_on_char ' ' 
-    (Board.space_name board i)) x y false true
+    let x, y = space_dim i l w in
+    if i == 10 || i == 20 || i == 30 || i == 0 then
+      write_name
+        (String.split_on_char ' ' (Board.space_name board i))
+        x y true false
+    else if (i > 10 && i < 20) || i > 30 then
+      write_name
+        (String.split_on_char ' ' (Board.space_name board i))
+        x y false true
     else
-    write_name (String.split_on_char ' ' (Board.space_name board i)) x y false false
+      write_name
+        (String.split_on_char ' ' (Board.space_name board i))
+        x y false false
   done
 
 let make_board g =
@@ -147,11 +170,11 @@ let make_board g =
     (size_y () - (size_x () / 2))
     (size_x () / 2)
     (size_x () / 2);
-    let space_width = size_x () / 26 in
-    let space_height = space_width * 2 in
-    let board_y = size_y () - (size_x () / 2) in
-    let color_h = space_height / 4 in
-    set_line_width 2;
+  let space_width = size_x () / 26 in
+  let space_height = space_width * 2 in
+  let board_y = size_y () - (size_x () / 2) in
+  let color_h = space_height / 4 in
+  set_line_width 2;
   set_color black;
   draw_rect 0 board_y space_height space_height;
   draw_rect 0 (board_y + (11 * space_width)) space_height space_height;
@@ -248,20 +271,21 @@ let make_board g =
     63 212 194 [] g space_height;
   moveto x y
 
-
-  let draw_stock g x y w h= 
+let draw_stock stock_name stock_value x y w h =
   set_color (rgb 216 221 227);
   fill_rect x y w h;
   set_color black;
   draw_rect x y w h;
-  moveto (x + w/10) (y+ 2*h/3);
-  draw_string "Stock:";
-  moveto (x + w/10) (y+ h/3);
-  draw_string "Value:"
+  moveto (x + (w / 10)) (y + (2 * h / 3));
+  draw_string ("Stock: " ^ stock_name);
+  moveto (x + (w / 10)) (y + (h / 3));
+  draw_string ("Value: " ^ string_of_int stock_value)
 
-
-
-  let make_stockmarket g = 
+let make_stockmarket m =
+  let stock_names = Stockmarket.stock_array m in
+  let stock_values =
+    Array.map (fun name -> Stockmarket.value_of m name) stock_names
+  in
   let starting_x = current_x () in
   let starting_y = current_y () in
   let height = size_y () - (size_x () / 2) in
@@ -272,21 +296,27 @@ let make_board g =
   set_color black;
   draw_rect 0 0 width height;
   set_line_width 1;
-  let boxh = (height-2*height/5) in
-  let boxy = (height - boxh)/4 in 
+  let boxh = height - (2 * height / 5) in
+  let boxy = (height - boxh) / 4 in
   (* let boxy = (height/5) in *)
-  let boxgap = width/50 in
-  let boxw = (width -boxgap*6)/5 in
-    moveto (width/2 - width/15) (height - height/5);
-    draw_string "Stock Tracker";
-    lineto (width/2 - width/15) (height - height/5);
-    draw_stock g boxgap boxy boxw boxh;
-    draw_stock g (2*boxgap + boxw) boxy boxw boxh;
-    draw_stock g (3*boxgap + 2*boxw ) boxy boxw boxh;
-    draw_stock g (4*boxgap + 3*boxw ) boxy boxw boxh;
-    draw_stock g (5*boxgap + 4*boxw ) boxy boxw boxh;
+  let boxgap = width / 50 in
+  let num_stocks =
+    let len = Array.length stock_names in
+    if len < 5 then len else 5
+  in
+  let boxw = (width - (boxgap * (num_stocks + 1))) / num_stocks in
+  moveto ((width / 2) - (width / 15)) (height - (height / 5));
+  draw_string "Stock Tracker";
+  lineto ((width / 2) - (width / 15)) (height - (height / 5));
+  Array.iteri
+    (fun i name ->
+      if i <= num_stocks then
+        draw_stock name stock_values.(i)
+          (((i + 1) * boxgap) + (i * boxw))
+          boxy boxw boxh)
+    stock_names;
+  moveto starting_x starting_y
 
-    moveto starting_x starting_y
 let wipe_console () =
   set_color black;
   fill_rect (size_x () / 2) 0 (size_x () / 2) (size_y ())
@@ -310,20 +340,20 @@ let input_print s c =
   moveto ((size_x () / 2) + 10) (current_y () + 20);
   update_console s c
 
-let create_window g =
+let create_window g m =
   open_graph "";
   resize_window 1440 810;
   set_window_title "Monopoly";
   create_console ();
   make_board g;
-  make_stockmarket g
+  make_stockmarket m
 (* play_sound "intro.wav" *)
 
 let wipe_game () =
   set_color white;
   fill_rect 0 0 (size_x () / 2) (size_y ())
 
-let update_frame g =
+let update_frame g m =
   wipe_game ();
   make_board g;
-  make_stockmarket g
+  make_stockmarket m

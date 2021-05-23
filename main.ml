@@ -13,7 +13,7 @@ let take_action result p g phase =
         Game.next_player g;
         red_print "Press enter to begin next player's turn. ";
         let _ = read_line () in
-        true )
+        true)
       else true
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move.";
@@ -24,7 +24,7 @@ let rec phase_2 b g p m =
   match result with
   | Input.Legal r ->
       Input.get_action r p;
-      Gui.update_frame g;
+      Gui.update_frame g m;
       Input.get_end r
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move.";
@@ -41,7 +41,7 @@ let rec double_turn b g p i m =
 
   let result = Input.turn p b g true cards m in
   let _ = take_action result p g true in
-  Gui.update_frame g;
+  Gui.update_frame g m;
   match result with
   | Input.Legal r -> (
       match Player.quarantine p with
@@ -56,8 +56,8 @@ let rec double_turn b g p i m =
                 "you pushed your luck and rolled doubles three \
                  times... given this luck we're worried you might have \
                  covid. You have to go to quarantine";
-              Player.go_to_quarantine_status p ) )
-          else () )
+              Player.go_to_quarantine_status p))
+          else ())
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move.";
       double_turn b g p i m
@@ -67,13 +67,13 @@ let rec phase_1 b g p m =
   match result with
   | Input.Legal r ->
       Input.get_action r p;
-      Gui.update_frame g;
+      Gui.update_frame g m;
       let double = Input.get_double r in
       let bankrupt = not (Game.player_exists g p) in
       if double && not bankrupt then (
         green_print "Yay! You rolled doubles. You may roll again!";
         double_turn b g p 1 m;
-        bankrupt )
+        bankrupt)
       else bankrupt
   | Input.Illegal ->
       red_print "Illegal move. Please enter a valid move.";
@@ -94,12 +94,12 @@ let rec turn_handler b g m =
       done;
     Game.next_player g;
     Stockmarket.update_market m;
-    turn_handler b g m )
+    turn_handler b g m)
   else (
     green_print "There is only one player remaining.";
     magenta_print
       ("Congratulations! " ^ Player.get_player_id p ^ " won!");
-    Input.graceful_shutdown b g )
+    Input.graceful_shutdown b g)
 
 (** [get_player_count ()] prompts the user to enter in the number of
     players until a valid (positive integer) input is read. *)
@@ -109,7 +109,7 @@ let rec get_player_count () =
     let n = int_of_string (read_line ()) in
     if n < 1 then (
       print_string "Invalid input. Please enter a positive integer. \n";
-      get_player_count () )
+      get_player_count ())
     else
       match n with
       | 1 ->
@@ -133,9 +133,9 @@ let default_game () =
   for i = 1 to n do
     players.(i - 1) <-
       Player.make_player
-        ( terminal_yellow_print
-            ("Enter Player " ^ string_of_int i ^ "'s name: ");
-          read_line () )
+        (terminal_yellow_print
+           ("Enter Player " ^ string_of_int i ^ "'s name: ");
+         read_line ())
   done;
   Game.init_game board players
 
@@ -169,7 +169,7 @@ let rec buy_houses name_lst board game =
       | Some (Board.Property _) ->
           Game.add_house game h false;
           buy_houses t board game
-      | _ -> buy_houses t board game )
+      | _ -> buy_houses t board game)
 
 let rec buy_houses' game name_lst =
   match name_lst with
@@ -238,10 +238,10 @@ let rec play_game () =
       Board.init_board (Yojson.Basic.from_file "board.json")
     in
     let g = game () in
-    Gui.create_window g;
     let m =
       Stockmarket.init_market (Yojson.Basic.from_file "stocks.json")
     in
+    Gui.create_window g m;
     turn_handler board g m
   with Invalid_argument _ | Failure _ ->
     terminal_red_print "Please enter a valid index.\n";
