@@ -8,7 +8,7 @@ exception NotValidCard
 
 (* Raised when a balance update attempt with int cost is made such that
    we must potentially bankrupt the player. *)
-exception MustCheckBankrupt of Player.t * int
+exception MustCheckBankrupt of int
 
 type t = {
   mutable chance_deck : card array;

@@ -239,18 +239,21 @@ let rec landing p g space_name r cards (modRent, mult) =
           try Game.do_tax g p space
           with Game.MustCheckBankrupt ->
             do_potential_bankruptcy g p t.cost p)
-      | Chance ->
+      | Chance -> (
           let location = Player.get_location p in
           magenta_print "You landed on Chance! Drawing a card...";
           let card = Cards.draw_chance_card cards in
           magenta_print "Your card says:";
           cyan_print card.message;
-          let modRent, mult = Cards.do_card card p b g in
-          if Player.get_location p <> location then
-            landing p g
-              (Board.space_name b (Player.get_location p))
-              r cards (modRent, mult)
-          else ()
+          try
+            let modRent, mult = Cards.do_card card p b g in
+            if Player.get_location p <> location then
+              landing p g
+                (Board.space_name b (Player.get_location p))
+                r cards (modRent, mult)
+            else ()
+          with Cards.MustCheckBankrupt c ->
+            do_potential_bankruptcy g p c p)
       | CommunityChest ->
           let location = Player.get_location p in
           magenta_print

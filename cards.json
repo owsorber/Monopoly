@@ -61,11 +61,6 @@
       "extra": "Boardwalk"
     },
     {
-      "title": "You have been elected Chairman of the Board - Pay each player $50",
-      "action": "removefundstoplayers",
-      "extra": "50"
-    },
-    {
       "title": "Your building loan matures - Collect $150",
       "action": "addfunds",
       "extra": "150"
@@ -96,11 +91,6 @@
       "title": "Go to Quarantine - Go directly to Quarantine - Do not pass Go - Do not collect $200",
       "action": "quarantine",
       "extra": "go to"
-    },
-    {
-      "title": "Grand Opera Night - Collect $50 from every player for opening night seats",
-      "action": "addfundsfromplayers",
-      "extra": "50"
     },
     {
       "title": "Holiday Fund matures - Receive $100",

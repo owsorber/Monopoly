@@ -8,7 +8,7 @@ type card = {
 
 exception NotValidCard
 
-exception MustCheckBankrupt of Player.t * int
+exception MustCheckBankrupt of int
 
 (* make deck an array and stack is a shuffled list of deck's values *)
 type t = {
@@ -99,8 +99,7 @@ let move_card loc p can_pass (loc_type, rent_mult) =
 let change_funds p g funds =
   let fund_int = int_of_string funds in
   (try Player.update_balance p fund_int
-   with Player.BalanceBelowZero ->
-     raise (MustCheckBankrupt (p, fund_int)));
+   with Player.BalanceBelowZero -> raise (MustCheckBankrupt fund_int));
   (0, 1)
 
 let quarantine_card p extra =
@@ -147,26 +146,7 @@ let property_charges game player extra =
     -((fst num * List.hd list) + (snd num * List.nth list 1))
   in
   (try Player.update_balance player cost
-   with Player.BalanceBelowZero ->
-     raise (MustCheckBankrupt (player, cost)));
-  (0, 1)
-
-let add_others_funds player game amount =
-  Array.iter
-    (fun p ->
-      try Player.pay p player amount
-      with Player.BalanceBelowZero ->
-        raise (MustCheckBankrupt (p, amount)))
-    (Game.get_all_players game);
-  (0, 1)
-
-let receive_others_funds player game amount =
-  Array.iter
-    (fun p ->
-      try Player.pay player p amount
-      with Player.BalanceBelowZero ->
-        raise (MustCheckBankrupt (p, amount)))
-    (Game.get_all_players game);
+   with Player.BalanceBelowZero -> raise (MustCheckBankrupt cost));
   (0, 1)
 
 let do_card card p board game =
@@ -184,8 +164,4 @@ let do_card card p board game =
         p false ("", 1)
   | "movenearest" -> move_nearest p board card.extra game
   | "propertycharges" -> property_charges game p card.extra
-  | "removefundstoplayers" ->
-      receive_others_funds p game (int_of_string card.extra)
-  | "addfundsfromplayers" ->
-      add_others_funds p game (int_of_string card.extra)
   | _ -> raise NotValidCard
