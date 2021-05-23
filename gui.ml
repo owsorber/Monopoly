@@ -271,8 +271,16 @@ let make_board g =
     63 212 194 [] g space_height;
   moveto x y
 
-let draw_stock stock_name stock_value x y w h =
-  set_color (rgb 216 221 227);
+let stock_change_color percent_change =
+  let other_change = int_of_float (percent_change /. 100. *. 255.) in
+  if percent_change < 0. then rgb 255 other_change other_change
+  else if percent_change > 0. then rgb other_change 255 other_change
+  else rgb 216 221 227
+
+let draw_stock stock_name stock_value percent_change x y w h =
+  (* set_color (rgb 216 221 227); *)
+  (* print_endline (string_of_float percent_change); *)
+  set_color (stock_change_color percent_change);
   fill_rect x y w h;
   set_color black;
   draw_rect x y w h;
@@ -286,6 +294,11 @@ let make_stockmarket m =
   let stock_values =
     Array.map (fun name -> Stockmarket.value_of m name) stock_names
   in
+  let stock_changes =
+    Array.map
+      (fun name -> Stockmarket.percent_change_of m name)
+      stock_names
+  in
   let starting_x = current_x () in
   let starting_y = current_y () in
   let height = size_y () - (size_x () / 2) in
@@ -298,7 +311,6 @@ let make_stockmarket m =
   set_line_width 1;
   let boxh = height - (2 * height / 5) in
   let boxy = (height - boxh) / 4 in
-  (* let boxy = (height/5) in *)
   let boxgap = width / 50 in
   let num_stocks =
     let len = Array.length stock_names in
@@ -311,7 +323,7 @@ let make_stockmarket m =
   Array.iteri
     (fun i name ->
       if i <= num_stocks then
-        draw_stock name stock_values.(i)
+        draw_stock name stock_values.(i) stock_changes.(i)
           (((i + 1) * boxgap) + (i * boxw))
           boxy boxw boxh)
     stock_names;
@@ -332,7 +344,7 @@ let update_console s c =
   draw_string s;
   moveto ((size_x () / 2) + 10) (current_y () - 20);
   if current_y () < 0 then scroll () else ();
-  Unix.sleepf 0.05
+  Unix.sleepf 0.025
 
 let input_print s c =
   set_color black;

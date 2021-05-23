@@ -94,6 +94,7 @@ let rec turn_handler b g m =
       done;
     Game.next_player g;
     Stockmarket.update_market m;
+    Gui.update_frame g m;
     turn_handler b g m)
   else (
     green_print "There is only one player remaining.";
