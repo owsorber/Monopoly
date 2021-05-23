@@ -937,11 +937,6 @@ let game_tests =
       "Light Blue" true;
   ]
 
-(* Any Input Module Testing Helper Functions/Variables *)
-
-(* Input Module Tests *)
-let input_tests = []
-
 (* Any Stockmarket Module Testing Helper Functions/Variables *)
 
 let market = Yojson.Basic.from_file "stocks.json" |> init_market
@@ -991,12 +986,6 @@ let stockmarket_tests =
 let suite =
   "test suite for Monopoly"
   >::: List.flatten
-         [
-           player_tests;
-           board_tests;
-           game_tests;
-           input_tests;
-           stockmarket_tests;
-         ]
+         [ player_tests; board_tests; game_tests; stockmarket_tests ]
 
 let _ = run_test_tt_main suite
