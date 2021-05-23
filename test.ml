@@ -100,7 +100,19 @@ let swap_properties_test name p1 p2 swap expected1 expected2 =
     get_ownable_name_list p1 = expected1
     && get_ownable_name_list p2 = expected2 )
 
+let get_stocks_test name player expected_output =
+  name >:: fun _ -> assert_equal expected_output (get_stocks player)
+
+let sell_stocks_shares_exn name player stock num cost expected_output =
+  name >:: fun _ ->
+  assert_raises NotEnoughShares (fun () ->
+      sell_stocks player stock num cost)
+
 let player1 = make_player "Kira"
+
+let () = buy_stocks player1 "Amazon" 5 100
+
+let () = sell_stocks player1 "Amazon" 2 100
 
 let player2 = make_player "player2"
 
@@ -164,6 +176,11 @@ let player_tests =
       player2 1600;
     get_location_test "Player 2 location after one roll" player2
       random_roll_sum;
+    get_stocks_test
+      "Player 1 has 3 stocks of Amazon after buying/selling" player1
+      [| ("Amazon", 3) |];
+    sell_stocks_shares_exn "Player 1 cannot sell 4 Amazon stocks"
+      player1 "Amazon" 4 100 [||];
     passes_go_test "Player 2 will not pass go with 1 & 1" (1, 1) player2
       false;
     get_balance_test "Player 3 balance after go passed" player3 1700;
@@ -639,6 +656,12 @@ let goes_bankrupt_test name game player cost expected_output =
   name >:: fun _ ->
   assert_equal expected_output (goes_bankrupt game player cost)
 
+let delete_player_test name game player =
+  name >:: fun _ ->
+  let player_before = player_exists game player in
+  delete_player game player;
+  assert (player_before <> player_exists game player)
+
 (* NOTE: Not testing landing_on_space *)
 
 let p1 = make_player "p1"
@@ -649,7 +672,9 @@ let p3 = make_player "p3"
 
 let p4 = make_player "p4"
 
-let game_one = init_game test_board [| p1; p2; p3; p4 |]
+let p5 = make_player "p5"
+
+let game_one = init_game test_board [| p1; p2; p3; p4; p5 |]
 
 let () = update_balance p1 100000
 
@@ -743,6 +768,7 @@ let game_tests =
     goes_bankrupt_test
       "p1 will not go bankrupt if they have to pay $100" game_one p1 100
       false;
+    delete_player_test "Deleting p5" game_one p5;
     can_sell_hotel_test "p4 can sell a hotel on Marvin Gardens" game_one
       p4 "Marvin Gardens" true;
     can_sell_hotel_nohotel_exn
