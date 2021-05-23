@@ -8,6 +8,42 @@ open Input
 (* General Helper Functions *)
 let pp_string s = "\"" ^ s ^ "\""
 
+let print_arr arr = Array.fold_left (fun x y -> x ^ y) "" arr
+
+(* buys a list of ownables for a player*)
+let buy_ownable_lst game board player name_lst =
+  let rec modify_property_lst names =
+    match names with
+    | [] -> ()
+    | h :: t ->
+        buy_ownable player h (get_ownable_price board h);
+        modify_property_lst t
+  in
+  modify_property_lst name_lst;
+  make_own_lst_owned game player name_lst
+
+(* adds [num] houses to property [name] *)
+let rec add_num_houses game name adding_house num =
+  match num with
+  | 0 -> ()
+  | n ->
+      if n = 5 then add_house game name false
+      else add_house game name true;
+      add_num_houses game name adding_house (n - 1)
+
+(* adds a list of houses (with num houses) to properties. Ex: name_lst =
+   [A;B;C;D] with num_lst [1;2;2;1] adds 1 house to A and D, and 2
+   houses to B and C. *)
+let rec add_num_houses_lst game name_lst adding_house num_lst =
+  match name_lst with
+  | [] -> ()
+  | h :: t -> (
+      match num_lst with
+      | [] -> ()
+      | n :: t1 ->
+          add_num_houses game h adding_house n;
+          add_num_houses_lst game t adding_house t1 )
+
 (* Any Player Module Testing Helper Functions/Variables *)
 
 let test_board = Yojson.Basic.from_file "board.json" |> init_board
@@ -55,6 +91,13 @@ let pay_test name p1 p2 amt =
     p1_balance - amt = get_balance p1
     && p2_balance + amt = get_balance p2 )
 
+let swap_properties_test name p1 p2 swap expected1 expected2 =
+  name >:: fun _ ->
+  swap_properties p1 p2 swap;
+  assert (
+    get_ownable_name_list p1 = expected1
+    && get_ownable_name_list p2 = expected2 )
+
 let player1 = make_player "Kira"
 
 let player2 = make_player "player2"
@@ -95,6 +138,18 @@ let () = go_to_quarantine_status player6
 
 let () = leave_quarantine player6
 
+let () = move_player_to player6 15 true
+
+let test_game_player = init_game test_board [| player5; player6 |]
+
+let () =
+  buy_ownable_lst test_game_player test_board player5
+    [ "Mediterranean Avenue"; "Baltic Avenue"; "Water Works" ]
+
+let () =
+  buy_ownable_lst test_game_player test_board player6
+    [ "Connecticut Avenue"; "St. Charles Place"; "Virginia Avenue" ]
+
 (* Player Module Tests *)
 let player_tests =
   [
@@ -126,6 +181,20 @@ let player_tests =
       "After rolling a 5, player1 is projected to be on Reading \
        Railroad"
       (2, 3) player1 test_board "Reading Railroad";
+    swap_properties_test
+      "Swaps Water Works and Baltic Avenue in player lists" player5
+      player6
+      [ "Baltic Avenue"; "Water Works" ]
+      [ "Mediterranean Avenue" ]
+      [
+        "Water Works";
+        "Baltic Avenue";
+        "Virginia Avenue";
+        "St. Charles Place";
+        "Connecticut Avenue";
+      ];
+    get_location_test "Player 6 directly moved to location 15" player6
+      15;
   ]
 
 (* Any Board Module Testing Helper Functions/Variables *)
@@ -214,7 +283,6 @@ let board_tests =
   ]
 
 (* Any Game Module Testing Helper Functions/Variables *)
-
 let test_game =
   init_game test_board [| player1; player2; player3; player4 |]
 
@@ -228,6 +296,31 @@ let () = next_player test_game_three (* curr player is now player2 *)
 let board = get_board test_game
 
 let cur_player = current_player test_game
+
+let get_board_test name game expected_output =
+  name >:: fun _ -> assert_equal expected_output (get_board game)
+
+let get_properties_test name game player expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (get_properties game player)
+
+let get_net_worth_test name game player expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (get_net_worth game player)
+    ~printer:string_of_int
+
+let get_houses_available_test name game expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (get_houses_available game)
+    ~printer:string_of_int
+
+let get_hotels_available_test name game expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (get_hotels_available game)
+    ~printer:string_of_int
 
 let current_player_test name game expected_output =
   name >:: fun _ -> assert_equal expected_output (current_player game)
@@ -354,6 +447,61 @@ let can_add_house_mortgaged_exn
   assert_raises (CannotAddHouse "Mortgaged Property on Color")
     (fun () -> can_add_house game player own_name)
 
+let can_trade_test name game player own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (can_trade game player own_name)
+
+let all_can_trade_test name game player expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (all_can_trade game player)
+    ~printer:print_arr
+
+let can_sell_house_test name game player own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (can_sell_house game player own_name)
+
+let can_sell_house_even_build_exn
+    name
+    game
+    player
+    own_name
+    expected_output =
+  name >:: fun _ ->
+  assert_raises (CannotSellHouse "Even Build") (fun () ->
+      can_sell_house game player own_name)
+
+let can_sell_house_hotel_exn name game player own_name expected_output =
+  name >:: fun _ ->
+  assert_raises (CannotSellHouse "Hotel on Property") (fun () ->
+      can_sell_house game player own_name)
+
+let can_sell_house_nohouse_exn name game player own_name expected_output
+    =
+  name >:: fun _ ->
+  assert_raises (CannotSellHouse "No houses on Property") (fun () ->
+      can_sell_house game player own_name)
+
+let all_can_sell_house_test name game player expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output
+    (all_can_sell_house game player)
+    ~printer:print_arr
+
+let can_sell_hotel_test name game player own_name expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (can_sell_hotel game player own_name)
+
+let can_sell_hotel_nohotel_exn name game player own_name expected_output
+    =
+  name >:: fun _ ->
+  assert_raises (CannotSellHotel "No hotel on Property") (fun () ->
+      can_sell_hotel game player own_name)
+
+let all_can_sell_hotel_test name game player expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (all_can_sell_hotel game player)
+
 let house_price_test name game player own_name expected_output =
   name >:: fun _ ->
   assert_equal expected_output (house_price game player own_name)
@@ -362,7 +510,9 @@ let all_can_buy_house_test name game player expected_output =
   name >:: fun _ ->
   assert_equal expected_output (all_can_buy_house game player)
 
-let print_arr arr = Array.fold_left (fun x y -> x ^ y) "" arr
+let player_exists_test name game player expected_output =
+  name >:: fun _ ->
+  assert_equal expected_output (player_exists game player)
 
 let all_can_buy_hotel_test name game player expected_output =
   name >:: fun _ ->
@@ -499,36 +649,6 @@ let () = update_balance p1 100000
 
 let () = update_balance p4 10000
 
-(* buys a list of ownables for a player*)
-let rec buy_ownable_lst game board player name_lst =
-  match name_lst with
-  | [] -> ()
-  | h :: t ->
-      buy_ownable player h (get_ownable_price board h);
-      make_ownable_owned game player h;
-      buy_ownable_lst game board player t
-
-(* adds [num] houses to property [name] *)
-let rec add_num_houses game name adding_house num =
-  match num with
-  | 0 -> ()
-  | n ->
-      add_house game name adding_house;
-      add_num_houses game name adding_house (n - 1)
-
-(* adds a list of houses (with num houses) to properties. Ex: name_lst =
-   [A;B;C;D] with num_lst [1;2;2;1] adds 1 house to A and D, and 2
-   houses to B and C. *)
-let rec add_num_houses_lst game name_lst adding_house num_lst =
-  match name_lst with
-  | [] -> ()
-  | h :: t -> (
-      match num_lst with
-      | [] -> ()
-      | n :: t1 ->
-          add_num_houses game h adding_house n;
-          add_num_houses_lst game t adding_house t1 )
-
 let () =
   buy_ownable_lst game_one test_board p1
     [
@@ -593,11 +713,13 @@ let () =
       "Ventnor Avenue";
       "Atlantic Avenue";
     ]
-    true [ 2; 0; 5; 4; 4 ]
+    true [ 1; 0; 5; 4; 4 ]
 
 (* Game Module Tests *)
 let game_tests =
   [
+    get_board_test "Game uses test_board as a board" test_game
+      test_board;
     get_all_players_test "get all four players in test game" test_game
       [| player1; player2; player3; player4 |];
     current_player_test "Player 1 starts the game" test_game player1;
@@ -607,6 +729,50 @@ let game_tests =
     current_player_test "Player 1 moves after Player 2 with 2 players"
       (next_player_help test_game_three)
       player1;
+    can_sell_hotel_test "p4 can sell a hotel on Marvin Gardens" game_one
+      p4 "Marvin Gardens" true;
+    can_sell_hotel_nohotel_exn
+      "p2 does not have a hotel on Virginia Ave" game_one p2
+      "Virginia Avenue" false;
+    all_can_sell_hotel_test
+      "p3 can sell hotels on Kentucky and Illinois Ave" game_one p3
+      [| "Illinois Avenue"; "Kentucky Avenue" |];
+    can_sell_house_test "Player 1 can sell a house on Connecticut Ave"
+      game_one p1 "Connecticut Avenue" true;
+    can_sell_house_even_build_exn
+      "Player 4 cannot sell a house on Ventnor due to even build"
+      game_one p4 "Ventnor Avenue" false;
+    can_sell_house_hotel_exn "Player 4 has a hotel on Marvin Gardens"
+      game_one p4 "Marvin Gardens" false;
+    can_sell_house_nohouse_exn "Player 2 has no houses on Virginia Ave"
+      game_one p2 "Virginia Avenue" false;
+    all_can_sell_house_test "p4 can sell houses on Park Place" game_one
+      p4 [| "Park Place" |];
+    can_trade_test "Player 4 can trade Boardwalk" game_one p4
+      "Boardwalk" true;
+    can_trade_test "Player 4 cannot trade Ventnor Avenue" game_one p4
+      "Ventnor Avenue" false;
+    all_can_trade_test "Player 1 cannot trade any properties" game_one
+      p1 [||];
+    all_can_trade_test
+      "Player 4 can trade Baltic, Boardwalk and N.C. Ave., and Pacific \
+       Ave"
+      game_one p4
+      [|
+        "Pacific Avenue";
+        "North Carolina Avenue";
+        "Boardwalk";
+        "Baltic Avenue";
+      |];
+    get_net_worth_test "Player 4 has $11250 worth in assets" game_one p4
+      11150;
+    get_properties_test
+      "p3 owns Kentucky, Indiana, and Illinois Avenues" game_one p3
+      [ "Illinois Avenue"; "Indiana Avenue"; "Kentucky Avenue" ];
+    get_houses_available_test "8 Houses available in game_one" game_one
+      8;
+    get_hotels_available_test "9 Hotels available in game_one" game_one
+      9;
     get_free_parking_test "A game starts with $0 free parking" game_one
       0;
     get_rent_test
@@ -618,9 +784,8 @@ let game_tests =
       "Landing on a railroad where the owner owns two costs $50"
       game_one 25 (2, 3) 50;
     get_rent_test
-      "Landing on Park Place with 2 houses and owner monopoly costs \
-       $500"
-      game_one 37 (1, 2) 500;
+      "Landing on Park Place with 1 house and owner monopoly costs $500"
+      game_one 37 (1, 2) 175;
     get_rent_test
       "Landing on Boardwalk with 0 houses and owner monopoly costs $100"
       game_one 39 (1, 2) 100;
