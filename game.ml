@@ -532,33 +532,37 @@ let rec get_rent g board_location roll =
   let o = Board.space_name board board_location in
   let o_status =
     try get_own_status g o
-    with NotOwnableName ->
-      failwith
-        "Get rent supplied a board location that isn't an ownable."
+    with NotOwnableName -> raise NotOwnableSpace
   in
   match o_status with
-  | Property status -> (
-      match status with
-      | P_Owned (player, houses) -> (
-          match space with
-          | Board.Property p ->
-              if houses = 0 && has_monopoly g player p.color then
-                (* double rent for monopoly with zero houses *)
-                2 * p.rent.(0)
-              else p.rent.(houses)
-          | _ -> failwith "Ownable Status has Incorrect Ownable Type")
-      | _ -> 0)
-  | Utility status -> (
-      match status with
-      | U_Owned player ->
-          let dice_sum = fst roll + snd roll in
-          let both_utilities = has_both_utilities g player in
-          if both_utilities then 10 * dice_sum else 4 * dice_sum
-      | _ -> 0)
-  | Railroad status -> (
-      match status with
-      | RR_Owned player -> 25 * num_rrs_owned g player
-      | _ -> 0)
+  | Property status -> get_property_rent g status space
+  | Utility status -> get_utility_rent g status roll
+  | Railroad status -> get_railroad_rent g status roll
+
+and get_property_rent g status space =
+  match status with
+  | P_Owned (player, houses) -> (
+      match space with
+      | Board.Property p ->
+          if houses = 0 && has_monopoly g player p.color then
+            (* double rent for monopoly with zero houses *)
+            2 * p.rent.(0)
+          else p.rent.(houses)
+      | _ -> failwith "Ownable Status has Incorrect Ownable Type")
+  | _ -> 0
+
+and get_utility_rent g status roll =
+  match status with
+  | U_Owned player ->
+      let dice_sum = fst roll + snd roll in
+      let both_utilities = has_both_utilities g player in
+      if both_utilities then 10 * dice_sum else 4 * dice_sum
+  | _ -> 0
+
+and get_railroad_rent g status roll =
+  match status with
+  | RR_Owned player -> 25 * num_rrs_owned g player
+  | _ -> 0
 
 (* makes all of a player's ownables available *)
 let rec make_player_ownables_available g p = function
@@ -574,25 +578,17 @@ let rec net_worth_helper acc g ownables =
   | h :: t ->
       if is_mortgaged g h then net_worth_helper acc g t
       else
-        let worth =
-          match get_own_status g h with
-          | Property p -> (
-              match p with
-              | P_Owned (player, houses) ->
-                  let house_price = house_price g player h in
-                  (houses * house_price / 2)
-                  + (get_ownable_price board h / 2)
-              | _ -> failwith "Property Not Owned")
-          | Utility u -> (
-              match u with
-              | U_Owned player -> get_ownable_price board h / 2
-              | _ -> failwith "Utility Not Owned")
-          | Railroad r -> (
-              match r with
-              | RR_Owned player -> get_ownable_price board h / 2
-              | _ -> failwith "Railroad Not Owned")
-        in
+        let worth = calc_worth g board h in
         net_worth_helper (acc + worth) g t
+
+and calc_worth g board o =
+  match get_own_status g o with
+  | Property (P_Owned (player, houses)) ->
+      let house_price = house_price g player o in
+      (houses * house_price / 2) + (get_ownable_price board o / 2)
+  | Utility (U_Owned player) -> get_ownable_price board o / 2
+  | Railroad (RR_Owned player) -> get_ownable_price board o / 2
+  | _ -> raise NotOwnableName
 
 let get_net_worth g p =
   Player.get_ownable_name_list p
