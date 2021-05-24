@@ -59,9 +59,9 @@ let roll () =
     (Random.self_init ();
      Random.int 6 + 1) )
 
-let update_balance player i =
-  if player.balance + i < 0 then raise BalanceBelowZero
-  else player.balance <- player.balance + i
+let update_balance player amount =
+  if player.balance + amount < 0 then raise BalanceBelowZero
+  else player.balance <- player.balance + amount
 
 let passes_go roll player = player.location + sums roll >= 40
 
@@ -93,9 +93,9 @@ let leave_quarantine player = player.quarantine_status <- Out
 
 let quarantine player = player.quarantine_status
 
-let buy_ownable p prop i =
-  update_balance p (-i);
-  p.ownable_name_list <- prop :: p.ownable_name_list
+let buy_ownable p property amount =
+  update_balance p (-amount);
+  p.ownable_name_list <- property :: p.ownable_name_list
 
 (* returns true if [elt] is contained in [lst] *)
 let rec contains elt = function
@@ -128,25 +128,25 @@ let swap_properties p1 p2 own_lst =
   remove_properties p1 own_lst;
   add_properties p2 own_lst
 
-let pay p1 p2 i =
-  update_balance p2 i;
-  update_balance p1 (-i)
+let pay p1 p2 amount =
+  update_balance p2 amount;
+  update_balance p1 (-amount)
 
-let move_player_to p l can_pass =
+let move_player_to p location can_pass =
   let o = p.location in
-  if o = l then ()
-  else if o > l && can_pass then (
+  if o = location then ()
+  else if o > location && can_pass then (
     update_balance p 200;
-    p.location <- l)
-  else p.location <- l
+    p.location <- location)
+  else p.location <- location
 
 let get_stocks p =
   Hashtbl.fold
     (fun k v acc -> Array.append acc [| (k, v) |])
     p.owned_stocks [||]
 
-let num_shares_owned p s =
-  try Hashtbl.find p.owned_stocks s with Not_found -> 0
+let num_shares_owned p stock =
+  try Hashtbl.find p.owned_stocks stock with Not_found -> 0
 
 let buy_stocks p s n c =
   update_balance p (-c);

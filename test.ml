@@ -45,7 +45,7 @@ let rec add_num_houses_lst game name_lst num_lst =
       | [] -> ()
       | n :: t1 ->
           add_num_houses game h n;
-          add_num_houses_lst game t t1 )
+          add_num_houses_lst game t t1)
 
 (* Any Player Module Testing Helper Functions/Variables *)
 
@@ -92,14 +92,14 @@ let pay_test name p1 p2 amt =
   pay p1 p2 amt;
   assert (
     p1_balance - amt = get_balance p1
-    && p2_balance + amt = get_balance p2 )
+    && p2_balance + amt = get_balance p2)
 
 let swap_properties_test name p1 p2 swap expected1 expected2 =
   name >:: fun _ ->
   swap_properties p1 p2 swap;
   assert (
     get_ownable_name_list p1 = expected1
-    && get_ownable_name_list p2 = expected2 )
+    && get_ownable_name_list p2 = expected2)
 
 let get_stocks_test name player expected_output =
   name >:: fun _ -> assert_equal expected_output (get_stocks player)
@@ -361,7 +361,7 @@ let do_free_parking_test name game player =
   let free_parking_amt = do_free_parking game player in
   assert (
     get_free_parking game = 0
-    && get_balance player = init_bal + free_parking_amt )
+    && get_balance player = init_bal + free_parking_amt)
 
 let do_tax_test name game player spc =
   name >:: fun _ ->
@@ -654,7 +654,7 @@ let sell_house_test name game own_name =
   sell_house game own_name true;
   assert (
     get_houses_available game = houses_available_before + 1
-    && houses_before - 1 = get_houses game own_name )
+    && houses_before - 1 = get_houses game own_name)
 
 let sell_all_test name game player =
   name >:: fun _ ->
@@ -662,7 +662,7 @@ let sell_all_test name game player =
   assert (
     List.for_all
       (fun x -> is_mortgaged game x)
-      (get_ownable_name_list player) )
+      (get_ownable_name_list player))
 
 let p1 = make_player "p1"
 
@@ -1049,10 +1049,10 @@ let stockmarket_tests =
       "GME"
       (int_of_float
          (Float.round
-            ( 1000.
-            +. (1000. *. percent_change_of test_market "GME" /. 100.) )));
+            (1000.
+            +. (1000. *. percent_change_of test_market "GME" /. 100.))));
     stock_array_test "All available stocks" market
-      [| "CamlCoin"; "Amazon"; "RPCC"; "GME"; "Snarly Hacker Co." |];
+      [| "CamlCoin"; "Amazon"; "SnarlyHacker"; "RPCC"; "GME" |];
   ]
 
 (* Test Suite *)

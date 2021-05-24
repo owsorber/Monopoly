@@ -1,3 +1,6 @@
+(*This is the file for cards*)
+
+(* The type of a card*)
 type card = {
   message : string;
   action : string;

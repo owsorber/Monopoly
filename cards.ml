@@ -26,14 +26,14 @@ let card_from_json j =
   }
 
 (** uses knuth algorithum*)
-let shuffle a =
-  for i = Array.length a - 1 downto 1 do
+let shuffle deck =
+  for i = Array.length deck - 1 downto 1 do
     let place = Random.int (i + 1) in
-    let swaper = a.(place) in
-    a.(place) <- a.(i);
-    a.(i) <- swaper
+    let swaper = deck.(place) in
+    deck.(place) <- deck.(i);
+  deck.(i) <- swaper
   done;
-  a
+  deck
 
 let rec init_deck_builder builder cards =
   match cards with
@@ -41,7 +41,7 @@ let rec init_deck_builder builder cards =
   | h :: t -> init_deck_builder (card_from_json h :: builder) t
 
 (** returns a shuffles array of cards*)
-let init_shuffle l = shuffle (Array.of_list l)
+let init_shuffle deck = shuffle (Array.of_list deck)
 
 let init_cards filename =
   let json = Yojson.Basic.from_file filename in
@@ -57,27 +57,27 @@ let init_cards filename =
     community_chest_int = 0;
   }
 
-let draw_chance_card t =
-  if t.chance_int < Array.length t.chance_deck - 1 then (
-    let c = t.chance_deck.(t.chance_int) in
-    t.chance_int <- t.chance_int + 1;
+let draw_chance_card deck =
+  if deck.chance_int < Array.length deck.chance_deck - 1 then (
+    let c = deck.chance_deck.(deck.chance_int) in
+    deck.chance_int <- deck.chance_int + 1;
     c)
   else
-    let c = t.chance_deck.(t.chance_int) in
-    t.chance_deck <- shuffle t.chance_deck;
-    t.chance_int <- 0;
+    let c = deck.chance_deck.(deck.chance_int) in
+    deck.chance_deck <- shuffle deck.chance_deck;
+    deck.chance_int <- 0;
     c
 
-let draw_community_chest_card t =
-  if t.community_chest_int < Array.length t.community_chest_deck - 1
+let draw_community_chest_card deck =
+  if deck.community_chest_int < Array.length deck.community_chest_deck - 1
   then (
-    let c = t.community_chest_deck.(t.community_chest_int) in
-    t.community_chest_int <- t.community_chest_int + 1;
+    let c = deck.community_chest_deck.(deck.community_chest_int) in
+    deck.community_chest_int <- deck.community_chest_int + 1;
     c)
   else
-    let c = t.community_chest_deck.(t.community_chest_int) in
-    t.community_chest_deck <- shuffle t.community_chest_deck;
-    t.community_chest_int <- 0;
+    let c = deck.community_chest_deck.(deck.community_chest_int) in
+    deck.community_chest_deck <- shuffle deck.community_chest_deck;
+    deck.community_chest_int <- 0;
     c
 
 let move_card loc p can_pass (loc_type, rent_mult) =
@@ -96,7 +96,7 @@ let move_card loc p can_pass (loc_type, rent_mult) =
   in
   (dummyRent, rent_mult)
 
-let change_funds p g funds =
+let change_funds p funds =
   let fund_int = int_of_string funds in
   (try Player.update_balance p fund_int
    with Player.BalanceBelowZero -> raise (MustCheckBankrupt fund_int));
@@ -155,9 +155,9 @@ let do_card card p board game =
       move_card
         (Board.location_from_space_name board card.extra)
         p true ("", 1)
-  | "addfunds" -> change_funds p game card.extra
+  | "addfunds" -> change_funds p card.extra
   | "quarantine" -> quarantine_card p card.extra
-  | "removefunds" -> change_funds p game card.extra
+  | "removefunds" -> change_funds p card.extra
   | "movenum" ->
       move_card
         (Player.get_location p + int_of_string card.extra)
