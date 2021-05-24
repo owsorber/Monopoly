@@ -63,7 +63,7 @@ let property_from_json j =
 
 (* Creates a space from the json for a space by pattern-matching against
    "type". *)
-let space_from_json j =
+let rec space_from_json j =
   let space_type = j |> member "type" |> to_string in
   match space_type with
   | "property" -> property_from_json j
@@ -79,12 +79,16 @@ let space_from_json j =
           name = j |> member "name" |> to_string;
           price = j |> member "cost" |> to_int;
         }
+  | _ -> space_from_json' space_type j
+  
+and space_from_json' space_type j=
+match space_type with
   | "tax" ->
-      Tax
-        {
-          name = j |> member "name" |> to_string;
-          cost = j |> member "cost" |> to_int;
-        }
+  Tax
+    {
+      name = j |> member "name" |> to_string;
+      cost = j |> member "cost" |> to_int;
+    }
   | "go" -> Go
   | "chance" -> Chance
   | "community-chest" -> CommunityChest
@@ -131,8 +135,8 @@ let init_board json =
 
 let length board = Array.length board.spaces
 
-let space_from_location board i =
-  try board.spaces.(i) with Invalid_argument _ -> raise (NotOnBoard i)
+let space_from_location board loc =
+  try board.spaces.(loc) with Invalid_argument _ -> raise (NotOnBoard loc)
 
 let is_ownable board space =
   match space with
@@ -161,9 +165,9 @@ let rec space_from_space_name_helper board acc s =
   else space_from_space_name_helper board (acc + 1) s
 
 let space_from_space_name board space_name =
-  let i = space_from_space_name_helper board 0 space_name in
-  if i = -1 then raise (NameNotOnBoard space_name)
-  else Some board.spaces.(i)
+  let loc = space_from_space_name_helper board 0 space_name in
+  if loc = -1 then raise (NameNotOnBoard space_name)
+  else Some board.spaces.(loc)
 
 let start_space board = space_name board 0
 

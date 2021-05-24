@@ -704,7 +704,7 @@ let () =
   buy_ownable_lst game_one test_board p3
     [
       "Shortline";
-      "B. & O. Railroad";
+      "B.&O. Railroad";
       "Kentucky Avenue";
       "Indiana Avenue";
       "Illinois Avenue";
@@ -895,8 +895,8 @@ let game_tests =
     all_mortgagable_test "p1 cannot mortgage any properties" game_one p1
       [||];
     all_mortgagable_test
-      "p3 can mortgage Shortline and B. & O. Railroad" game_one p3
-      [| "B. & O. Railroad"; "Shortline" |];
+      "p3 can mortgage Shortline and B.&O. Railroad" game_one p3
+      [| "B.&O. Railroad"; "Shortline" |];
     can_add_house_test "p1 can add a house to Vermont" game_one p1
       "Vermont Avenue" true;
     can_add_house_monopoly_exn "p3 does not have a monopoly on brown"
