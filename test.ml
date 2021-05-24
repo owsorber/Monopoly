@@ -1,4 +1,5 @@
-(* TODO: Write tests. *)
+(* Test Plan: *)
+
 open OUnit2
 open Player
 open Board
@@ -703,7 +704,7 @@ let () =
   buy_ownable_lst game_one test_board p3
     [
       "Shortline";
-      "B. & O. Railroad";
+      "B.&O. Railroad";
       "Kentucky Avenue";
       "Indiana Avenue";
       "Illinois Avenue";
@@ -894,8 +895,8 @@ let game_tests =
     all_mortgagable_test "p1 cannot mortgage any properties" game_one p1
       [||];
     all_mortgagable_test
-      "p3 can mortgage Shortline and B. & O. Railroad" game_one p3
-      [| "B. & O. Railroad"; "Shortline" |];
+      "p3 can mortgage Shortline and B.&O. Railroad" game_one p3
+      [| "B.&O. Railroad"; "Shortline" |];
     can_add_house_test "p1 can add a house to Vermont" game_one p1
       "Vermont Avenue" true;
     can_add_house_monopoly_exn "p3 does not have a monopoly on brown"
@@ -935,6 +936,78 @@ let game_tests =
       "Light Blue" true;
     has_houses_on_color_test "p1 has houses on Light Blue" game_one p1
       "Light Blue" true;
+  ]
+
+(* Any Card Module Testing Helper Functions/Variables *)
+
+let cards = init_cards "cards.json"
+
+let change_funds_chance_test name card player board game =
+  name >:: fun _ ->
+  let init_balance = get_balance player in
+  let amt_change = int_of_string card.extra in
+  let _ = do_card card player board game in
+  assert (get_balance player = init_balance + amt_change)
+
+let change_funds_exn_test name card player board game =
+  name >:: fun _ ->
+  assert_raises
+    (MustCheckBankrupt (int_of_string card.extra))
+    (fun () -> do_card card player board game)
+
+let quarantine_chance_test name card player board game =
+  name >:: fun _ ->
+  let _ = do_card card player board game in
+  assert (get_location player = 10)
+
+let propertycharges_chance_test
+    name
+    card
+    player
+    board
+    game
+    mults
+    (houses, hotels) =
+  name >:: fun _ ->
+  let house_mult, hotel_mult = (fst mults, snd mults) in
+  let init_balance = get_balance player in
+  let amt_change = (houses * house_mult) + (hotels * hotel_mult) in
+  let _ = do_card card player board game in
+  assert_equal (get_balance player) (init_balance - amt_change)
+
+let p1_cards = make_player "p1_cards"
+
+let p2_cards = make_player "p2_cards"
+
+let cards_game = init_game test_board [| p1_cards; p2_cards |]
+
+let () =
+  buy_ownable_lst cards_game test_board p1_cards
+    [ "Mediterranean Avenue"; "Baltic Avenue" ]
+
+let () =
+  add_num_houses_lst cards_game
+    [ "Mediterranean Avenue"; "Baltic Avenue" ]
+    [ 5; 4 ]
+
+(* Card Module Tests *)
+let card_tests =
+  [
+    change_funds_chance_test "Adding funds chance card"
+      { message = ""; action = "addfunds"; extra = "50" }
+      p2_cards test_board cards_game;
+    change_funds_chance_test "Removed funds chance card"
+      { message = ""; action = "removefunds"; extra = "-15" }
+      p2_cards test_board cards_game;
+    change_funds_exn_test "Removed funds causing bankruptcy"
+      { message = ""; action = "removefunds"; extra = "-15000" }
+      p2_cards test_board cards_game;
+    quarantine_chance_test "Sent to quarantine chance"
+      { message = ""; action = "quarantine"; extra = "go to" }
+      p1_cards test_board cards_game;
+    propertycharges_chance_test "Property charges chance"
+      { message = ""; action = "propertycharges"; extra = "25 100" }
+      p1_cards test_board cards_game (25, 100) (4, 1);
   ]
 
 (* Any Stockmarket Module Testing Helper Functions/Variables *)
@@ -986,6 +1059,12 @@ let stockmarket_tests =
 let suite =
   "test suite for Monopoly"
   >::: List.flatten
-         [ player_tests; board_tests; game_tests; stockmarket_tests ]
+         [
+           player_tests;
+           board_tests;
+           game_tests;
+           card_tests;
+           stockmarket_tests;
+         ]
 
 let _ = run_test_tt_main suite
