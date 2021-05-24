@@ -204,21 +204,16 @@ let do_potential_bankruptcy g p c p2 =
       ^ "mortgaged all assets and successfully payed off the debt!" ) )
 
 let rec landing p g space_name r cards (modRent, mult) =
-  magenta_print "IN LANDING";
   let b = Game.get_board g in
   match Board.space_from_space_name b space_name with
   | Some space -> (
       match space with
       | Property _ | Railroad _ | Utility _ ->
           let current_location = Player.get_location p in
-          magenta_print "REACHED HERE";
           let rent =
             if modRent <> 0 then modRent * mult
             else Game.get_rent g current_location r * mult
           in
-          magenta_print ("The rent is: " ^ string_of_int rent);
-          magenta_print space_name;
-
           if rent > 0 then
             match Game.owner g space_name with
             | Some player ->
