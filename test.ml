@@ -1,10 +1,46 @@
-(* Test Plan: *)
+(* Test Plan:
+
+   Given that our group created a game (Monopoly), our testing approach
+   consisted of both OUnit testing (tests found in this file), as well
+   as extensive play/manual testing. Specifically, we tested the board,
+   cards, game, player, and stockmarket modules with OUnit Testing. We
+   tested our input, main, and gui modules with manual testing. This is
+   because the board, cards, game, player, and stockmarket modules
+   contain all of the logic needed to play the game, as well as the
+   methods that modify the game state accordingly. Thus, we made sure to
+   properly test all of these functions with OUnit tests. However, our
+   other modules do not introduce any logic of their own; they use
+   functions from other modules to output the game to the user. This
+   means that OUnit tests for these modules would not be applicable,
+   which is why we manually tested them instead.
+
+   As mentioned before, we tested the Board, Cards, Game, Player, and
+   Stockmarket modules with OUnit testing. We did not use randomized
+   testing, as our system runs on predictable inputs (standard Monopoly
+   board). However, we did use both glass-box and black-box tests in
+   developing tests. We did this by "splitting" up the test cases. The
+   person who wrote a function made test cases based on their
+   implementation of said function (glass-box tests). Others in the
+   group wrote tests for that same function, only based on the
+   specification written in the mli (black-box tests).
+
+   We are confident that these tests demonstrate our system's
+   correctness. This is because we tested every function listed in our
+   mli, ensuring that the functions properly modify game state with
+   property-based tests, as well as returned the correct output based on
+   their specification. Because our main output functions are all built
+   by assuming that our function operate as stated in the specification,
+   by unit testing these functions based on their
+   specification/implementation, we can be assured that all of our
+   functions will work as intended, as well. Play testing our game
+   extensively allowed us to improve the user experience, as well as
+   make implementation decisions based on the desired output in specific
+   situations. *)
 
 open OUnit2
 open Player
 open Board
 open Game
-open Input
 open Cards
 open Stockmarket
 
@@ -45,7 +81,7 @@ let rec add_num_houses_lst game name_lst num_lst =
       | [] -> ()
       | n :: t1 ->
           add_num_houses game h n;
-          add_num_houses_lst game t t1)
+          add_num_houses_lst game t t1 )
 
 (* Any Player Module Testing Helper Functions/Variables *)
 
@@ -92,14 +128,14 @@ let pay_test name p1 p2 amt =
   pay p1 p2 amt;
   assert (
     p1_balance - amt = get_balance p1
-    && p2_balance + amt = get_balance p2)
+    && p2_balance + amt = get_balance p2 )
 
 let swap_properties_test name p1 p2 swap expected1 expected2 =
   name >:: fun _ ->
   swap_properties p1 p2 swap;
   assert (
     get_ownable_name_list p1 = expected1
-    && get_ownable_name_list p2 = expected2)
+    && get_ownable_name_list p2 = expected2 )
 
 let get_stocks_test name player expected_output =
   name >:: fun _ -> assert_equal expected_output (get_stocks player)
@@ -361,7 +397,7 @@ let do_free_parking_test name game player =
   let free_parking_amt = do_free_parking game player in
   assert (
     get_free_parking game = 0
-    && get_balance player = init_bal + free_parking_amt)
+    && get_balance player = init_bal + free_parking_amt )
 
 let do_tax_test name game player spc =
   name >:: fun _ ->
@@ -654,7 +690,7 @@ let sell_house_test name game own_name =
   sell_house game own_name true;
   assert (
     get_houses_available game = houses_available_before + 1
-    && houses_before - 1 = get_houses game own_name)
+    && houses_before - 1 = get_houses game own_name )
 
 let sell_all_test name game player =
   name >:: fun _ ->
@@ -662,7 +698,7 @@ let sell_all_test name game player =
   assert (
     List.for_all
       (fun x -> is_mortgaged game x)
-      (get_ownable_name_list player))
+      (get_ownable_name_list player) )
 
 let p1 = make_player "p1"
 
@@ -894,8 +930,8 @@ let game_tests =
       "Shortline" "exn";
     all_mortgagable_test "p1 cannot mortgage any properties" game_one p1
       [||];
-    all_mortgagable_test
-      "p3 can mortgage Shortline and B.&O. Railroad" game_one p3
+    all_mortgagable_test "p3 can mortgage Shortline and B.&O. Railroad"
+      game_one p3
       [| "B.&O. Railroad"; "Shortline" |];
     can_add_house_test "p1 can add a house to Vermont" game_one p1
       "Vermont Avenue" true;
@@ -1049,8 +1085,8 @@ let stockmarket_tests =
       "GME"
       (int_of_float
          (Float.round
-            (1000.
-            +. (1000. *. percent_change_of test_market "GME" /. 100.))));
+            ( 1000.
+            +. (1000. *. percent_change_of test_market "GME" /. 100.) )));
     stock_array_test "All available stocks" market
       [| "CamlCoin"; "Amazon"; "SnarlyHacker"; "RPCC"; "GME" |];
   ]
