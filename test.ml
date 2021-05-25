@@ -32,10 +32,13 @@
    by assuming that our function operate as stated in the specification,
    by unit testing these functions based on their
    specification/implementation, we can be assured that all of our
-   functions will work as intended, as well. Play testing our game
-   extensively allowed us to improve the user experience, as well as
-   make implementation decisions based on the desired output in specific
-   situations. *)
+   functions will work as intended, as well. Furthermore, when using the
+   Bisect tool on our test suite, all of our files have above 85% test
+   coverage, which is enough for us to feel confident about our test
+   cases, especially because many of the untested cases will never be
+   reached. Play testing our game extensively allowed us to improve the
+   user experience, as well as make implementation decisions based on
+   the desired output in specific situations. *)
 
 open OUnit2
 open Player
