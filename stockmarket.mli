@@ -1,8 +1,18 @@
+(** Representation of the Monopoly Stockmarket
+
+    This module contains methods that allow querying of specific stock
+    market shares, and updating the market based off multiple
+    probabilistic formulas *)
+
 (** The abstract type representing a stock market. *)
 type t
 
+(** The type [stock_name] represents the name of a stock contained in
+    the stockmarket *)
 type stock_name = string
 
+(** The type [stock_value] represents the value (price) of a single
+    share of a stock in the market *)
 type stock_value = int
 
 (** [init_market j] initializes and returns a stock market based on json
@@ -27,4 +37,5 @@ val percent_change_of : t -> stock_name -> float
     which corresponds to a time-step. *)
 val update_market : t -> unit
 
+(** [stock_array m] returns all of the stock names in market [m] *)
 val stock_array : t -> stock_name array
