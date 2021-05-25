@@ -12,3 +12,4 @@
 #load "cards.cmo";;
 #load "input.cmo";;
 #load "gui.cmo";;
+#require "bisect_ppx.runtime";;
