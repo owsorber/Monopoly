@@ -113,7 +113,7 @@ let rec get_properties_helper g acc ownables =
   | h :: t -> (
       match get_own_status g h with
       | Property status -> get_properties_helper g (h :: acc) t
-      | _ -> get_properties_helper g acc t)
+      | _ -> get_properties_helper g acc t )
 
 (* Gets all the properties of player [p] in game [g]. *)
 let get_properties g p =
@@ -458,12 +458,12 @@ let can_mortgage g p o =
     | None -> raise NotOwnableName
     | Some s -> s
   in
-  (match get_own_status g o with
+  ( match get_own_status g o with
   | Property (P_Owned (player, houses)) ->
       let col = Board.color board space in
       player = p && houses = 0 && not (has_houses_on_color g p col)
   | Utility (U_Owned player) | Railroad (RR_Owned player) -> player = p
-  | _ -> false)
+  | _ -> false )
   && get_ownable_price board o / 2 < Player.get_balance p
 
 let can_trade g p name =
@@ -548,7 +548,7 @@ and get_property_rent g status space =
             (* double rent for monopoly with zero houses *)
             2 * p.rent.(0)
           else p.rent.(houses)
-      | _ -> failwith "Ownable Status has Incorrect Ownable Type")
+      | _ -> failwith "Ownable Status has Incorrect Ownable Type" )
   | _ -> 0
 
 and get_utility_rent g status roll =
@@ -618,9 +618,11 @@ let sell_all g p =
   let rec mortgage_all lst =
     match lst with
     | [] -> ()
-    | h :: t ->
-        make_ownable_mortgaged g p h;
-        mortgage_all t
+    | h :: t -> (
+        try
+          make_ownable_mortgaged g p h;
+          mortgage_all t
+        with _ -> mortgage_all t )
   in
   mortgage_all ownables
 
@@ -641,7 +643,7 @@ let do_tax g p s =
   match s with
   | Board.Tax t ->
       let tax_cost = t.cost in
-      (try Player.update_balance p (-tax_cost)
-       with Player.BalanceBelowZero -> raise MustCheckBankrupt);
+      ( try Player.update_balance p (-tax_cost)
+        with Player.BalanceBelowZero -> raise MustCheckBankrupt );
       g.free_parking <- g.free_parking + tax_cost
   | _ -> failwith "Tried to complete a tax on a non-tax space."
