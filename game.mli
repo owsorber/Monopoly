@@ -1,23 +1,39 @@
+(** Representation of a Monopoly game state
+
+    This module contains the data associated with a single Monopoly
+    game. Methods are included that query fields tied to a game state,
+    and update these fields. *)
+
 (** The abstract type representing a Game State *)
 type t
 
+(** The type [ownable_name] represents the name of a space on the
+    Monopoly board which can be owned *)
 type ownable_name = string
 
+(** The type [property_status] represents the owned status of a Monopoly
+    property (i.e. whether it is owned, mortgaged, or available) *)
 type property_status =
   | P_Owned of (Player.t * int)
   | P_Mortgaged of Player.t
   | P_Available
 
+(** The type [rr_status] represents the owned status of a Monopoly
+    railroad *)
 type rr_status =
   | RR_Owned of Player.t
   | RR_Mortgaged of Player.t
   | RR_Available
 
+(** The type [util_status] represents the owned status of a Monopoly
+    utility *)
 type util_status =
   | U_Owned of Player.t
   | U_Mortgaged of Player.t
   | U_Available
 
+(** The type [ownable_status] represents the ownable status of a
+    Monopoly property *)
 type ownable_status =
   | Property of property_status
   | Railroad of rr_status
