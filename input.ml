@@ -896,77 +896,88 @@ let stock_details stock p g market buy =
    attempting to buy or sell stocks on the stock market [market]. The
    player is attempting to buy if [buy] is true. [buy_sell_stock] acts
    for player [p] in game [g].*)
-let buy_sell_stock p g market buy =
+let rec buy_sell_stock p g market buy =
   let stock_array =
     if buy then Stockmarket.stock_array market
     else Array.map (fun (stock, _) -> stock) (Player.get_stocks p)
   in
-  if Array.length stock_array = 0 then (
-    green_print "None.";
-    Legal
-      {
-        player_id = Player.get_player_id p;
-        action = (fun _ -> ());
-        is_double = false;
-        is_end = false;
-      })
+  if Array.length stock_array = 0 then buy_sell_stock_none p
   else (
-    if buy then
-      white_print
-        "Please enter the number of the stock you would like to buy: "
-    else
-      white_print
-        "Please enter the number of the stock you would like to sell: ";
-    print_array (fun x -> stock_details x p g market buy) stock_array;
-    white_print "> ";
-    white_print "";
+    print_ask g p market stock_array buy;
     try
       let stock_index = int_of_string (read_line ()) in
       let stock_name = stock_array.(stock_index - 1) in
-
-      if buy then (
-        white_print
-          ("Please enter the number of " ^ stock_name
-         ^ " you would like to buy:");
-        white_print "")
-      else (
-        white_print
-          ("Please enter the number of " ^ stock_name
-         ^ " you would like to sell:");
-        white_print "");
+      print_ask_shares g p market buy stock_name;
       let num_stocks = int_of_string (read_line ()) in
       let total_value =
         Stockmarket.value_of_num_shares market stock_name num_stocks
       in
       if buy && Player.get_balance p > total_value then
-        Legal
-          {
-            player_id = Player.get_player_id p;
-            action =
-              (fun _ ->
-                Player.buy_stocks p stock_name num_stocks total_value);
-            is_double = false;
-            is_end = false;
-          }
+        buy_stock_move p stock_name num_stocks total_value
       else if not buy then
-        Legal
-          {
-            player_id = Player.get_player_id p;
-            action =
-              (fun _ ->
-                try
-                  Player.sell_stocks p stock_name num_stocks total_value
-                with Player.NotEnoughShares ->
-                  red_print "you do not have enough shares");
-            is_double = false;
-            is_end = false;
-          }
+        sell_stock_move p stock_name num_stocks total_value
       else (
         red_print "you do not have enough money";
         Illegal)
     with _ ->
       red_print "invalid input";
       Illegal)
+
+and buy_sell_stock_none p =
+  green_print "None.";
+  Legal
+    {
+      player_id = Player.get_player_id p;
+      action = (fun _ -> ());
+      is_double = false;
+      is_end = false;
+    }
+
+and print_ask g p market stock_array buy =
+  if buy then
+    white_print
+      "Please enter the number of the stock you would like to buy: "
+  else
+    white_print
+      "Please enter the number of the stock you would like to sell: ";
+  print_array (fun x -> stock_details x p g market buy) stock_array;
+  white_print "> ";
+  white_print ""
+
+and print_ask_shares g p market buy stock_name =
+  if buy then (
+    white_print
+      ("Please enter the number of " ^ stock_name
+     ^ " you would like to buy:");
+    white_print "")
+  else (
+    white_print
+      ("Please enter the number of " ^ stock_name
+     ^ " you would like to sell:");
+    white_print "")
+
+and buy_stock_move p stock_name num_stocks total_value =
+  Legal
+    {
+      player_id = Player.get_player_id p;
+      action =
+        (fun _ -> Player.buy_stocks p stock_name num_stocks total_value);
+      is_double = false;
+      is_end = false;
+    }
+
+and sell_stock_move p stock_name num_stocks total_value =
+  Legal
+    {
+      player_id = Player.get_player_id p;
+      action =
+        (fun _ ->
+          try Player.sell_stocks p stock_name num_stocks total_value
+          with Player.NotEnoughShares ->
+            red_print "you do not have enough shares");
+      is_double = false;
+      is_end = false;
+    }
 
 let stock_printer p =
   let stocks = Player.get_stocks p in
@@ -1001,7 +1012,7 @@ let max players f =
 
 (**[print_endgame b g] prints appropriate information about the game
    ending give game [g] and board [b]. *)
-let print_endgame b g =
+let rec print_endgame b g =
   let players = Array.to_list (Game.get_all_players g) in
   let max_money = max players Player.get_balance in
   let max_properties =
@@ -1013,6 +1024,9 @@ let print_endgame b g =
           (fun acc (_, n) -> acc + n)
           0 (Player.get_stocks p))
   in
+  print_final_info b g max_money max_properties max_stocks
+
+and print_final_info b g max_money max_properties max_stocks =
   magenta_print "Player with the most money (ties excluded): ";
   green_print (Player.get_player_id max_money);
   magenta_print "with ";
