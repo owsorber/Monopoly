@@ -113,10 +113,10 @@ let quarantine_card p extra =
 let rec find_nearest board loc typ =
   match Board.space_from_location board loc with
   | Railroad r ->
-      if typ = "rr" then loc else find_nearest board (loc + 1) typ
+      if typ = "rr" then loc else find_nearest board ((loc + 1) mod 40) typ
   | Utility u ->
-      if typ = "utility" then loc else find_nearest board (loc + 1) typ
-  | _ -> find_nearest board (loc + 1) typ
+      if typ = "utility" then loc else find_nearest board ((loc + 1) mod 40) typ
+  | _ -> find_nearest board ((loc + 1) mod 40) typ
 
 let move_nearest player board extra game =
   let cmd_list = String.split_on_char ' ' extra in
