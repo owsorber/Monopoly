@@ -3,7 +3,6 @@
 #require "yojson";;
 #require "ANSITerminal";;
 #require "graphics";;
-#require "sfml.audio";;
 #load "printers.cmo";;
 #load "board.cmo";;
 #load "stockmarket.cmo";;
@@ -12,4 +11,3 @@
 #load "cards.cmo";;
 #load "input.cmo";;
 #load "gui.cmo";;
-#require "bisect_ppx.runtime";;

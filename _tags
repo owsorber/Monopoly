@@ -1,3 +1,1 @@
-<{player,game,stockmarket,board}.ml>: coverage
-<test.{byte,native}>: coverage
 true: package(ounit2),package(yojson),package(ANSITerminal),package(graphics)

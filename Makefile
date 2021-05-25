@@ -14,13 +14,6 @@ default: build
 build:
 	$(OCAMLBUILD) $(OBJECTS)
 
-bisect: clean bisect-test
-	bisect-ppx-report html
-
-bisect-test:
-	BISECT_COVERAGE=YES $(OCAMLBUILD) -tag 'debug' $(TEST) \
-		&& ./$(TEST)
-
 test:
 	$(OCAMLBUILD) -tag 'debug' $(TEST) && ./$(TEST) -runner sequential
 
