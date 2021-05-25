@@ -8,11 +8,11 @@
 type t
 
 (** The type [stock_name] represents the name of a stock contained in
-    the stockmarket *)
+    the stockmarket. *)
 type stock_name = string
 
 (** The type [stock_value] represents the value (price) of a single
-    share of a stock in the market *)
+    share of a stock in the market. *)
 type stock_value = int
 
 (** [init_market j] initializes and returns a stock market based on json
@@ -37,5 +37,6 @@ val percent_change_of : t -> stock_name -> float
     which corresponds to a time-step. *)
 val update_market : t -> unit
 
-(** [stock_array m] returns all of the stock names in market [m] *)
+(** [stock_array m] returns an array containing all of the stock names
+    in market [m]. *)
 val stock_array : t -> stock_name array

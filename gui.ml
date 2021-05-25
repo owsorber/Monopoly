@@ -297,16 +297,18 @@ and draw_m board_y =
   lineto (current_x ()) (current_y () - (3 * size_x () / 12));
   set_line_width 1
 
-let stock_change_color percent_change =
-  let other_change = int_of_float (percent_change /. 100. *. 255.) in
-  if percent_change < 0. then rgb 255 other_change other_change
-  else if percent_change > 0. then rgb other_change 255 other_change
-  else rgb 216 221 227
+let stock_change_color stock_value percent_change =
+  if stock_value = 0 then rgb 216 221 227
+  else
+    let other_change = int_of_float (percent_change /. 100. *. 255.) in
+    if percent_change < 0. then rgb 255 other_change other_change
+    else if percent_change > 0. then rgb other_change 255 other_change
+    else rgb 216 221 227
 
 let draw_stock stock_name stock_value percent_change x y w h =
   (* set_color (rgb 216 221 227); *)
   (* print_endline (string_of_float percent_change); *)
-  set_color (stock_change_color percent_change);
+  set_color (stock_change_color stock_value percent_change);
   fill_rect x y w h;
   set_color black;
   draw_rect x y w h;

@@ -3,84 +3,84 @@
     Module contains methods that allow querying of a player state, as
     well as methods that update player state. *)
 
-(** The abstract type representing a player *)
+(** The abstract type representing a player. *)
 type t
 
-(** The type [player_id] represents the player_id of a player *)
+(** The type [player_id] represents the player_id of a player. *)
 type player_id = string
 
-(** The type [balance] represents a player's balance *)
+(** The type [balance] represents a player's balance. *)
 type balance = int
 
-(** The type [location] represents a location on the Monopoly board *)
+(** The type [location] represents a location on the Monopoly board. *)
 type location = int
 
 (** The type [ownable_name] represents the name of a space on the
-    Monopoly board which can be owned *)
+    Monopoly board which can be owned. *)
 type ownable_name = string
 
-(** The type [ownable_name_list] represents a list of ownable_name *)
+(** The type [ownable_name_list] represents a list of ownable_name. *)
 type ownable_name_list = ownable_name list
 
 (** The type [rolled_dice] represents a the result of a roll of a two
-    dice, where the roll must be between 1 and 6, inclusive *)
+    dice, where the roll must be between 1 and 6, inclusive. *)
 type rolled_dice = int * int
 
 (** The type [quarantine_status] represents a player's quarantine status
-    (whether they are in or out of quarantine) *)
+    (whether they are in or out of quarantine). *)
 type quarantine_status =
   | In of int
   | Out
 
-(** Raised when a player's Balance is below 0*)
+(** Raised when a player's Balance is below 0. *)
 exception BalanceBelowZero
 
 (** Raised when a player attempts to move and is in quarantine with the
-    days remaining in quarantine*)
+    days remaining in quarantine. *)
 exception InQuarantine of int
 
 (** Raised when a player attempts to sell shares of stock that they do
     not have. *)
 exception NotEnoughShares
 
-(** [get_player_id t] returns the name of player [t] *)
+(** [get_player_id t] returns the name of player [t]. *)
 val get_player_id : t -> player_id
 
-(** [get_balance t] returns the balance of [t] *)
+(** [get_balance t] returns the balance of [t]. *)
 val get_balance : t -> balance
 
-(** [get_location t] returns the location of [t] *)
+(** [get_location t] returns the location of [t]. *)
 val get_location : t -> location
 
-(** [get_ownable_name_list t] returns the player_id of t *)
+(** [get_ownable_name_list t] returns the player_id of t. *)
 val get_ownable_name_list : t -> ownable_name_list
 
 (** [make_player id] is a player at the begining of the game with
-    player_id [id] *)
+    player_id [id]. *)
 val make_player : player_id -> t
 
-(** [sums d] returns the sum of the rolled [d] values *)
+(** [sums d] returns the sum of the rolled [d] values. *)
 val sums : rolled_dice -> int
 
 (** [roll] returns a tuple containing 2 random ints between 1 and 6
-    inclusive *)
+    inclusive. *)
 val roll : unit -> rolled_dice
 
 (** [move_player roll p] updates player [p]'s location based on the dice
     values in [roll] and updates their balance if they pass "Go".
     Requires: [rolled_dice] is a valid roll. Raises: [InQuarantine i]
-    where [i] is the remaining days in quarantine *)
+    where [i] is the remaining days in quarantine. *)
 val move_player : rolled_dice -> t -> unit
 
 (** [go_to_quarantine_status p] sends player [p] to quarantine by making
     their location quarantine and changes their quarantine_status to In
-    of 3 *)
+    of 3. *)
 val go_to_quarantine_status : t -> unit
 
 (** [decrement_day_quarantine p] changes the player [p]'s quarantine
     status to In of (i - 1) where i is the current int in [p]'s
     quarantine_status. Requires: [p].quarantine status is In of int
-    where int is > 1 *)
+    where int is > 1. *)
 val decrement_day_quarantine : t -> unit
 
 (** [projected_space roll p b] is the name of the space that player [p]
@@ -99,7 +99,7 @@ val passes_go : rolled_dice -> t -> bool
 val update_balance : t -> int -> unit
 
 (** [quarantine t] checks if player [t] is in quarantine or not and
-    returns player's quarentine_status *)
+    returns player's quarentine_status. *)
 val quarantine : t -> quarantine_status
 
 (** [buy_ownable t o i] adds ownable with name [o] to player [t]'s
@@ -123,7 +123,7 @@ val pay : t -> t -> int -> unit
 val move_player_to : t -> location -> bool -> unit
 
 (** [leave_quarantine player] updates [player]'s quarantine status to
-    Out *)
+    Out. *)
 val leave_quarantine : t -> unit
 
 (** [get_stocks p] returns a list of the stocks owned by player [p] in
@@ -139,7 +139,7 @@ val get_stocks : t -> (Stockmarket.stock_name * int) array
     invalid because cost [c] exceeds the player's current balance. *)
 val buy_stocks : t -> Stockmarket.stock_name -> int -> int -> unit
 
-(** [buy_stocks p s n c] completes all parts of a transaction (removing
+(** [sell_stocks p s n c] completes all parts of a transaction (removing
     the shares from the player's portfolio, increasing the player's
     balance) where player [p] sells [n] shares of stock with name [s] at
     a total cost [c]. Raises: [NotEnoughShares] if the player owns less

@@ -1,3 +1,6 @@
+In a terminal session and with a valid OCaml installation, 
+enter `opam install graphics`
+
 After downloading the zip file from CMS, unzip it. Open terminal and 
 cd into the directory. Then run `make build` to build the project and run
 `make play` to play our current version of Monopoly.

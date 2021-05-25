@@ -89,28 +89,26 @@ let print_array elem_printer a =
       yellow_print (string_of_int (i + 1) ^ ": " ^ elem_printer elem))
     a
 
-let phase2_string_of_move m p b g =
+let rec phase2_string_of_move m p b g =
   let move_str = string_of_move m in
   let details =
-    match m with
-    | Buy ->
-        let current_location = Player.get_location p in
-        let current_space =
-          Board.space_from_location b current_location
-        in
-        let space_name = Board.space_name b current_location in
-        if Board.is_ownable b current_space then
-          if Game.is_available g space_name then
-            " (Price: "
-            ^ string_of_int
-                (Game.get_ownable_price b
-                   (Board.space_name b current_location))
-            ^ ")"
-          else " (Illegal Action)"
-        else " (Illegal Action)"
-    | _ -> ""
+    match m with Buy -> phase2_string_of_buy p b g | _ -> ""
   in
   move_str ^ details
+
+and phase2_string_of_buy p b g =
+  let current_location = Player.get_location p in
+  let current_space = Board.space_from_location b current_location in
+  let space_name = Board.space_name b current_location in
+  if Board.is_ownable b current_space then
+    if Game.is_available g space_name then
+      " (Price: "
+      ^ string_of_int
+          (Game.get_ownable_price b
+             (Board.space_name b current_location))
+      ^ ")"
+    else " (Illegal Action)"
+  else " (Illegal Action)"
 
 (** [options_printer phase] is the string representation of the options
     a player can take during phase 1 if [phase] is true or phase 2 if
@@ -205,146 +203,162 @@ let do_potential_bankruptcy g p c p2 =
 
 let rec landing p g space_name r cards (modRent, mult) =
   let b = Game.get_board g in
-  match Board.space_from_space_name b space_name with
-  | Some space -> (
-      match space with
-      | Property _ | Railroad _ | Utility _ ->
-          let current_location = Player.get_location p in
-          let rent =
-            if modRent <> 0 then modRent * mult
-            else Game.get_rent g current_location r * mult
-          in
-          if rent > 0 then
-            match Game.owner g space_name with
-            | Some player ->
-                if player <> p then (
-                  magenta_print "You must pay ";
-                  red_print (string_of_int rent);
-                  magenta_print "to ";
-                  cyan_print (Player.get_player_id player);
-                  print_endline "";
-                  if rent > Player.get_balance p then
-                    do_potential_bankruptcy g p rent player
-                  else Player.pay p player rent)
-                else ()
-            | None -> ()
-          else ()
-      | Tax t -> (
-          magenta_print "Oh no! You landed on ";
-          yellow_print t.name;
-          magenta_print "You must pay ";
-          red_print (string_of_int t.cost);
-          print_endline "";
-          try Game.do_tax g p space
-          with Game.MustCheckBankrupt ->
-            do_potential_bankruptcy g p t.cost p)
-      | Chance -> (
-          let location = Player.get_location p in
-          magenta_print "You landed on Chance! Drawing a card...";
-          let card = Cards.draw_chance_card cards in
-          magenta_print "Your card says:";
-          cyan_print card.message;
-          try
-            let modRent, mult = Cards.do_card card p b g in
-            if Player.get_location p <> location then
-              landing p g
-                (Board.space_name b (Player.get_location p))
-                r cards (modRent, mult)
-            else ()
-          with Cards.MustCheckBankrupt c ->
-            do_potential_bankruptcy g p c p)
-      | CommunityChest ->
-          let location = Player.get_location p in
-          magenta_print
-            "You landed on Community Chest!Drawing a card...";
-          let card = Cards.draw_community_chest_card cards in
-          magenta_print "Your card says:";
-          cyan_print card.message;
-          let modRent, mult = Cards.do_card card p b g in
-          if Player.get_location p <> location then
-            landing p g
-              (Board.space_name b (Player.get_location p))
-              r cards (modRent, mult)
-          else ()
-      | Quarantine -> (
-          match Player.quarantine p with
-          | In _ ->
-              magenta_print
-                "you stare out your window and notice a couple on a \
-                 nice stroll.";
-              magenta_print
-                "you can't remember the last time you felt the wind... \
-                 or anything really"
-          | Out ->
-              magenta_print "You're just here for a visit... for now")
-      | FreeParking ->
-          let received = Game.do_free_parking g p in
-          magenta_print
-            "You landed on Free Parking! You get to collect ";
-          green_print (string_of_int received)
-      | GoToQuarantine ->
-          Player.go_to_quarantine_status p;
-          magenta_print
-            "Oh no! You tested positive and need to go into quarantine!"
-      | Go -> ())
+  let space = Board.space_from_space_name b space_name in
+  let real_space =
+    match space with Some s -> s | None -> failwith "Not a space"
+  in
+  match space with
+  | Some (Property _) | Some (Railroad _) | Some (Utility _) ->
+      ownable_landing p g space_name r modRent mult
+  | Some (Tax _) -> tax_landing p g real_space
+  | Some Chance -> chance_landing g b p cards r
+  | Some CommunityChest -> community_chest_landing g b p cards r
+  | Some Quarantine -> quarantine_landing p
+  | Some FreeParking -> free_parking_landing g p
+  | Some GoToQuarantine -> goto_quarantine_landing p
+  | _ -> ()
+
+and ownable_landing p g space_name r modRent mult =
+  let current_location = Player.get_location p in
+  let rent =
+    if modRent <> 0 then modRent * mult
+    else Game.get_rent g current_location r * mult
+  in
+  match Game.owner g space_name with
+  | Some player ->
+      if player <> p && rent > 0 then (
+        magenta_print "You must pay ";
+        red_print (string_of_int rent);
+        magenta_print "to ";
+        cyan_print (Player.get_player_id player);
+        if rent > Player.get_balance p then
+          do_potential_bankruptcy g p rent player
+        else Player.pay p player rent)
+      else ()
   | None -> ()
+
+and tax_landing p g space =
+  match space with
+  | Board.Tax t -> (
+      magenta_print "Oh no! You landed on ";
+      yellow_print t.name;
+      magenta_print "You must pay ";
+      red_print (string_of_int t.cost);
+      try Game.do_tax g p space
+      with Game.MustCheckBankrupt ->
+        do_potential_bankruptcy g p t.cost p)
+  | _ -> failwith "Should be a Tax"
+
+and chance_landing game board player cards r =
+  let location = Player.get_location player in
+  magenta_print "You landed on Chance! Drawing a card...";
+  let card = Cards.draw_chance_card cards in
+  magenta_print "Your card says:";
+  cyan_print card.message;
+  try
+    let modRent, mult = Cards.do_card card player board game in
+    if Player.get_location player <> location then
+      landing player game
+        (Board.space_name board (Player.get_location player))
+        r cards (modRent, mult)
+    else ()
+  with Cards.MustCheckBankrupt c ->
+    do_potential_bankruptcy game player c player
+
+and community_chest_landing g b p cards r =
+  let location = Player.get_location p in
+  magenta_print "You landed on Community Chest! Drawing a card...";
+  let card = Cards.draw_community_chest_card cards in
+  magenta_print "Your card says:";
+  cyan_print card.message;
+  let modRent, mult = Cards.do_card card p b g in
+  if Player.get_location p <> location then
+    landing p g
+      (Board.space_name b (Player.get_location p))
+      r cards (modRent, mult)
+  else ()
+
+and quarantine_landing p =
+  match Player.quarantine p with
+  | In _ ->
+      magenta_print
+        "you stare out your window and notice a couple on a nice \
+         stroll.";
+      magenta_print
+        "you can't remember the last time you felt the wind... or \
+         anything really"
+  | Out -> magenta_print "You're just here for a visit... for now"
+
+and free_parking_landing g p =
+  let received = Game.do_free_parking g p in
+  magenta_print "You landed on Free Parking! You get to collect ";
+  green_print (string_of_int received)
+
+and goto_quarantine_landing p =
+  Player.go_to_quarantine_status p;
+  magenta_print
+    "Oh no! You tested positive and need to go into quarantine!"
 
 (**[double_of_roll (a,b)] returns true if a and b are equal and false if
    not. *)
-let double_of_roll (a, b) = if a = b then true else false
+let double_of_roll (a, b) = a = b
 
 (**[roll p b] returns a Legal result of the action representing a roll
    by player [p], given board [b]. *)
-let roll p b g cards =
-  (* Gui.play_sound "dice.wav"; *)
+let rec roll p b g cards =
   let r = Player.roll () in
   magenta_print (string_of_roll r);
-
   if Player.passes_go r p then
     green_print "You passed go! You gained $200!";
   match Player.quarantine p with
   | In i ->
-      if double_of_roll r then (
-        green_print
-          "Congrats! you rolled doubles and can leave quarantine! (you \
-           tested negative)";
-        let new_space = Player.projected_space r p b in
-        Player.leave_quarantine p;
-        Legal
-          {
-            player_id = Player.get_player_id p;
-            action =
-              (fun player ->
-                Player.move_player r player;
-                landing player g new_space r cards (0, 1));
-            is_double = false;
-            is_end = false;
-          })
-      else (
-        red_print
-          ("You can't move yet, you're still in quarantine for "
-         ^ string_of_int i ^ " more turns.");
-        Legal
-          {
-            player_id = Player.get_player_id p;
-            action = (fun x -> Player.decrement_day_quarantine x);
-            is_double = double_of_roll r;
-            is_end = false;
-          })
-  | Out ->
-      let new_space = Player.projected_space r p b in
-      magenta_print "You landed on: ";
-      yellow_print new_space;
-      Legal
-        {
-          player_id = Player.get_player_id p;
-          action =
-            (fun player ->
-              Player.move_player r player;
-              landing player g new_space r cards (0, 1));
-          is_double = double_of_roll r;
-          is_end = false;
-        }
+      if double_of_roll r then roll_in_quarantine_doubles p b g r cards
+      else roll_in_quarantine_no_doubles p b g r cards i
+  | Out -> roll_out_of_quarantine p b g r cards
+
+and roll_in_quarantine_doubles p b g r cards =
+  green_print
+    "Congrats! you rolled doubles and can leave quarantine! (you \
+     tested negative)";
+  let new_space = Player.projected_space r p b in
+  Player.leave_quarantine p;
+  Legal
+    {
+      player_id = Player.get_player_id p;
+      action =
+        (fun player ->
+          Player.move_player r player;
+          landing player g new_space r cards (0, 1));
+      is_double = false;
+      is_end = false;
+    }
+
+and roll_in_quarantine_no_doubles p b g r cards i =
+  red_print
+    ("You can't move yet, you're still in quarantine for "
+   ^ string_of_int i ^ " more turns.");
+  Legal
+    {
+      player_id = Player.get_player_id p;
+      action = (fun x -> Player.decrement_day_quarantine x);
+      is_double = double_of_roll r;
+      is_end = false;
+    }
+
+and roll_out_of_quarantine p b g r cards =
+  let new_space = Player.projected_space r p b in
+  magenta_print "You landed on: ";
+  yellow_print new_space;
+  Legal
+    {
+      player_id = Player.get_player_id p;
+      action =
+        (fun player ->
+          Player.move_player r player;
+          landing player g new_space r cards (0, 1));
+      is_double = double_of_roll r;
+      is_end = false;
+    }
 
 (**[end_turn p b] is the representative result of type t for player [p]
    on board [b] to end their turn. *)
@@ -429,7 +443,8 @@ let mortgagable_details ownable b =
 
 let mortgage p b g =
   white_print
-    "Please the number of the property you would like to mortgage: ";
+    "Please type the number of the property you would like to \
+     mortgage: ";
   yellow_print "Possible properties to mortgage: ";
   let mortgagables = Game.all_mortgagable g p in
   print_array (fun x -> mortgagable_details x b) mortgagables;
@@ -508,7 +523,7 @@ let unmortgage_details ownable b =
   in
   ownable ^ details
 
-let unmortgage p b g =
+let rec unmortgage p b g =
   white_print
     "Please the number of the property you would like to buy back from \
      the bank: ";
@@ -516,39 +531,43 @@ let unmortgage p b g =
   let owned = Player.get_ownable_name_list p in
   let mortgaged = find_mortgaged g [||] owned in
   print_array (fun x -> unmortgage_details x b) mortgaged;
-  if Array.length mortgaged = 0 then (
-    green_print "None.";
-    Legal
-      {
-        player_id = Player.get_player_id p;
-        action = (fun _ -> ());
-        is_double = false;
-        is_end = false;
-      })
+  if Array.length mortgaged = 0 then unmortgage_none p b g
   else (
     white_print "> ";
     white_print "";
-    (* check out of bounds *)
-    try
-      let property_index = int_of_string (read_line ()) in
-      let property_name = mortgaged.(property_index - 1) in
-      Legal
-        {
-          player_id = Player.get_player_id p;
-          action =
-            (fun x ->
-              Game.make_ownable_owned g x property_name;
-              Player.update_balance x
-                (int_of_float
-                   (1.1
-                   *. float_of_int
-                        (-Game.get_ownable_price b property_name / 2))));
-          is_double = false;
-          is_end = false;
-        }
-    with _ ->
-      red_print "Something went wrong.";
-      Illegal)
+    unmortgage_some p b g mortgaged)
+
+and unmortgage_some p b g mortgaged =
+  try
+    let property_index = int_of_string (read_line ()) in
+    let property_name = mortgaged.(property_index - 1) in
+    Legal
+      {
+        player_id = Player.get_player_id p;
+        action =
+          (fun x ->
+            Game.make_ownable_owned g x property_name;
+            Player.update_balance x
+              (int_of_float
+                 (1.1
+                 *. float_of_int
+                      (-Game.get_ownable_price b property_name / 2))));
+        is_double = false;
+        is_end = false;
+      }
+  with _ ->
+    red_print "Something went wrong.";
+    Illegal
+
+and unmortgage_none p b g =
+  green_print "None.";
+  Legal
+    {
+      player_id = Player.get_player_id p;
+      action = (fun _ -> ());
+      is_double = false;
+      is_end = false;
+    }
 
 let house_details ownable p g buy =
   let descriptor = if buy then "Cost" else "Value" in
@@ -785,7 +804,7 @@ let rec ask_yes_no () =
   print_array (fun x -> x) [| "Yes"; "No" |];
   white_print "";
   let accept = int_of_string (read_line ()) in
-  if accept = 1 || accept = 2 then if accept = 1 then true else false
+  if accept = 1 || accept = 2 then accept = 1
   else (
     red_print "Please enter either 1 or 2.";
     ask_yes_no ())

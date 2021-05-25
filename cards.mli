@@ -19,11 +19,11 @@ type card = {
 exception NotValidCard
 
 (** Raised when a balance update attempt is made such that we must
-    potentially bankrupt the player. *)
+    potentially bankrupt the player attempting to pay an integer amount. *)
 exception MustCheckBankrupt of int
 
 (** The abstract type of values representing a deck of community chest
-    and chance cards *)
+    and chance cards. *)
 type t = {
   mutable chance_deck : card array;
   mutable chance_int : int;
@@ -37,14 +37,14 @@ type t = {
 val init_cards : string -> t
 
 (** [shuffle deck] returns a shuffled array of the cards in [deck] using
-    Knuth's algorithum *)
+    Knuth's algorithum. *)
 val shuffle : card array -> card array
 
 (** [draw_chance_card t] returns the card that at the location
     chance_int in the chance_deck provided by [t] and changes chance_int
     to chance_int + 1. If chance_int is the location of the last card in
     the chance_deck, that card is picked and the deck is then reshuffled
-    and chance_int is set to 0 *)
+    and chance_int is set to 0. *)
 val draw_chance_card : t -> card
 
 (** [draw_community_chest t] returns the card that at the location
@@ -52,7 +52,7 @@ val draw_chance_card : t -> card
     changes community_chest to community_chest + 1. If
     community_chest_int is the location of the last card in the
     community_chest_deck, that card is picked and the deck is then
-    reshuffled and community_chest_int is set to 0 *)
+    reshuffled and community_chest_int is set to 0. *)
 val draw_community_chest_card : t -> card
 
 (**[do_card card player board game] performs the action dicated by
