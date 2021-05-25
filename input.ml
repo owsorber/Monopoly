@@ -199,7 +199,7 @@ let do_potential_bankruptcy g p c p2 =
     if p == p2 then Player.update_balance p (-c) else Player.pay p p2 c;
     green_print
       ("However, " ^ player_name
-     ^ "mortgaged all assets and successfully payed off the debt!"))
+     ^ " mortgaged all assets and successfully payed off the debt!"))
 
 let rec landing p g space_name r cards (modRent, mult) =
   let b = Game.get_board g in
