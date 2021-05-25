@@ -13,6 +13,11 @@ _doc.private
 *.byte
 _build
 
+# bisect
+_coverage
+bisect*.coverage
+
+
 # temporary files
 *.swp
 *~
