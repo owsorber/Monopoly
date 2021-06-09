@@ -1,6 +1,15 @@
+(**Representation of a monopoly board with different spaces and
+   information about them.
+
+   This module represents the board composed of spaces, which can be a
+   Property, Railroad, Utility, Tax, Go, Chance, CommunityChest,
+   Quarantine, FreeParking, or GoToQuarantine. Methods to query
+   information about spaces or the board are also provided. *)
+
 (** The abstract type representing a Board *)
 type t
 
+(** The type representing a space. *)
 type space =
   | Property of {
       name : string;
@@ -81,7 +90,8 @@ val space_name : t -> int -> string
     on in [board]. *)
 val start_space : t -> string
 
-(* [color board s] returns the color of space [s]. Raises *)
+(* [color board s] returns the color of space [s]. Raises
+   [SpaceDoesNotHaveColor] if [space] is not a property. *)
 val color : t -> space -> string
 
 (* [num_of_color board col] returns the number of properties in [board]
@@ -89,7 +99,7 @@ val color : t -> space -> string
    not the color of any property in [board]. *)
 val num_of_color : t -> string -> int
 
-(** [space_from_space_name b str] returns the location if there exists
-    space s on board [b] with name [str]. requires: [str] is the only
-    space with that name*)
+(** [location_from_space_name b str] returns an int representing the
+    location of s if there exists space s on board [b] with name [str].
+    requires: [str] is the only space with that name. *)
 val location_from_space_name : t -> string -> int

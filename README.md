@@ -9,7 +9,7 @@ Our own version of Monopoly, written in OCaml for the CS 3110 Final Project.
 
 
 ## Current Phase
-Finished MS2 (Beta)
+Complete!
 
 ## Commands
 ### `make`
@@ -22,6 +22,8 @@ Finished MS2 (Beta)
 - Runs the game interface
 ### `make clean`
 - Runs `ocaml build -clean` to get rid of our `_build` directory
+### `make docs`
+- Produces documentation for the project in folders `_doc.public` and `_doc.private`
 ### `make zip`
 - Compresses our project into a zip file for submission on CMS
 ### `./cloc.sh`

@@ -6,6 +6,16 @@
       "extra": "Go"
     },
     {
+      "title": "Advance token to nearest Utility.",
+      "action": "movenearest",
+      "extra": "utility 10"
+    },
+    {
+      "title": "Advance token to the nearest Railroad and pay owner twice the rental to which he/she is otherwise entitled.",
+      "action": "movenearest",
+      "extra": "rr 2"
+    },
+    {
       "title": "Advance to Illinois Avenue - If you pass Go, collect $200",
       "action": "move",
       "extra": "Illinois Avenue"
@@ -51,11 +61,6 @@
       "extra": "Boardwalk"
     },
     {
-      "title": "You have been elected Chairman of the Board - Pay each player $50",
-      "action": "removefundstoplayers",
-      "extra": "50"
-    },
-    {
       "title": "Your building loan matures - Collect $150",
       "action": "addfunds",
       "extra": "150"
@@ -86,11 +91,6 @@
       "title": "Go to Quarantine - Go directly to Quarantine - Do not pass Go - Do not collect $200",
       "action": "quarantine",
       "extra": "go to"
-    },
-    {
-      "title": "Grand Opera Night - Collect $50 from every player for opening night seats",
-      "action": "addfundsfromplayers",
-      "extra": "50"
     },
     {
       "title": "Holiday Fund matures - Receive $100",

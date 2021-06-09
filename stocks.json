@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Amazon",
+    "start": 1000,
+    "mu": 0.01,
+    "sigma": 0.04
+  },
+  {
+    "name": "GME",
+    "start": 1000,
+    "mu": 0.0,
+    "sigma": 0.4
+  },
+  {
+    "name": "RPCC",
+    "start": 100,
+    "mu": -0.01,
+    "sigma": 0.05
+  },
+  {
+    "name": "SnarlyHacker",
+    "start": 200,
+    "mu": 0.02,
+    "sigma": 0.1
+  },
+  {
+    "name": "CamlCoin",
+    "start": 10,
+    "mu": 0.02,
+    "sigma": 0.2
+  }
+]
