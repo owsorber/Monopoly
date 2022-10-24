@@ -7,6 +7,9 @@ Our own version of Monopoly, written in OCaml for the CS 3110 Final Project.
 - [Owen Sorber](https://github.com/owsorber)
 - [Jack Williamson](https://github.com/jew256)
 
+## Gameplay Visual
+![Screenshot](gameplay.png)
+
 
 ## Current Phase
 Complete!
